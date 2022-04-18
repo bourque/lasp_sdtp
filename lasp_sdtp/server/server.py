@@ -2,92 +2,96 @@
 
 Authors
 -------
-	Matthew Bourque
+    Matthew Bourque
 
 Use
 ---
 
-	To run a local server, use:
-		FLASK_APP=server.py FLASK_ENV=development flask run --port 8000
+    To run a local server, use:
+        FLASK_APP=server.py FLASK_ENV=development flask run --port 8000
 """
 
-import glob
 import os
 
 from flask import Flask
 from flask import request
 
+from lasp_sdtp.database.database import FileMetadata, session
+
 app = Flask(__name__)
 
 FILESYSTEM_PATH = '../test_filesystem/'
 
+
 @app.route('/files', methods=['GET'])
 def get_fieldlist():
 
-	# Parse paramters from the request
-	stream = request.args.get('stream', default=None, type=str)
-	shortname = request.args.get('ShortName', default=None, type=str)
+    # Parse paramters from the request
+    stream = request.args.get('stream', default='prod', type=str)
+    shortname = request.args.get('ShortName', default='all', type=str)
 
-	# Determine which files to return based on parameters
-	# Currently the files are gathered from a local filesystem
-	# Eventually these may be retrieved via a database query
-	if shortname:
-		filepaths = glob.glob(os.path.join(FILESYSTEM_PATH, shortname, '*'))
-	else:
-		filepaths = glob.glob(os.path.join(FILESYSTEM_PATH, '*'))
+    # Determine which files to return based on parameters
+    if shortname == 'all':
+        data = session.query(FileMetadata).all()
+    else:
+        data = session.query(FileMetadata).filter(FileMetadata.shortname == shortname).all()
+    data = [item.__dict__ for item in data]
+    for item in data:
+        del item['_sa_instance_state']
 
-	# Construct the response
-	# Currently a hard-coded response is given that matches the SDTP protocol
-	# Eventually these may be constructed based on models provided in models.py
-	response = {
-		"files": [
-		{
-	    	"fileid": 1342,
-	    	"name": "tsis2_L1_20220412.zip",
-	    	"checksum": "sha256:f4c96f1f144f083485e8a4ea490cb605a7d0f2ffb7a11ec48e97a9e1631aa079",
-	    	"size": 5678,
-	   		"expires": "2022-12-31",
-	    	"tags": {
-	      		"stream": "prod",
-	      		"ShortName": "TSIS2_L1",
-	      		"Version": "001"
-	      	}
-	    },
-		{
-	    	"fileid": 1355,
-	    	"name": "tsis2_L1_20220413.zip",
-	    	"checksum": "sha256:ca7316a6bdba23870508ae72c53872bfc0a87520cbe3a88679130a81f400d5ae",
-	    	"size": 15,
-	   		"expires": "2022-12-31",
-	    	"tags": {
-	      		"stream": "prod",
-	      		"ShortName": "TSIS2_L1",
-	      		"Version": "001"
-	      	}
-	    }]	      	
-  	}
-	response['status'] = 200
-	
-	return response
+    # Construct the response
+    # Currently the response doesn't quite match the SDTP
+    # Eventually these may be constructed based on models provided in models.py
+    response = {'files': data, 'status': 200}
+
+    return response
 
 
 @app.route('/files/<fileid>', methods=['GET'])
-def get_files(file_id):
-	pass
+def get_files(fileid):
+
+    # Get the metadata for the file of interest
+    data = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
+    data = data[0].__dict__
+
+    # Determine where the file exists in the filesystem
+    filepath = os.path.join(FILESYSTEM_PATH, data['shortname'], data['name'])
+
+    # Get the file contents
+    with open(filepath, 'r') as f:
+        contents = f.readlines()
+
+    response = {'contents': contents, 'stauts': 200}
+
+    return response
 
 
 @app.route('/register', methods=['PUT'])
 def register():
-	pass
+    pass
+
 
 @app.route('/files/<fileid>', methods=['DELETE'])
-def delete_file(file_id):
-	pass
+def delete_file(fileid):
+
+    # Get the metadata for the file of interest
+    data = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
+    data = data[0].__dict__
+
+    # Determine where the file exists in the filesystem
+    filepath = os.path.join(FILESYSTEM_PATH, data['shortname'], data['name'])
+
+    # Check to see if the file is in the queue
+    # If not, delete the file
+
 
 @app.route('/')
 def home():
-	pass
+
+    # Return a HTML template that describes how to use the interface?
+    pass
+
 
 if __name__ == '__main__':
 
-	app.run(host='0.0.0.0', port='8000')
+    app.run(host='0.0.0.0', port='8000')
