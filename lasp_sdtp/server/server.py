@@ -20,11 +20,11 @@ from lasp_sdtp.database.database import FileMetadata, session
 
 app = Flask(__name__)
 
-FILESYSTEM_PATH = '../test_filesystem/'
+FILESYSTEM_PATH = '~/Desktop/test_filesystem/'
 
 
 @app.route('/files', methods=['GET'])
-def get_fieldlist():
+def get_filelist():
 
     # Parse paramters from the request
     stream = request.args.get('stream', default='prod', type=str)
@@ -61,14 +61,16 @@ def get_files(fileid):
     with open(filepath, 'r') as f:
         contents = f.readlines()
 
-    response = {'contents': contents, 'stauts': 200}
+    response = {'contents': contents, 'status': 200}
 
     return response
 
 
 @app.route('/register', methods=['PUT'])
 def register():
-    pass
+    
+    response = {'status': 200}
+    return response
 
 
 @app.route('/files/<fileid>', methods=['DELETE'])
@@ -81,8 +83,12 @@ def delete_file(fileid):
     # Determine where the file exists in the filesystem
     filepath = os.path.join(FILESYSTEM_PATH, data['shortname'], data['name'])
 
-    # Check to see if the file is in the queue
-    # If not, delete the file
+    # # Check to see if the file is in the queue
+    # # If not, delete the file
+
+    response = {"File to delete": filepath, "Status": 200}
+
+    return response
 
 
 @app.route('/')

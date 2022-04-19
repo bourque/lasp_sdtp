@@ -41,6 +41,10 @@ Use
         results = session.query(SomeTable).all()
 """
 
+import glob
+import os
+import random
+import string
 import sys
 
 from sqlalchemy import Column
@@ -53,6 +57,8 @@ from sqlalchemy import Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+
+HOME_DIR = os.path.expanduser('~')
 
 def load_connection():
     """Return ``session``, ``base``, ``engine``, and ``metadata`` objects for
@@ -76,7 +82,7 @@ def load_connection():
         The connection metadata
     """
 
-    connection_string = 'sqlite://///Users/mabo8927/Desktop/lasp_sdtp_db.db'
+    connection_string = f'sqlite://///{HOME_DIR}/Desktop/lasp_sdtp_db.db'
     engine = create_engine(connection_string, echo=True)
     base = declarative_base(engine)
     Session = sessionmaker(bind=engine)
@@ -107,55 +113,37 @@ class FileMetadata(base):
     version = Column(String, nullable=False)
 
 
+def _get_shortname(filename):
+    """
+    """
+
+    # Need to implement this
+    return 'foo'
+
+
 def insert_test_data():
     """
     """
 
     table = Table('file_metadata', base.metadata, autoload=True)
-    data = [
-        {"fileid": 1234,
-         "name": "tsis2_L1_20220413.zip",
-         "checksum": "sha256:ca7316a6bdba23870508ae72c53872bfc0a87520cbe3a88679130a81f400d5ae",
-         "size": 1,
-         "expires": "2022-12-31",
-         "stream": "prod",
-         "shortname": "TSIS2_L1",
-         "version": "001"},
-        {"fileid": 5678,
-         "name": "tsis2_L1_20220414.zip",
-         "checksum": "sha256:3sesc1w9clz6amp42jryfybwtvoq9uk7gscf99o6zum6jsqfgr26x4cve52lk8ia",
-         "size": 10,
-         "expires": "2022-12-31",
-         "stream": "prod",
-         "shortname": "TSIS2_L1",
-         "version": "001"},
-        {"fileid": 9012,
-         "name": "tsis2_L1_20220415.zip",
-         "checksum": "sha256:cngw4694ii4gedgxkfgybvngevyc4dc4j9t2ewngyo2s2kcz8aq0935r07eazjxe",
-         "size": 100,
-         "expires": "2022-12-31",
-         "stream": "prod",
-         "shortname": "TSIS2_L1",
-         "version": "001"},
-        {"fileid": 3456,
-         "name": "tsis2_tim_L2_v01_20220416.zip",
-         "checksum": "sha256:dfl0lgwpjl0lt5hw0rljpa5ybvqbsq0du4ebhauos9qsisuy339ss21ovyjcdwh1",
-         "size": 1000,
-         "expires": "2023-01-01",
-         "stream": "prod",
-         "shortname": "TSIS2_TIM_L2",
-         "version": "001"},
-        {"fileid": 7890,
-         "name": "tsis2_tim_L2_v01_20220417.zip",
-         "checksum": "sha256:97r21sfc81yvfbo35s8fksouvkjjly3z445xql5cdjg0snrc1ukgaayq53x5ciro",
-         "size": 10000,
-         "expires": "2023-01-01",
-         "stream": "prod",
-         "shortname": "TSIS2_TIM_L2",
-         "version": "001"}
-    ]
+    test_filesystem = f'{HOME_DIR}/Desktop/test_filesystem/'
+    test_files = glob.glob(os.path.join(test_filesystem, '*'))
 
-    table.insert().execute(data)
+    data_to_insert = []
+    for i, test_file in enumerate(test_files):
+        data = {
+            'fileid': i + 1,
+            'name': os.path.basename(test_file),
+            'checksum': ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(64)),
+            'size': os.path.getsize(test_file),
+            'expires': '2022-12-31',
+            'stream': 'prod',
+            'shortname': _get_shortname(os.path.basename(test_file)),
+            'version': '001'
+        }
+        data_to_insert.append(data)
+
+    table.insert().execute(data_to_insert)
 
 
 if __name__ == '__main__':
