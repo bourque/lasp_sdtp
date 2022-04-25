@@ -83,7 +83,7 @@ def load_connection():
     """
 
     connection_string = f'sqlite://///{HOME_DIR}/Desktop/lasp_sdtp_db.db'
-    engine = create_engine(connection_string, echo=True)
+    engine = create_engine(connection_string, echo=False)
     base = declarative_base(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
@@ -117,8 +117,28 @@ def _get_shortname(filename):
     """
     """
 
-    # Need to implement this
-    return 'foo'
+    shortname_mapping = {
+        'tsis2_L1': 'TSIS2_L1',
+        'tsis2_sim_cal': 'TSIS2_SIM_CAL',
+        'tsis2_tim_cal': 'TSIS2_TIM_CAL',
+        'tsis2_sim_L2': 'TSIS2_SIM_L2',
+        'tsis2_tim_L2': 'TSIS2_TIM_L2',
+        'tsis2_sc_L2': 'TSIS_SC_L2',
+        'tsis2_ssi_L3_c12h': 'TSIS2_SSI_L3_12HR',
+        'tsis2_ssi_L3_c24h': 'TSIS2_SSI_L3_24HR',
+        'tsis2_tsi_L3_c06h': 'TSIS2_TSI_L3_06HR',
+        'tsis2_tsi_L3_c24h': 'TSIS2_TSI_L3_24HR'
+    }
+
+    for item in shortname_mapping:
+        if filename.startswith(item):
+            shortname = shortname_mapping[item]
+            if filename.endswith('.txt'):
+                shortname += '_TXT'
+            elif filename.endswith('.nc'):
+                shortname += '_NC'
+    
+    return shortname
 
 
 def insert_test_data():

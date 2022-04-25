@@ -16,12 +16,19 @@ import os
 from flask import Flask
 from flask import request
 
-from lasp_sdtp.database.database import FileMetadata, session
+from lasp_sdtp.database.database_interface import FileMetadata, session
 
 app = Flask(__name__)
 
-FILESYSTEM_PATH = '~/Desktop/test_filesystem/'
+HOME_DIR = os.path.expanduser('~')
+FILESYSTEM_PATH = f'{HOME_DIR}/Desktop/test_filesystem/'
 
+
+def create_app():
+    """
+    """
+
+    return app
 
 @app.route('/files', methods=['GET'])
 def get_filelist():
@@ -48,14 +55,14 @@ def get_filelist():
 
 
 @app.route('/files/<fileid>', methods=['GET'])
-def get_files(fileid):
+def get_file(fileid):
 
     # Get the metadata for the file of interest
     data = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
     data = data[0].__dict__
 
     # Determine where the file exists in the filesystem
-    filepath = os.path.join(FILESYSTEM_PATH, data['shortname'], data['name'])
+    filepath = os.path.join(FILESYSTEM_PATH, data['name'])
 
     # Get the file contents
     with open(filepath, 'r') as f:
