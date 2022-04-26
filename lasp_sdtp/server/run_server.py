@@ -1,4 +1,4 @@
-"""The main module for running the last_sdtp flask application
+"""The main module for running the last_sdtp flask application.
 
 Authors
 -------
@@ -11,27 +11,36 @@ Use
         FLASK_APP=server.py FLASK_ENV=development flask run --port 8000
 """
 
+import datetime
 import os
+import shutil
 
-from flask import Flask
-from flask import request
+from flask import Flask, request
+from sqlalchemy import Table
 
-from lasp_sdtp.database.database_interface import FileMetadata, session
+from lasp_sdtp.database.database_interface import base, engine, FileMetadata, FileQueue, session
 
 app = Flask(__name__)
 
 HOME_DIR = os.path.expanduser('~')
 FILESYSTEM_PATH = f'{HOME_DIR}/Desktop/test_filesystem/'
+SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
 
 
-def create_app():
-    """
-    """
-
+def get_app():
+    """Return an instance of the flask app (mostly for testing purposes)"""
     return app
+
 
 @app.route('/files', methods=['GET'])
 def get_filelist():
+    """Return a list of files available in the filesystem.
+
+    Returns
+    -------
+    response : dict
+        The response object containing approriate headers and content.
+    """
 
     # Parse paramters from the request
     stream = request.args.get('stream', default='prod', type=str)
@@ -56,50 +65,101 @@ def get_filelist():
 
 @app.route('/files/<fileid>', methods=['GET'])
 def get_file(fileid):
+    """Return the contents of a given file.
+
+    Returns
+    -------
+    response : dict
+        The response object containing approriate headers and content.
+    """
 
     # Get the metadata for the file of interest
-    data = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
-    data = data[0].__dict__
+    file_metadata = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
+    file_metadata = file_metadata[0].__dict__
 
     # Determine where the file exists in the filesystem
-    filepath = os.path.join(FILESYSTEM_PATH, data['name'])
+    filepath = os.path.join(FILESYSTEM_PATH, file_metadata['name'])
+
+    # Copy the file to the queue
+    dst = os.path.join(SUBSCRIBER_QUEUE, os.path.basename(filepath))
+    shutil.copyfile(filepath, dst)
+
+    # Add a database record for the file in the queue
+    entry_date = datetime.datetime.today()
+    expiration_date = entry_date + datetime.timedelta(days=180)
+    table = Table('file_queue', base.metadata, autoload=True)
+    data_to_insert = [{'subscriber_name': 'GES DISC',
+                       'fileid': fileid,
+                       'entry_date': entry_date.strftime('%Y-%m-%d'),
+                       'expires': expiration_date.strftime('%Y-%m-%d')}]
+    table.insert().execute(data_to_insert)
 
     # Get the file contents
     with open(filepath, 'r') as f:
         contents = f.readlines()
 
-    response = {'contents': contents, 'status': 200}
+    # Build the response
+    response = {'filename': file_metadata['name'], 'contents': contents, 'status': 200}
 
     return response
 
 
 @app.route('/register', methods=['PUT'])
 def register():
-    
+    """Register a subscriber.
+
+    Returns
+    -------
+    response : dict
+        The response object containing approriate headers and content.
+    """
+
+    # Create a queue space on filesystem
+
     response = {'status': 200}
     return response
 
 
 @app.route('/files/<fileid>', methods=['DELETE'])
 def delete_file(fileid):
+    """Delete a given file from the queue, if applicable.
+
+    Returns
+    -------
+    response : dict
+        The response object containing approriate headers and content.
+    """
 
     # Get the metadata for the file of interest
-    data = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
-    data = data[0].__dict__
+    file_metadata = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
+    file_metadata = file_metadata[0].__dict__
 
-    # Determine where the file exists in the filesystem
-    filepath = os.path.join(FILESYSTEM_PATH, data['shortname'], data['name'])
+    # Determine where the file exists in the queue
+    filepath = os.path.join(SUBSCRIBER_QUEUE, file_metadata['name'])
 
-    # # Check to see if the file is in the queue
-    # # If not, delete the file
+    # Check to see if the file is in the queue for another subscriber
+    queue_data = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
+    queue_data = [item.__dict__ for item in queue_data]
+    file_needed = False
+    for entry in queue_data:
+        if entry['subscriber_name'] != 'GES DISC':
+            file_needed = True
 
-    response = {"File to delete": filepath, "Status": 200}
+    # If not, delete the file from the queue
+    if not file_needed:
+
+        os.remove(filepath)
+
+        # Remove entry from database
+
+    response = {'message': 'Success but no other response necessary', 'status': 204}
 
     return response
 
 
 @app.route('/')
 def home():
+    """View for the homepage"""
 
     # Return a HTML template that describes how to use the interface?
     pass

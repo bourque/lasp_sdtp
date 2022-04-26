@@ -54,11 +54,13 @@ from sqlalchemy import Integer
 from sqlalchemy import MetaData
 from sqlalchemy import String
 from sqlalchemy import Table
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 
 HOME_DIR = os.path.expanduser('~')
+
 
 def load_connection():
     """Return ``session``, ``base``, ``engine``, and ``metadata`` objects for
@@ -99,7 +101,6 @@ session, base, engine, meta = load_connection()
 class FileMetadata(base):
     """ORM for the ``file_metadata`` table"""
 
-    # Name the table
     __tablename__ = 'file_metadata'
 
     # Define the columns
@@ -113,8 +114,46 @@ class FileMetadata(base):
     version = Column(String, nullable=False)
 
 
+class FileQueue(base):
+    """ORM for the ``file_queue`` table"""
+
+    __tablename__ = 'file_queue'
+    __table_args__ = (UniqueConstraint('queueid', 'subscriber_name', 'fileid',
+                                       name='file_queue_uc'),)
+
+    # Define the columns
+    queueid = Column(Integer, primary_key=True, nullable=False)
+    subscriber_name = Column(String, nullable=False)
+    fileid = Column(Integer, nullable=False)
+    entry_date = Column(String, nullable=False)
+    expires = Column(String, nullable=False)
+
+# class TransactionLog(base):
+#     """ORM for the ``transaction_log`` table"""
+
+#
+#     __tablename__ = 'transaction_log'
+
+#     # Define the columns
+#     transaction_id
+#     subscriber_id
+#     provider_id
+#     start_time
+#     end_time
+
+
 def _get_shortname(filename):
-    """
+    """Return the appropriate ``ShortName`` for the given filename.
+
+    Parameters
+    ----------
+    filename : str
+        The filename of interest (e.g. ``tsis2_tim_L2_v01_20220422.zip``)
+
+    Returns
+    -------
+    shortname : str
+        The ``ShortName`` that matches the given filename (e.g. ``TSIS2_TIM_L2``)
     """
 
     shortname_mapping = {
@@ -137,12 +176,13 @@ def _get_shortname(filename):
                 shortname += '_TXT'
             elif filename.endswith('.nc'):
                 shortname += '_NC'
-    
+
     return shortname
 
 
 def insert_test_data():
-    """
+    """Insert test data into the test database. The data that are insterted is
+    based on which files exist in the ``test_filesystem``
     """
 
     table = Table('file_metadata', base.metadata, autoload=True)
