@@ -36,11 +36,11 @@ def app():
     app.config.update({'TESTING': True})
 
     # Clear out test database
-    base.metadata.drop_all()
-    base.metadata.create_all(engine)
+    #base.metadata.drop_all()
+    #base.metadata.create_all(engine)
 
     # Add testing data to test database
-    insert_test_data()
+    #insert_test_data()
 
     yield app
 
@@ -62,7 +62,7 @@ def client(app):
 def test_db_connection(client):
     """Tests that the test database can be connected to"""
 
-    assert os.path.basename(str(session.bind.url)) == 'lasp_sdtp_db.db'
+    assert 'oracle://' in str(session.bind.url)
 
 
 def test_get_filelist(client):
@@ -97,6 +97,8 @@ def test_get_file(client):
 
     # Check if the file is in the queue
     assert os.path.exists(os.path.join(SUBSCRIBER_QUEUE, data['filename']))
+
+    # Check that there is a database entry for the file in the queue
 
     # Make sure the response headers are correct
 

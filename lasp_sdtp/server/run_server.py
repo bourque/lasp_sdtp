@@ -87,11 +87,11 @@ def get_file(fileid):
     # Add a database record for the file in the queue
     entry_date = datetime.datetime.today()
     expiration_date = entry_date + datetime.timedelta(days=180)
-    table = Table('file_queue', base.metadata, autoload=True)
+    table = Table('file_queue', base.metadata)
     data_to_insert = [{'subscriber_name': 'GES DISC',
                        'fileid': fileid,
-                       'entry_date': entry_date.strftime('%Y-%m-%d'),
-                       'expires': expiration_date.strftime('%Y-%m-%d')}]
+                       'entry_date': str(entry_date.strftime('%Y-%m-%d')),
+                       'expires': str(expiration_date.strftime('%Y-%m-%d'))}]
     table.insert().execute(data_to_insert)
 
     # Get the file contents

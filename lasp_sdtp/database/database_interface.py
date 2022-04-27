@@ -52,11 +52,14 @@ from sqlalchemy import create_engine
 from sqlalchemy import Float
 from sqlalchemy import Integer
 from sqlalchemy import MetaData
+from sqlalchemy import Sequence
 from sqlalchemy import String
 from sqlalchemy import Table
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+
+from lasp_sdtp.config import config
 
 
 HOME_DIR = os.path.expanduser('~')
@@ -84,7 +87,7 @@ def load_connection():
         The connection metadata
     """
 
-    connection_string = f'sqlite://///{HOME_DIR}/Desktop/lasp_sdtp_db.db'
+    connection_string = config['connection_string']
     engine = create_engine(connection_string, echo=False)
     base = declarative_base(engine)
     Session = sessionmaker(bind=engine)
@@ -102,31 +105,32 @@ class FileMetadata(base):
     """ORM for the ``file_metadata`` table"""
 
     __tablename__ = 'file_metadata'
+    id_seq = Sequence('id_seq')
 
     # Define the columns
-    fileid = Column(Integer, primary_key=True, nullable=False)
-    name = Column(String, unique=True, nullable=False)
-    checksum = Column(String, unique=True, nullable=False)
+    fileid = Column(Integer, id_seq, server_default=id_seq.next_value(), primary_key=True)
+    name = Column(String(255), unique=True, nullable=False)
+    checksum = Column(String(255), unique=True, nullable=False)
     size = Column(Float, nullable=False)
-    expires = Column(String, nullable=False)
-    stream = Column(String, nullable=False)
-    shortname = Column(String, nullable=False)
-    version = Column(String, nullable=False)
+    expires = Column(String(10), nullable=False)
+    stream = Column(String(255), nullable=False)
+    shortname = Column(String(255), nullable=False)
+    version = Column(String(3), nullable=False)
 
 
 class FileQueue(base):
     """ORM for the ``file_queue`` table"""
 
     __tablename__ = 'file_queue'
-    __table_args__ = (UniqueConstraint('queueid', 'subscriber_name', 'fileid',
-                                       name='file_queue_uc'),)
+    __table_args__ = (UniqueConstraint('queueid', 'subscriber_name', 'fileid', name='file_queue_uc'),)
+    #id_seq = Sequence('id_seq')
 
     # Define the columns
-    queueid = Column(Integer, primary_key=True, nullable=False)
-    subscriber_name = Column(String, nullable=False)
+    queueid = Column(Integer, Sequence('id_seq'), primary_key=True)
+    subscriber_name = Column(String(255), nullable=False)
     fileid = Column(Integer, nullable=False)
-    entry_date = Column(String, nullable=False)
-    expires = Column(String, nullable=False)
+    entry_date = Column(String(10), nullable=False)
+    expires = Column(String(10), nullable=False)
 
 # class TransactionLog(base):
 #     """ORM for the ``transaction_log`` table"""
@@ -185,7 +189,7 @@ def insert_test_data():
     based on which files exist in the ``test_filesystem``
     """
 
-    table = Table('file_metadata', base.metadata, autoload=True)
+    table = Table('file_metadata', base.metadata)
     test_filesystem = f'{HOME_DIR}/Desktop/test_filesystem/'
     test_files = glob.glob(os.path.join(test_filesystem, '*'))
 
