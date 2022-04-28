@@ -150,12 +150,6 @@ def client(app):
     return client
 
 
-def test_db_connection(client):
-    """Tests that the test database can be connected to"""
-
-    assert 'oracle://' in str(session.bind.url)
-
-
 def test_get_filelist(client):
     """Tests that the ``GET /files`` request works as expected"""
 
