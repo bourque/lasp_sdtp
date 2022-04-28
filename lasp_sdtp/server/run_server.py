@@ -18,6 +18,7 @@ import shutil
 from flask import Flask, request
 from sqlalchemy import Table
 
+from lasp_sdtp.config import config
 from lasp_sdtp.database.database_interface import base, engine, FileMetadata, FileQueue, session
 
 app = Flask(__name__)
@@ -86,7 +87,7 @@ def get_file(fileid):
 
     # Add a database record for the file in the queue
     entry_date = datetime.datetime.today()
-    expiration_date = entry_date + datetime.timedelta(days=180)
+    expiration_date = entry_date + datetime.timedelta(days=config['expiration_period'])
     table = Table('file_queue', base.metadata)
     data_to_insert = [{'subscriber_name': 'GES DISC',
                        'fileid': fileid,
@@ -167,4 +168,4 @@ def home():
 
 if __name__ == '__main__':
 
-    app.run(host='0.0.0.0', port='8000')
+    app.run(host=config['endpoint'], port='8000')

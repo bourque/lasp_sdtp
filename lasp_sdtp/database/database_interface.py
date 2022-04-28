@@ -50,6 +50,7 @@ import sys
 from sqlalchemy import Column
 from sqlalchemy import create_engine
 from sqlalchemy import Float
+from sqlalchemy import Identity
 from sqlalchemy import Integer
 from sqlalchemy import MetaData
 from sqlalchemy import Sequence
@@ -110,7 +111,7 @@ class FileMetadata(base):
     # Define the columns
     fileid = Column(Integer, id_seq, server_default=id_seq.next_value(), primary_key=True)
     name = Column(String(255), unique=True, nullable=False)
-    checksum = Column(String(255), unique=True, nullable=False)
+    checksum = Column(String(71), unique=True, nullable=False)
     size = Column(Float, nullable=False)
     expires = Column(String(10), nullable=False)
     stream = Column(String(255), nullable=False)
@@ -126,7 +127,7 @@ class FileQueue(base):
     #id_seq = Sequence('id_seq')
 
     # Define the columns
-    queueid = Column(Integer, Sequence('id_seq'), primary_key=True)
+    queueid = Column(Integer, Identity(start=1), primary_key=True)
     subscriber_name = Column(String(255), nullable=False)
     fileid = Column(Integer, nullable=False)
     entry_date = Column(String(10), nullable=False)
@@ -144,6 +145,23 @@ class FileQueue(base):
 #     provider_id
 #     start_time
 #     end_time
+
+
+def _get_checksum():
+    """Return a randomly generated checksum
+
+    Returns
+    -------
+    checksum : str
+        A randomly generated checksum based on the ``checksum_type`` given in
+        the system configuration
+    """
+
+    checksum_type = config['checksum_type']
+    checksum_string = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(64))
+    checksum = f'{checksum_type}:{checksum_string}'
+
+    return checksum
 
 
 def _get_shortname(filename):
@@ -198,7 +216,7 @@ def insert_test_data():
         data = {
             'fileid': i + 1,
             'name': os.path.basename(test_file),
-            'checksum': ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(64)),
+            'checksum': _get_checksum(),
             'size': os.path.getsize(test_file),
             'expires': '2022-12-31',
             'stream': 'prod',
