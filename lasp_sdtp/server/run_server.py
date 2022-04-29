@@ -148,13 +148,26 @@ def delete_file(fileid):
 
     # If not, delete the file from the queue
     if not file_needed:
-
         os.remove(filepath)
 
         # Remove entry from database
+        table = Table('file_queue', base.metadata)
+        table.delete().where(FileQueue.fileid == fileid).execute()
 
     response = {'message': 'Success but no other response necessary', 'status': 204}
 
+    return response
+
+@app.route('/files/<fileid_start>-<fileid_end>', methods=['DELETE'])
+def delete_files(fileid_start, fileid_end):
+    """
+    """
+
+    fileids = [fileid for fileid in range(int(fileid_start), int(fileid_end))]
+    for fileid in fileids:
+        delete_file(fileid)
+
+    response = {'status': 204}
     return response
 
 

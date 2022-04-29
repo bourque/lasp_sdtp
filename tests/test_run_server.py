@@ -115,6 +115,7 @@ def _insert_test_data():
     # Insert data into database
     table.insert().execute(data_to_insert)
 
+_insert_test_data()
 
 @pytest.fixture()
 def app():
@@ -129,9 +130,6 @@ def app():
 
     app = get_app()
     app.config.update({'TESTING': True})
-
-    # Add testing data to test database
-    _insert_test_data()
 
     yield app
 
@@ -188,6 +186,9 @@ def test_get_file(client):
     assert os.path.exists(os.path.join(SUBSCRIBER_QUEUE, data['filename']))
 
     # Check that there is a database entry for the file in the queue
+    results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
+    assert len(results) == 1  # There should only be one db entry
+    assert results[0].__dict__['fileid'] == int(fileid)
 
     # Make sure the response headers are correct
 
@@ -199,8 +200,13 @@ def test_delete_file(client):
     file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
     fileid = str(file_metadata[0].__dict__['fileid'])
 
+    # Delete the file
     response = client.delete(f'files/{fileid}')
     data = json.loads(response.data)
+
+    # Check that the database entry was removed
+    results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
+    assert len(results) == 0
 
     # Make sure the response status is 204
     assert data['status'] == 204
@@ -209,7 +215,22 @@ def test_delete_file(client):
 def test_delete_files(client):
     """Tests that the ``DELETE /files/<fileid_start>-<fileid_end>`` request
     works as expected"""
-    pass
+    
+    # Get a handful of files to test
+    file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
+    fileid_start = file_metadata[0].__dict__['fileid']
+    fileid_end = fileid_start + 5
+
+    fileids = [fileid for fileid in range(fileid_start, fileid_end)]
+    for fileid in fileids:
+        
+        # Get the file
+        print('here')
+        print(fileid)
+        client.get(f'/files/{str(fileid)}')
+
+    response = client.delete(f'/files/{fileid_start}-{fileid_end}')
+    print(response.data)
 
 
 def test_register(client):
