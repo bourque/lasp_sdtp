@@ -220,17 +220,21 @@ def test_delete_files(client):
     file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
     fileid_start = file_metadata[0].__dict__['fileid']
     fileid_end = fileid_start + 5
-
     fileids = [fileid for fileid in range(fileid_start, fileid_end)]
     for fileid in fileids:
-        
-        # Get the file
-        print('here')
-        print(fileid)
         client.get(f'/files/{str(fileid)}')
 
+    # Delete the files
     response = client.delete(f'/files/{fileid_start}-{fileid_end}')
-    print(response.data)
+    data = json.loads(response.data)
+
+    # Check that the database entries were removed
+    for fileid in fileids:
+        results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
+        assert len(results) == 0
+
+    # Make sure the response status is 204
+    assert data['status'] == 204
 
 
 def test_register(client):

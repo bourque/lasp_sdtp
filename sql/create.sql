@@ -32,10 +32,11 @@ CREATE SEQUENCE file_queue_seq
 
 CREATE TABLE file_queue (
     queueid NUMBER NOT NULL,
-    subscriber_name VARCHAR2(255) NOT NULL unique,
-    fileid NUMBER NOT NULL unique,
+    subscriber_name VARCHAR2(255) NOT NULL,
+    fileid NUMBER NOT NULL,
     entry_date VARCHAR(10) NOT NULL,
     expires VARCHAR(10) NOT NULL,
+    CONSTRAINT file_queue_uc UNIQUE(subscriber_name, fileid),
     PRIMARY KEY(queueid)
     );
 
