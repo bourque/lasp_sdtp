@@ -19,11 +19,13 @@ import string
 from sqlalchemy import Table
 
 from lasp_sdtp.config import config
-from lasp_sdtp.database.database_interface import base, FileMetadata, FileQueue, session
+from lasp_sdtp.database.database_interface import base, FileMetadata, FileQueue, session, Transactions
 from lasp_sdtp.server.run_server import get_app
 
 HOME_DIR = os.path.expanduser('~')
 SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
+
+# Could utilize decorators to make code more DRY
 
 
 def _get_checksum():
@@ -153,11 +155,15 @@ def test_get_filelist(client):
     """Tests that the ``GET /files`` request works as expected"""
 
     # Send a test request and get the response
-    response = client.get('/files?stream=prod&ShortName=TSIS2_L1')
-    data = json.loads(response.data)
+    request_url = '/files?stream=prod&ShortName=TSIS2_L1'
+    response = client.get(request_url)
+    data = json.loads(response.get_data().decode("utf-8"))
 
     # Make sure the response status is 200
-    assert data['status'] == 200
+    assert response.status_code == 200
+
+    # Make sure the response headers are correct
+    assert 'transactionid' in response.headers
 
     # Check if the returned files are in the filesystem
     test_filesystem = f'{HOME_DIR}/Desktop/test_filesystem/'
@@ -166,7 +172,10 @@ def test_get_filelist(client):
         if os.path.basename(test_file).startswith('tsis2_L1'):
             assert os.path.basename(test_file) in str(data['files'])
 
-    # Make sure the response headers are correct
+    # Check that there is a record in the transactions table
+    results = session.query(Transactions).filter(Transactions.transactionid == response.headers['transactionid']).all()
+    assert len(results) == 1  # There should only be one db entry
+    assert request_url in results[0].__dict__['action']
 
 
 def test_get_file(client):
@@ -177,11 +186,15 @@ def test_get_file(client):
     fileid = str(file_metadata[0].__dict__['fileid'])
 
     # Send a test request and get the response
-    response = client.get(f'/files/{fileid}')
-    data = json.loads(response.data)
+    request_url = f'/files/{fileid}'
+    response = client.get(request_url)
+    data = json.loads(response.get_data().decode("utf-8"))
 
     # Make sure the response status is 200
-    assert data['status'] == 200
+    assert response.status_code == 200
+
+    # Make sure the response headers are correct
+    assert 'transactionid' in response.headers
 
     # Check if the file is in the queue
     assert os.path.exists(os.path.join(SUBSCRIBER_QUEUE, data['filename']))
@@ -191,7 +204,10 @@ def test_get_file(client):
     assert len(results) == 1  # There should only be one db entry
     assert results[0].__dict__['fileid'] == int(fileid)
 
-    # Make sure the response headers are correct
+    # Check that there is a record in the transactions table
+    results = session.query(Transactions).filter(Transactions.transactionid == response.headers['transactionid']).all()
+    assert len(results) == 1  # There should only be one db entry
+    assert request_url in results[0].__dict__['action']
 
 
 def test_delete_file(client):
@@ -202,15 +218,23 @@ def test_delete_file(client):
     fileid = str(file_metadata[0].__dict__['fileid'])
 
     # Delete the file
-    response = client.delete(f'files/{fileid}')
-    data = json.loads(response.data)
+    request_url = f'files/{fileid}'
+    response = client.delete(request_url)
+
+    # Make sure the response status is 204
+    assert response.status_code == 204
+
+    # Make sure the response headers are correct
+    assert 'transactionid' in response.headers
 
     # Check that the database entry was removed
     results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
     assert len(results) == 0
 
-    # Make sure the response status is 204
-    assert data['status'] == 204
+    # Check that there is a record in the transactions table
+    results = session.query(Transactions).filter(Transactions.transactionid == response.headers['transactionid']).all()
+    assert len(results) == 1  # There should only be one db entry
+    assert request_url in results[0].__dict__['action']
 
 
 def test_delete_files(client):
@@ -226,20 +250,25 @@ def test_delete_files(client):
         client.get(f'/files/{str(fileid)}')
 
     # Delete the files
-    response = client.delete(f'/files/{fileid_start}-{fileid_end}')
-    data = json.loads(response.data)
+    request_url = f'/files/{fileid_start}-{fileid_end}'
+    response = client.delete(request_url)
+
+    # Make sure the response status is 204
+    assert response.status_code == 204
 
     # Check that the database entries were removed
     for fileid in fileids:
         results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
         assert len(results) == 0
 
-    # Make sure the response status is 204
-    assert data['status'] == 204
-
 
 def test_register(client):
     """Tests that the ``PUT /register`` request works as expected"""
 
     response = client.put('/register')
-    assert '"status":200' in str(response.data)
+
+    # Make sure the response status is 200
+    assert response.status_code == 200
+
+    # Make sure the response headers are correct
+    assert 'transactionid' in response.headers

@@ -15,7 +15,7 @@ import datetime
 import os
 import shutil
 
-from flask import Flask, request
+from flask import Flask, make_response, request
 from sqlalchemy import Table
 
 from lasp_sdtp.config import config
@@ -45,7 +45,7 @@ def delete_file(fileid):
     """
 
     # Add a transactions database record
-    _update_transactions_table(request, fileid=fileid)
+    transactionid = _update_transactions_table(request, fileid=fileid)
 
     # Get the metadata for the file of interest
     file_metadata = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
@@ -70,7 +70,12 @@ def delete_file(fileid):
         table = Table('file_queue', base.metadata)
         table.delete().where(FileQueue.fileid == fileid).execute()
 
-    response = {'message': 'Success but no other response necessary', 'status': 204}
+    # Construct the response
+    content = {'message': 'Success but no other response necessary'}
+    status = 204
+    response = make_response(content, status)
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['transactionid'] = transactionid
 
     return response
 
@@ -96,7 +101,12 @@ def delete_files(fileid_start, fileid_end):
     for fileid in fileids:
         delete_file(fileid)
 
-    response = {'status': 204}
+    # Construct the response
+    content = {'message': 'Success but no other response necessary'}
+    status = 204
+    response = make_response(content, status)
+    response.headers['Content-Type'] = 'application/json'
+
     return response
 
 
@@ -151,8 +161,12 @@ def get_file(fileid):
     with open(filepath, 'r') as f:
         contents = f.readlines()
 
-    # Build the response
-    response = {'filename': os.path.basename(filepath), 'contents': contents, 'status': 200}
+    # Construct the response
+    content = {'filename': os.path.basename(filepath), 'contents': contents}
+    status = 200
+    response = make_response(content, status)
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['transactionid'] = transactionid
 
     return response
 
@@ -167,7 +181,7 @@ def get_filelist():
         The response object containing approriate headers and content.
     """
 
-    _update_transactions_table(request)
+    transactionid = _update_transactions_table(request)
 
     # Parse paramters from the request
     stream = request.args.get('stream', default='prod', type=str)
@@ -182,7 +196,12 @@ def get_filelist():
     for item in data:
         del item['_sa_instance_state']
 
-    response = {'files': data, 'status': 200}
+    # Construct the response
+    content = {'files': data}
+    status = 200
+    response = make_response(content, status)
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['transactionid'] = transactionid
 
     return response
 
@@ -206,11 +225,17 @@ def register():
     """
 
     # Add a transactions database record
-    _update_transactions_table(request)
+    transactionid = _update_transactions_table(request)
 
     # Create a queue space on filesystem
 
-    response = {'status': 200}
+    # Construct the response
+    content = ''
+    status = 200
+    response = make_response(content, status)
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['transactionid'] = transactionid
+
     return response
 
 
