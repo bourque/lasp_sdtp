@@ -41,8 +41,10 @@ Use
         results = session.query(SomeTable).all()
 """
 
+import datetime
 import os
 
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import create_engine
 from sqlalchemy import Float
@@ -57,6 +59,8 @@ from lasp_sdtp.config import config
 
 
 HOME_DIR = os.path.expanduser('~')
+FILESYSTEM_PATH = f'{HOME_DIR}/Desktop/test_filesystem/'
+SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
 
 
 def load_connection():
@@ -95,6 +99,60 @@ def load_connection():
 session, base, engine, meta = load_connection()
 
 
+def _mark_transaction_complete(transactionid):
+    """
+    """
+
+    end_time = str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    session.query(Transactions).filter(Transactions.transactionid == transactionid).update({'end_time': end_time, 'complete': 1})
+    session.commit()
+
+
+def _update_transactions_table(request, **kwargs):
+    """
+    """
+
+    # For PUT /register
+    if request.method == 'PUT':
+        data_to_insert = Transactions(
+            action=f'{request.method} {request.url}',
+            subscriber_name=config['subscriber_name'],
+            start_time=str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+
+    # For GET /files
+    elif request.method == 'GET' and 'fileid' not in kwargs:
+        data_to_insert = Transactions(
+            action=f'{request.method} {request.url}',
+            subscriber_name=config['subscriber_name'],
+            start_time=str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+
+    # For GET /files/<fileid>
+    elif request.method == 'GET' and 'fileid' in kwargs:
+        data_to_insert = Transactions(
+            action=f'{request.method} {request.url}',
+            subscriber_name=config['subscriber_name'],
+            start_time=str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+            fileid=kwargs['fileid'],
+            source=FILESYSTEM_PATH,
+            destination=SUBSCRIBER_QUEUE)
+
+    # For DELETE /files/<fileid>
+    if request.method == 'DELETE':
+        url = os.path.join(os.path.dirname(request.url), str(kwargs['fileid']))
+        data_to_insert = Transactions(
+            action=f'{request.method} {url}',
+            subscriber_name=config['subscriber_name'],
+            start_time=str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+
+    # Insert the data, and get the transaction id
+    session.add(data_to_insert)
+    session.flush()
+    transactionid = data_to_insert.transactionid
+    session.commit()
+
+    return transactionid
+
+
 class FileMetadata(base):
     """ORM for the ``file_metadata`` table"""
 
@@ -124,15 +182,19 @@ class FileQueue(base):
     entry_date = Column(String(10), nullable=False)
     expires = Column(String(10), nullable=False)
 
-# class TransactionLog(base):
-#     """ORM for the ``transaction_log`` table"""
 
-#
-#     __tablename__ = 'transaction_log'
+class Transactions(base):
+    """ORM for the ``transaction_log`` table"""
 
-#     # Define the columns
-#     transaction_id
-#     subscriber_id
-#     provider_id
-#     start_time
-#     end_time
+    __tablename__ = 'transactions'
+
+    # Define the columns
+    transactionid = Column(Integer, primary_key=True)
+    action = Column(String(255), nullable=False)
+    subscriber_name = Column(String(255), nullable=False)
+    start_time = Column(String(19), nullable=False)
+    fileid = Column(Integer)
+    source = Column(String(255))
+    destination = Column(String(255))
+    end_time = Column(String(19))
+    complete = Column(Boolean)

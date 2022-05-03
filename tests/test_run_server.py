@@ -117,6 +117,7 @@ def _insert_test_data():
 
 _insert_test_data()
 
+
 @pytest.fixture()
 def app():
     """Create an instance of the application to test with.  Also perform any
@@ -215,7 +216,7 @@ def test_delete_file(client):
 def test_delete_files(client):
     """Tests that the ``DELETE /files/<fileid_start>-<fileid_end>`` request
     works as expected"""
-    
+
     # Get a handful of files to test
     file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
     fileid_start = file_metadata[0].__dict__['fileid']

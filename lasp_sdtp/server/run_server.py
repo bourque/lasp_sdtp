@@ -19,7 +19,8 @@ from flask import Flask, request
 from sqlalchemy import Table
 
 from lasp_sdtp.config import config
-from lasp_sdtp.database.database_interface import base, engine, FileMetadata, FileQueue, session
+from lasp_sdtp.database.database_interface import base, FileMetadata, FileQueue, session
+from lasp_sdtp.database.database_interface import _mark_transaction_complete, _update_transactions_table
 
 app = Flask(__name__)
 
@@ -28,108 +29,23 @@ FILESYSTEM_PATH = f'{HOME_DIR}/Desktop/test_filesystem/'
 SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
 
 
-def get_app():
-    """Return an instance of the flask app (mostly for testing purposes)"""
-    return app
-
-
-@app.route('/files', methods=['GET'])
-def get_filelist():
-    """Return a list of files available in the filesystem.
-
-    Returns
-    -------
-    response : dict
-        The response object containing approriate headers and content.
-    """
-
-    # Parse paramters from the request
-    stream = request.args.get('stream', default='prod', type=str)
-    shortname = request.args.get('ShortName', default='all', type=str)
-
-    # Determine which files to return based on parameters
-    if shortname == 'all':
-        data = session.query(FileMetadata).all()
-    else:
-        data = session.query(FileMetadata).filter(FileMetadata.shortname == shortname).all()
-    data = [item.__dict__ for item in data]
-    for item in data:
-        del item['_sa_instance_state']
-
-    # Construct the response
-    # Currently the response doesn't quite match the SDTP
-    # Eventually these may be constructed based on models provided in models.py
-    response = {'files': data, 'status': 200}
-
-    return response
-
-
-@app.route('/files/<fileid>', methods=['GET'])
-def get_file(fileid):
-    """Return the contents of a given file.
-
-    Returns
-    -------
-    response : dict
-        The response object containing approriate headers and content.
-    """
-
-    # Get the metadata for the file of interest
-    file_metadata = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
-    file_metadata = file_metadata[0].__dict__
-
-    # Determine where the file exists in the filesystem
-    filepath = os.path.join(FILESYSTEM_PATH, file_metadata['name'])
-
-    # Copy the file to the queue
-    dst = os.path.join(SUBSCRIBER_QUEUE, os.path.basename(filepath))
-    shutil.copyfile(filepath, dst)
-
-    # Add a database record for the file in the queue
-    entry_date = datetime.datetime.today()
-    expiration_date = entry_date + datetime.timedelta(days=config['expiration_period'])
-    table = Table('file_queue', base.metadata)
-    data_to_insert = [{'subscriber_name': 'GES DISC',
-                       'fileid': fileid,
-                       'entry_date': str(entry_date.strftime('%Y-%m-%d')),
-                       'expires': str(expiration_date.strftime('%Y-%m-%d'))}]
-    table.insert().execute(data_to_insert)
-
-    # Get the file contents
-    with open(filepath, 'r') as f:
-        contents = f.readlines()
-
-    # Build the response
-    response = {'filename': file_metadata['name'], 'contents': contents, 'status': 200}
-
-    return response
-
-
-@app.route('/register', methods=['PUT'])
-def register():
-    """Register a subscriber.
-
-    Returns
-    -------
-    response : dict
-        The response object containing approriate headers and content.
-    """
-
-    # Create a queue space on filesystem
-
-    response = {'status': 200}
-    return response
-
-
 @app.route('/files/<fileid>', methods=['DELETE'])
 def delete_file(fileid):
     """Delete a given file from the queue, if applicable.
 
+    Parameters
+    ----------
+    fileid : int
+        The ``fileid`` of interest.
+
     Returns
     -------
     response : dict
         The response object containing approriate headers and content.
     """
+
+    # Add a transactions database record
+    _update_transactions_table(request, fileid=fileid)
 
     # Get the metadata for the file of interest
     file_metadata = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
@@ -158,9 +74,22 @@ def delete_file(fileid):
 
     return response
 
+
 @app.route('/files/<fileid_start>-<fileid_end>', methods=['DELETE'])
 def delete_files(fileid_start, fileid_end):
-    """
+    """For a range of files, delete those that are no longer needed in the queue
+
+    Parameters
+    ----------
+    fileid_start : int
+        The starting ``fileid`` of interest.
+    fileid_end : int
+        The ending ``fileid`` of interest.
+
+    Returns
+    -------
+    response : dict
+        The response object containing approriate headers and content.
     """
 
     fileids = [fileid for fileid in range(int(fileid_start), int(fileid_end))]
@@ -171,12 +100,118 @@ def delete_files(fileid_start, fileid_end):
     return response
 
 
+def get_app():
+    """Return an instance of the flask app (mostly for testing purposes)"""
+    return app
+
+
+@app.route('/files/<fileid>', methods=['GET'])
+def get_file(fileid):
+    """Return the contents of a given file.
+
+    Parameters
+    ----------
+    fileid : int
+        The ``fileid`` of interest.
+
+    Returns
+    -------
+    response : dict
+        The response object containing approriate headers and content.
+    """
+
+    # Add a transactions database record
+    transactionid = _update_transactions_table(request, fileid=fileid)
+
+    # Get the metadata for the file of interest
+    file_metadata = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
+    file_metadata = file_metadata[0].__dict__
+
+    # Determine where the file exists in the filesystem
+    filepath = os.path.join(FILESYSTEM_PATH, file_metadata['name'])
+
+    # Copy the file to the queue
+    dst = os.path.join(SUBSCRIBER_QUEUE, os.path.basename(filepath))
+    shutil.copyfile(filepath, dst)
+
+    # Add a file queue database record
+    entry_date = datetime.datetime.today()
+    expiration_date = entry_date + datetime.timedelta(days=config['expiration_period'])
+    table = Table('file_queue', base.metadata)
+    data_to_insert = [{'subscriber_name': 'GES DISC',
+                       'fileid': fileid,
+                       'entry_date': str(entry_date.strftime('%Y-%m-%d')),
+                       'expires': str(expiration_date.strftime('%Y-%m-%d'))}]
+    table.insert().execute(data_to_insert)
+
+    # Update transactions table with completion info
+    _mark_transaction_complete(transactionid=transactionid)
+
+    # Get the file contents
+    with open(filepath, 'r') as f:
+        contents = f.readlines()
+
+    # Build the response
+    response = {'filename': os.path.basename(filepath), 'contents': contents, 'status': 200}
+
+    return response
+
+
+@app.route('/files', methods=['GET'])
+def get_filelist():
+    """Return a list of files available in the filesystem.
+
+    Returns
+    -------
+    response : dict
+        The response object containing approriate headers and content.
+    """
+
+    _update_transactions_table(request)
+
+    # Parse paramters from the request
+    stream = request.args.get('stream', default='prod', type=str)
+    shortname = request.args.get('ShortName', default='all', type=str)
+
+    # Determine which files to return based on parameters
+    if shortname == 'all':
+        data = session.query(FileMetadata).all()
+    else:
+        data = session.query(FileMetadata).filter(FileMetadata.shortname == shortname).all()
+    data = [item.__dict__ for item in data]
+    for item in data:
+        del item['_sa_instance_state']
+
+    response = {'files': data, 'status': 200}
+
+    return response
+
+
 @app.route('/')
 def home():
     """View for the homepage"""
 
     # Return a HTML template that describes how to use the interface?
     pass
+
+
+@app.route('/register', methods=['PUT'])
+def register():
+    """Register a subscriber.
+
+    Returns
+    -------
+    response : dict
+        The response object containing approriate headers and content.
+    """
+
+    # Add a transactions database record
+    _update_transactions_table(request)
+
+    # Create a queue space on filesystem
+
+    response = {'status': 200}
+    return response
 
 
 if __name__ == '__main__':

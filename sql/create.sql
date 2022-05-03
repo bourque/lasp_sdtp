@@ -33,12 +33,12 @@ CREATE SEQUENCE file_queue_seq
 CREATE TABLE file_queue (
     queueid NUMBER NOT NULL,
     subscriber_name VARCHAR2(255) NOT NULL,
-    fileid NUMBER NOT NULL,
+    fileid NUMBER(15) NOT NULL,
     entry_date VARCHAR(10) NOT NULL,
     expires VARCHAR(10) NOT NULL,
     CONSTRAINT file_queue_uc UNIQUE(subscriber_name, fileid),
     PRIMARY KEY(queueid)
-    );
+);
 
 CREATE OR REPLACE TRIGGER file_queue_trg
 BEFORE INSERT ON "FILE_QUEUE"
@@ -46,5 +46,33 @@ FOR EACH ROW
 BEGIN
     IF :new.queueid IS NULL THEN
         SELECT file_queue_seq.nextval INTO :new.queueid FROM DUAL;
+    END IF;
+END;
+
+
+CREATE SEQUENCE transactions_seq
+    INCREMENT BY 1 START WITH 1
+    MINVALUE 1 MAXVALUE 9999999999999999999999999999
+    NOCYCLE CACHE 2;
+
+CREATE TABLE transactions (
+    transactionid NUMBER NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    subscriber_name VARCHAR2(255) NOT NULL,
+    start_time VARCHAR(19) NOT NULL,
+    fileid NUMBER(15),
+    source VARCHAR2(255),
+    destination VARCHAR2(255),
+    end_time VARCHAR(19),
+    complete NUMBER(1) CHECK (complete in (0,1)),
+    PRIMARY KEY(transactionid)
+);
+
+CREATE OR REPLACE TRIGGER transactions_trg
+BEFORE INSERT ON "TRANSACTIONS"
+FOR EACH ROW
+BEGIN
+    IF :new.transactionid IS NULL THEN
+        SELECT transactions_seq.nextval INTO :new.transactionid FROM DUAL;
     END IF;
 END;

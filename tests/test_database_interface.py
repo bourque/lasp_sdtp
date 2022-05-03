@@ -40,3 +40,10 @@ def test_fileid_boundary():
     with pytest.raises(Exception) as error:
         table.insert().execute([data])
     assert 'ORA-01438' in str(error.value)  # ORA-01438: value larger than specified precision allowed
+
+
+def test_update_transactions_table():
+    """
+    """
+
+    pass
