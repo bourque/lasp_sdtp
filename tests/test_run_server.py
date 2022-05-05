@@ -13,111 +13,36 @@ import glob
 import json
 import os
 import pytest
-import random
-import string
 
-from sqlalchemy import Table
-
-from lasp_sdtp.config import config
-from lasp_sdtp.database.database_interface import base, FileMetadata, FileQueue, session, Transactions
+from lasp_sdtp.database.database_interface import FileMetadata, FileQueue, insert_test_data, session, Transactions
 from lasp_sdtp.server.run_server import get_app
 
 HOME_DIR = os.path.expanduser('~')
 SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
 
-# Could utilize decorators to make code more DRY
+# Put testing data into the database
+insert_test_data()
 
 
-def _get_checksum():
-    """Return a randomly generated checksum
-
-    Returns
-    -------
-    checksum : str
-        A randomly generated checksum based on the ``checksum_type`` given in
-        the system configuration
-    """
-
-    checksum_type = config['checksum_type']
-    checksum_string = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(64))
-    checksum = f'{checksum_type}:{checksum_string}'
-
-    return checksum
-
-
-def _get_shortname(filename):
-    """Return the appropriate ``ShortName`` for the given filename.
+def _check_transaction(request_url, headers):
+    """Checks that a transaction record was added to the database
 
     Parameters
     ----------
-    filename : str
-        The filename of interest (e.g. ``tsis2_tim_L2_v01_20220422.zip``)
-
-    Returns
-    -------
-    shortname : str
-        The ``ShortName`` that matches the given filename (e.g. ``TSIS2_TIM_L2``)
+    request_url : str
+        The request URL (e.g. ``'/files?stream=prod&ShortName=TSIS2_L1'``)
+    headers : ``werkzeug.datastructures.Headers`` obj
+        The response header object
     """
 
-    shortname_mapping = {
-        'tsis2_L1': 'TSIS2_L1',
-        'tsis2_sim_cal': 'TSIS2_SIM_CAL',
-        'tsis2_tim_cal': 'TSIS2_TIM_CAL',
-        'tsis2_sim_L2': 'TSIS2_SIM_L2',
-        'tsis2_tim_L2': 'TSIS2_TIM_L2',
-        'tsis2_sc_L2': 'TSIS_SC_L2',
-        'tsis2_ssi_L3_c12h': 'TSIS2_SSI_L3_12HR',
-        'tsis2_ssi_L3_c24h': 'TSIS2_SSI_L3_24HR',
-        'tsis2_tsi_L3_c06h': 'TSIS2_TSI_L3_06HR',
-        'tsis2_tsi_L3_c24h': 'TSIS2_TSI_L3_24HR'
-    }
+    print(type(headers))
+    # Make sure the transactionid is in the header
+    assert 'transactionid' in headers
 
-    for item in shortname_mapping:
-        if filename.startswith(item):
-            shortname = shortname_mapping[item]
-            if filename.endswith('.txt'):
-                shortname += '_TXT'
-            elif filename.endswith('.nc'):
-                shortname += '_NC'
-
-    return shortname
-
-
-def _insert_test_data():
-    """Insert test data into the test database. The data that are insterted is
-    based on which files exist in the ``test_filesystem``
-    """
-
-    # Remove any data that already exists
-    session.query(FileMetadata).delete()
-    session.commit()
-    session.query(FileQueue).delete()
-    session.commit()
-
-    table = Table('file_metadata', base.metadata)
-
-    # Locate test files
-    test_filesystem = f'{HOME_DIR}/Desktop/test_filesystem/'
-    test_files = glob.glob(os.path.join(test_filesystem, '*'))
-
-    # Gather metadata to store in database
-    data_to_insert = []
-    for i, test_file in enumerate(test_files):
-        data = {
-            'name': os.path.basename(test_file),
-            'checksum': _get_checksum(),
-            'size': os.path.getsize(test_file),
-            'expires': '2022-12-31',
-            'stream': 'prod',
-            'shortname': _get_shortname(os.path.basename(test_file)),
-            'version': '001'
-        }
-        data_to_insert.append(data)
-
-    # Insert data into database
-    table.insert().execute(data_to_insert)
-
-_insert_test_data()
+    # Check that there is a record in the transactions table
+    results = session.query(Transactions).filter(Transactions.transactionid == headers['transactionid']).all()
+    assert len(results) == 1  # There should only be one db entry
+    assert request_url in results[0].__dict__['action']
 
 
 @pytest.fixture()
@@ -162,9 +87,6 @@ def test_get_filelist(client):
     # Make sure the response status is 200
     assert response.status_code == 200
 
-    # Make sure the response headers are correct
-    assert 'transactionid' in response.headers
-
     # Check if the returned files are in the filesystem
     test_filesystem = f'{HOME_DIR}/Desktop/test_filesystem/'
     test_files = glob.glob(os.path.join(test_filesystem, '*'))
@@ -172,10 +94,7 @@ def test_get_filelist(client):
         if os.path.basename(test_file).startswith('tsis2_L1'):
             assert os.path.basename(test_file) in str(data['files'])
 
-    # Check that there is a record in the transactions table
-    results = session.query(Transactions).filter(Transactions.transactionid == response.headers['transactionid']).all()
-    assert len(results) == 1  # There should only be one db entry
-    assert request_url in results[0].__dict__['action']
+    _check_transaction(request_url, response.headers)
 
 
 def test_get_file(client):
@@ -193,9 +112,6 @@ def test_get_file(client):
     # Make sure the response status is 200
     assert response.status_code == 200
 
-    # Make sure the response headers are correct
-    assert 'transactionid' in response.headers
-
     # Check if the file is in the queue
     assert os.path.exists(os.path.join(SUBSCRIBER_QUEUE, data['filename']))
 
@@ -204,10 +120,7 @@ def test_get_file(client):
     assert len(results) == 1  # There should only be one db entry
     assert results[0].__dict__['fileid'] == int(fileid)
 
-    # Check that there is a record in the transactions table
-    results = session.query(Transactions).filter(Transactions.transactionid == response.headers['transactionid']).all()
-    assert len(results) == 1  # There should only be one db entry
-    assert request_url in results[0].__dict__['action']
+    _check_transaction(request_url, response.headers)
 
 
 def test_delete_file(client):
@@ -224,17 +137,11 @@ def test_delete_file(client):
     # Make sure the response status is 204
     assert response.status_code == 204
 
-    # Make sure the response headers are correct
-    assert 'transactionid' in response.headers
-
     # Check that the database entry was removed
     results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
     assert len(results) == 0
 
-    # Check that there is a record in the transactions table
-    results = session.query(Transactions).filter(Transactions.transactionid == response.headers['transactionid']).all()
-    assert len(results) == 1  # There should only be one db entry
-    assert request_url in results[0].__dict__['action']
+    _check_transaction(request_url, response.headers)
 
 
 def test_delete_files(client):
@@ -265,10 +172,10 @@ def test_delete_files(client):
 def test_register(client):
     """Tests that the ``PUT /register`` request works as expected"""
 
-    response = client.put('/register')
+    request_url = '/register'
+    response = client.put(request_url)
 
     # Make sure the response status is 200
     assert response.status_code == 200
 
-    # Make sure the response headers are correct
-    assert 'transactionid' in response.headers
+    _check_transaction(request_url, response.headers)
