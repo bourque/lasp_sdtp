@@ -50,6 +50,7 @@ import string
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import create_engine
+from sqlalchemy import Enum
 from sqlalchemy import Float
 from sqlalchemy import Integer
 from sqlalchemy import MetaData
@@ -219,8 +220,9 @@ def insert_test_data():
 
     # Remove any data that already exists
     session.query(FileMetadata).delete()
-    session.commit()
     session.query(FileQueue).delete()
+    session.query(Transactions).delete()
+    session.query(Accounts).delete()
     session.commit()
 
     table = Table('file_metadata', base.metadata)
@@ -247,10 +249,24 @@ def insert_test_data():
     table.insert().execute(data_to_insert)
 
 
+class Accounts(base):
+    """ORM for the ``accounts`` table"""
+
+    __tablename__ = 'accounts'
+
+    # Define the columns
+    userid = Column(Integer, primary_key=True)
+    username = Column(String(255), unique=True, nullable=False)
+    role = Column(Enum('admin', 'subscriber', name='role'), nullable=False)
+    registration_date = Column(String(10), nullable=False)
+    registration_expires = Column(String(10))
+
+
 class FileMetadata(base):
     """ORM for the ``file_metadata`` table"""
 
     __tablename__ = 'file_metadata'
+    __table_args__ = (UniqueConstraint('fileid', 'name', 'checksum', name='file_metadata_uc'),)
 
     # Define the columns
     fileid = Column(Integer, primary_key=True)
@@ -278,7 +294,7 @@ class FileQueue(base):
 
 
 class Transactions(base):
-    """ORM for the ``transaction_log`` table"""
+    """ORM for the ``transactions`` table"""
 
     __tablename__ = 'transactions'
 

@@ -227,7 +227,21 @@ def register():
     # Add a transactions database record
     transactionid = _update_transactions_table(request)
 
+    # Add a accounts database record
+    registration_date = datetime.datetime.today()
+    registration_expires = registration_date + datetime.timedelta(days=config['account_expiration_period'])
+    table = Table('accounts', base.metadata)
+    data_to_insert = [{
+        'username': config['username'],
+        'role': 'subscriber',
+        'registration_date': str(registration_date.strftime('%Y-%m-%d')),
+        'registration_expires': str(registration_expires.strftime('%Y-%m-%d'))}]
+    table.insert().execute(data_to_insert)
+
     # Create a queue space on filesystem
+    queue_path = f"{HOME_DIR}/Desktop/{config['username']}_queue/"
+    if not os.path.exists(queue_path):
+        os.mkdir(queue_path)
 
     # Construct the response
     content = ''
@@ -240,5 +254,12 @@ def register():
 
 
 if __name__ == '__main__':
+
+    # Register an admin account
+    data_to_insert = [{
+        'username': 'lasp_admin',
+        'role': 'admin',
+        'registration_date': str(datetime.datetime.today().strftime('%Y-%m-%d'))}]
+    Table('accounts', base.metadata).insert().execute(data_to_insert)
 
     app.run(host=config['endpoint'], port='8000')

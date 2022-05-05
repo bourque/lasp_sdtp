@@ -35,7 +35,6 @@ def _check_transaction(request_url, headers):
         The response header object
     """
 
-    print(type(headers))
     # Make sure the transactionid is in the header
     assert 'transactionid' in headers
 
