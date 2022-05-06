@@ -50,6 +50,7 @@ import string
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import create_engine
+from sqlalchemy import DateTime
 from sqlalchemy import Enum
 from sqlalchemy import Float
 from sqlalchemy import Integer
@@ -163,7 +164,7 @@ def _mark_transaction_complete(transactionid):
     """
     """
 
-    end_time = str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    end_time = datetime.datetime.now()
     session.query(Transactions).filter(Transactions.transactionid == transactionid).update({'end_time': end_time, 'complete': 1})
     session.commit()
 
@@ -176,22 +177,22 @@ def _update_transactions_table(request, **kwargs):
     if request.method == 'PUT':
         data_to_insert = Transactions(
             action=f'{request.method} {request.url}',
-            subscriber_name=config['subscriber_name'],
-            start_time=str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+            username=config['username'],
+            start_time=datetime.datetime.now())
 
     # For GET /files
     elif request.method == 'GET' and 'fileid' not in kwargs:
         data_to_insert = Transactions(
             action=f'{request.method} {request.url}',
-            subscriber_name=config['subscriber_name'],
-            start_time=str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+            username=config['username'],
+            start_time=datetime.datetime.now())
 
     # For GET /files/<fileid>
     elif request.method == 'GET' and 'fileid' in kwargs:
         data_to_insert = Transactions(
             action=f'{request.method} {request.url}',
-            subscriber_name=config['subscriber_name'],
-            start_time=str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+            username=config['username'],
+            start_time=datetime.datetime.now(),
             fileid=kwargs['fileid'],
             source=FILESYSTEM_PATH,
             destination=SUBSCRIBER_QUEUE)
@@ -201,8 +202,8 @@ def _update_transactions_table(request, **kwargs):
         url = os.path.join(os.path.dirname(request.url), str(kwargs['fileid']))
         data_to_insert = Transactions(
             action=f'{request.method} {url}',
-            subscriber_name=config['subscriber_name'],
-            start_time=str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+            username=config['username'],
+            start_time=datetime.datetime.now())
 
     # Insert the data, and get the transaction id
     session.add(data_to_insert)
@@ -238,10 +239,10 @@ def insert_test_data():
             'name': os.path.basename(test_file),
             'checksum': _get_checksum(),
             'size': os.path.getsize(test_file),
-            'expires': '2022-12-31',
+            'expires': datetime.datetime.today() + datetime.timedelta(days=config['expiration_period']),
             'stream': 'prod',
             'shortname': _get_shortname(os.path.basename(test_file)),
-            'version': '001'
+            'version': 'v01'
         }
         data_to_insert.append(data)
 
@@ -258,8 +259,8 @@ class Accounts(base):
     userid = Column(Integer, primary_key=True)
     username = Column(String(255), unique=True, nullable=False)
     role = Column(Enum('admin', 'subscriber', name='role'), nullable=False)
-    registration_date = Column(String(10), nullable=False)
-    registration_expires = Column(String(10))
+    registration_date = Column(DateTime, nullable=False)
+    registration_expires = Column(DateTime)
 
 
 class FileMetadata(base):
@@ -273,7 +274,7 @@ class FileMetadata(base):
     name = Column(String(255), unique=True, nullable=False)
     checksum = Column(String(71), unique=True, nullable=False)
     size = Column(Float, nullable=False)
-    expires = Column(String(10), nullable=False)
+    expires = Column(DateTime, nullable=False)
     stream = Column(String(255), nullable=False)
     shortname = Column(String(255), nullable=False)
     version = Column(String(3), nullable=False)
@@ -283,14 +284,14 @@ class FileQueue(base):
     """ORM for the ``file_queue`` table"""
 
     __tablename__ = 'file_queue'
-    __table_args__ = (UniqueConstraint('queueid', 'subscriber_name', 'fileid', name='file_queue_uc'),)
+    __table_args__ = (UniqueConstraint('queueid', 'username', 'fileid', name='file_queue_uc'),)
 
     # Define the columns
     queueid = Column(Integer, primary_key=True)
-    subscriber_name = Column(String(255), nullable=False)
+    username = Column(String(30), nullable=False)
     fileid = Column(Integer, nullable=False)
-    entry_date = Column(String(10), nullable=False)
-    expires = Column(String(10), nullable=False)
+    entry_date = Column(DateTime, nullable=False)
+    expires = Column(DateTime, nullable=False)
 
 
 class Transactions(base):
@@ -301,10 +302,10 @@ class Transactions(base):
     # Define the columns
     transactionid = Column(Integer, primary_key=True)
     action = Column(String(255), nullable=False)
-    subscriber_name = Column(String(255), nullable=False)
-    start_time = Column(String(19), nullable=False)
+    username = Column(String(30), nullable=False)
+    start_time = Column(DateTime, nullable=False)
     fileid = Column(Integer)
     source = Column(String(255))
     destination = Column(String(255))
-    end_time = Column(String(19))
+    end_time = Column(DateTime)
     complete = Column(Boolean)

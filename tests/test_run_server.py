@@ -75,6 +75,18 @@ def client(app):
     return client
 
 
+def test_register(client):
+    """Tests that the ``PUT /register`` request works as expected"""
+
+    request_url = '/register'
+    response = client.put(request_url)
+
+    # Make sure the response status is 200
+    assert response.status_code == 200
+
+    _check_transaction(request_url, response.headers)
+
+
 def test_get_filelist(client):
     """Tests that the ``GET /files`` request works as expected"""
 
@@ -166,15 +178,3 @@ def test_delete_files(client):
     for fileid in fileids:
         results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
         assert len(results) == 0
-
-
-def test_register(client):
-    """Tests that the ``PUT /register`` request works as expected"""
-
-    request_url = '/register'
-    response = client.put(request_url)
-
-    # Make sure the response status is 200
-    assert response.status_code == 200
-
-    _check_transaction(request_url, response.headers)

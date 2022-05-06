@@ -1,3 +1,31 @@
+-- accounts table
+CREATE SEQUENCE accounts_seq
+    INCREMENT BY 1 START WITH 1
+    MINVALUE 1 MAXVALUE 9999999999999999999999999999
+    NOCYCLE CACHE 2;
+
+CREATE TABLE accounts (
+    userid NUMBER NOT NULL,
+    username VARCHAR2(30) NOT NULL,
+    role VARCHAR2(255) NOT NULL,
+    registration_date DATE NOT NULL,
+    registration_expires DATE,
+    CONSTRAINT role_constraint CHECK (role IN ('admin', 'subscriber')),
+    CONSTRAINT accounts_uc UNIQUE(username),
+    PRIMARY KEY(userid)
+);
+
+CREATE OR REPLACE TRIGGER accounts_trg
+BEFORE INSERT ON "ACCOUNTS"
+FOR EACH ROW
+BEGIN
+    IF :new.userid IS NULL THEN
+        SELECT accounts_seq.nextval INTO :new.userid FROM DUAL;
+    END IF;
+END;
+
+
+-- file_metadata table
 CREATE SEQUENCE file_metadata_seq
     INCREMENT BY 1 START WITH 1
     MINVALUE 1 MAXVALUE 999999999999999
@@ -8,7 +36,7 @@ CREATE TABLE file_metadata (
     name VARCHAR2(255) NOT NULL,
     checksum VARCHAR2(71) NOT NULL,
     "size" FLOAT NOT NULL,
-    expires VARCHAR2(10) NOT NULL,
+    expires DATE NOT NULL,
     stream VARCHAR2(255) NOT NULL,
     shortname VARCHAR(255) NOT NULL,
     version VARCHAR2(3) NOT NULL,
@@ -26,6 +54,7 @@ BEGIN
 END;
 
 
+-- file_queue table
 CREATE SEQUENCE file_queue_seq
     INCREMENT BY 1 START WITH 1
     MINVALUE 1 MAXVALUE 9999999999999999999999999999
@@ -33,11 +62,12 @@ CREATE SEQUENCE file_queue_seq
 
 CREATE TABLE file_queue (
     queueid NUMBER NOT NULL,
-    subscriber_name VARCHAR2(255) NOT NULL,
+    username VARCHAR2(30) NOT NULL,
     fileid NUMBER(15) NOT NULL,
-    entry_date VARCHAR(10) NOT NULL,
-    expires VARCHAR(10) NOT NULL,
-    CONSTRAINT file_queue_uc UNIQUE(subscriber_name, fileid),
+    entry_date DATE NOT NULL,
+    expires DATE NOT NULL,
+    FOREIGN KEY(username) REFERENCES accounts(username),
+    CONSTRAINT file_queue_uc UNIQUE(username, fileid),
     PRIMARY KEY(queueid)
 );
 
@@ -51,6 +81,7 @@ BEGIN
 END;
 
 
+-- transactions table
 CREATE SEQUENCE transactions_seq
     INCREMENT BY 1 START WITH 1
     MINVALUE 1 MAXVALUE 9999999999999999999999999999
@@ -59,13 +90,14 @@ CREATE SEQUENCE transactions_seq
 CREATE TABLE transactions (
     transactionid NUMBER NOT NULL,
     action VARCHAR(255) NOT NULL,
-    subscriber_name VARCHAR2(255) NOT NULL,
-    start_time VARCHAR(19) NOT NULL,
+    username VARCHAR2(30) NOT NULL,
+    start_time DATE NOT NULL,
     fileid NUMBER(15),
     source VARCHAR2(255),
     destination VARCHAR2(255),
-    end_time VARCHAR(19),
+    end_time DATE,
     complete NUMBER(1) CHECK (complete IN (0,1)),
+    FOREIGN KEY(username) REFERENCES accounts(username),
     PRIMARY KEY(transactionid)
 );
 
@@ -75,31 +107,5 @@ FOR EACH ROW
 BEGIN
     IF :new.transactionid IS NULL THEN
         SELECT transactions_seq.nextval INTO :new.transactionid FROM DUAL;
-    END IF;
-END;
-
-
-CREATE SEQUENCE accounts_seq
-    INCREMENT BY 1 START WITH 1
-    MINVALUE 1 MAXVALUE 9999999999999999999999999999
-    NOCYCLE CACHE 2;
-
-CREATE TABLE accounts (
-    userid NUMBER NOT NULL,
-    username VARCHAR2(255) NOT NULL,
-    role VARCHAR2(255) NOT NULL,
-    registration_date VARCHAR2(19) NOT NULL,
-    registration_expires VARCHAR2(10),
-    CONSTRAINT role_constraint CHECK (role IN ('admin', 'subscriber')),
-    CONSTRAINT accounts_uc UNIQUE(username),
-    PRIMARY KEY(userid)
-);
-
-CREATE OR REPLACE TRIGGER accounts_trg
-BEFORE INSERT ON "ACCOUNTS"
-FOR EACH ROW
-BEGIN
-    IF :new.userid IS NULL THEN
-        SELECT accounts_seq.nextval INTO :new.userid FROM DUAL;
     END IF;
 END;

@@ -59,7 +59,7 @@ def delete_file(fileid):
     queue_data = [item.__dict__ for item in queue_data]
     file_needed = False
     for entry in queue_data:
-        if entry['subscriber_name'] != 'GES DISC':
+        if entry['username'] != config['username']:
             file_needed = True
 
     # If not, delete the file from the queue
@@ -148,10 +148,10 @@ def get_file(fileid):
     entry_date = datetime.datetime.today()
     expiration_date = entry_date + datetime.timedelta(days=config['expiration_period'])
     table = Table('file_queue', base.metadata)
-    data_to_insert = [{'subscriber_name': 'GES DISC',
+    data_to_insert = [{'username': config['username'],
                        'fileid': fileid,
-                       'entry_date': str(entry_date.strftime('%Y-%m-%d')),
-                       'expires': str(expiration_date.strftime('%Y-%m-%d'))}]
+                       'entry_date': entry_date,
+                       'expires': expiration_date}]
     table.insert().execute(data_to_insert)
 
     # Update transactions table with completion info
@@ -186,13 +186,18 @@ def get_filelist():
     # Parse paramters from the request
     stream = request.args.get('stream', default='prod', type=str)
     shortname = request.args.get('ShortName', default='all', type=str)
+    version = request.args.get('version', default='v01', type=str)
 
     # Determine which files to return based on parameters
-    if shortname == 'all':
-        data = session.query(FileMetadata).all()
-    else:
-        data = session.query(FileMetadata).filter(FileMetadata.shortname == shortname).all()
-    data = [item.__dict__ for item in data]
+    query = session.query(FileMetadata)\
+        .filter(FileMetadata.stream == stream)\
+        .filter(FileMetadata.version == version)
+    if shortname != 'all':
+        query = query.filter(FileMetadata.shortname == shortname)
+    results = query.all()
+
+    # Parse the results
+    data = [item.__dict__ for item in results]
     for item in data:
         del item['_sa_instance_state']
 
@@ -224,9 +229,6 @@ def register():
         The response object containing approriate headers and content.
     """
 
-    # Add a transactions database record
-    transactionid = _update_transactions_table(request)
-
     # Add a accounts database record
     registration_date = datetime.datetime.today()
     registration_expires = registration_date + datetime.timedelta(days=config['account_expiration_period'])
@@ -234,9 +236,12 @@ def register():
     data_to_insert = [{
         'username': config['username'],
         'role': 'subscriber',
-        'registration_date': str(registration_date.strftime('%Y-%m-%d')),
-        'registration_expires': str(registration_expires.strftime('%Y-%m-%d'))}]
+        'registration_date': registration_date,
+        'registration_expires': registration_expires}]
     table.insert().execute(data_to_insert)
+
+    # Add a transactions database record
+    transactionid = _update_transactions_table(request)
 
     # Create a queue space on filesystem
     queue_path = f"{HOME_DIR}/Desktop/{config['username']}_queue/"
@@ -259,7 +264,7 @@ if __name__ == '__main__':
     data_to_insert = [{
         'username': 'lasp_admin',
         'role': 'admin',
-        'registration_date': str(datetime.datetime.today().strftime('%Y-%m-%d'))}]
+        'registration_date': datetime.datetime.today()}]
     Table('accounts', base.metadata).insert().execute(data_to_insert)
 
     app.run(host=config['endpoint'], port='8000')
