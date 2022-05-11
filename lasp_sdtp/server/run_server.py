@@ -19,8 +19,12 @@ from flask import Flask, make_response, request
 from sqlalchemy import Table
 
 from lasp_sdtp.config import config
-from lasp_sdtp.database.database_interface import base, FileMetadata, FileQueue, session
-from lasp_sdtp.database.database_interface import _mark_transaction_complete, _update_transactions_table
+from lasp_sdtp.database.database_interface import base
+from lasp_sdtp.database.database_interface import FileMetadata
+from lasp_sdtp.database.database_interface import FileQueue
+from lasp_sdtp.database.database_interface import _mark_transaction_complete
+from lasp_sdtp.database.database_interface import session
+from lasp_sdtp.database.database_interface import _update_transactions_table
 
 app = Flask(__name__)
 

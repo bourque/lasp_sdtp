@@ -14,7 +14,11 @@ import json
 import os
 import pytest
 
-from lasp_sdtp.database.database_interface import FileMetadata, FileQueue, insert_test_data, session, Transactions
+from lasp_sdtp.database.database_interface import FileMetadata
+from lasp_sdtp.database.database_interface import FileQueue
+from lasp_sdtp.database.database_interface import session
+from lasp_sdtp.database.database_interface import Transactions
+from lasp_sdtp.database.insert_test_data import insert_test_data
 from lasp_sdtp.server.run_server import get_app
 
 HOME_DIR = os.path.expanduser('~')

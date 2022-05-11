@@ -9,10 +9,16 @@ Use
     pytest test_database_interface.py
 """
 
+from collections import namedtuple
+
 import pytest
 from sqlalchemy import Table
 
-from lasp_sdtp.database.database_interface import base, session
+from lasp_sdtp.database.database_interface import base
+from lasp_sdtp.database.database_interface import FileMetadata
+from lasp_sdtp.database.database_interface import session
+from lasp_sdtp.database.database_interface import Transactions
+from lasp_sdtp.database.database_interface import _update_transactions_table
 
 
 def test_db_connection():
@@ -22,6 +28,7 @@ def test_db_connection():
 
 
 def test_fileid_boundary():
+    """Tests that the fileid cannot exceed 15 digits"""
 
     table = Table('file_metadata', base.metadata)
 
@@ -43,7 +50,25 @@ def test_fileid_boundary():
 
 
 def test_update_transactions_table():
-    """
-    """
+    """Tests the ``_update_transactions_table`` function"""
 
-    pass
+    # Get the lowest fileid that exists
+    file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
+    test_fileid = str(file_metadata[0].__dict__['fileid'])
+
+    # Create a dummy request
+    Request = namedtuple('request', ['method', 'url'])
+    requests = [Request('PUT', '/register'),
+                Request('GET', '/files'),
+                Request('GET', f'/files/{test_fileid}'),
+                Request('DELETE', f'/files/{test_fileid}')]
+    fileids = [None, None, test_fileid, test_fileid]
+
+    for request, fileid in zip(requests, fileids):
+
+        transactionid = _update_transactions_table(request, fileid)
+
+        # Check that there is a record in the transactions table
+        results = session.query(Transactions).filter(Transactions.transactionid == transactionid).all()
+        assert len(results) == 1  # There should only be one db entry
+        assert request.url in results[0].__dict__['action']

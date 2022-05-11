@@ -7,7 +7,7 @@ CREATE SEQUENCE accounts_seq
 CREATE TABLE accounts (
     userid NUMBER NOT NULL,
     username VARCHAR2(30) NOT NULL,
-    role VARCHAR2(255) NOT NULL,
+    role VARCHAR2(10) NOT NULL,
     registration_date DATE NOT NULL,
     registration_expires DATE,
     CONSTRAINT role_constraint CHECK (role IN ('admin', 'subscriber')),
@@ -66,6 +66,7 @@ CREATE TABLE file_queue (
     fileid NUMBER(15) NOT NULL,
     entry_date DATE NOT NULL,
     expires DATE NOT NULL,
+    FOREIGN KEY(fileid) REFERENCES file_metadata(fileid),
     FOREIGN KEY(username) REFERENCES accounts(username),
     CONSTRAINT file_queue_uc UNIQUE(username, fileid),
     PRIMARY KEY(queueid)
@@ -97,6 +98,7 @@ CREATE TABLE transactions (
     destination VARCHAR2(255),
     end_time DATE,
     complete NUMBER(1) CHECK (complete IN (0,1)),
+    FOREIGN KEY(fileid) REFERENCES file_metadata(fileid),
     FOREIGN KEY(username) REFERENCES accounts(username),
     PRIMARY KEY(transactionid)
 );
