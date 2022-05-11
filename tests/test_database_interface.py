@@ -16,14 +16,16 @@ from sqlalchemy import Table
 
 from lasp_sdtp.database.database_interface import base
 from lasp_sdtp.database.database_interface import FileMetadata
+from lasp_sdtp.database.database_interface import load_connection
 from lasp_sdtp.database.database_interface import session
 from lasp_sdtp.database.database_interface import Transactions
 from lasp_sdtp.database.database_interface import _update_transactions_table
 
 
-def test_db_connection():
-    """Tests that the test database can be connected to"""
+def test_load_connection():
+    """Tests the ``load_connection`` function"""
 
+    session, base, engine, meta = load_connection()
     assert 'oracle://' in str(session.bind.url)
 
 

@@ -12,6 +12,7 @@ Use
 """
 
 import datetime
+import logging
 import os
 import shutil
 
@@ -25,8 +26,10 @@ from lasp_sdtp.database.database_interface import FileQueue
 from lasp_sdtp.database.database_interface import _mark_transaction_complete
 from lasp_sdtp.database.database_interface import session
 from lasp_sdtp.database.database_interface import _update_transactions_table
+from lasp_sdtp.utils.utils import configure_logging
 
 app = Flask(__name__)
+configure_logging()
 
 HOME_DIR = os.path.expanduser('~')
 FILESYSTEM_PATH = f'{HOME_DIR}/Desktop/test_filesystem/'
