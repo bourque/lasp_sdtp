@@ -42,6 +42,7 @@ Use
 """
 
 import datetime
+import logging
 import os
 
 from sqlalchemy import Boolean
@@ -94,6 +95,8 @@ def load_connection():
     session = Session()
     meta = MetaData(engine)
 
+    logging.info(f'Connected to database {config["connection_string"]}')
+
     return session, base, engine, meta
 
 
@@ -114,6 +117,7 @@ def _mark_transaction_complete(transactionid):
     end_time = datetime.datetime.now()
     session.query(Transactions).filter(Transactions.transactionid == transactionid).update({'end_time': end_time, 'complete': 1})
     session.commit()
+    logging.info(f'Transaction {transactionid} marked complete')
 
 
 def _update_transactions_table(request, fileid=None):
@@ -170,6 +174,8 @@ def _update_transactions_table(request, fileid=None):
     session.flush()
     transactionid = data_to_insert.transactionid
     session.commit()
+
+    logging.info(f'Recorded transaction {transactionid} for request {request}')
 
     return transactionid
 

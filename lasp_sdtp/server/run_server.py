@@ -72,10 +72,12 @@ def delete_file(fileid):
     # If not, delete the file from the queue
     if not file_needed:
         os.remove(filepath)
+        logging.info(f'Removed {filepath} from queue')
 
         # Remove entry from database
         table = Table('file_queue', base.metadata)
         table.delete().where(FileQueue.fileid == fileid).execute()
+        logging.info(f'Removed fileid {fileid} from queue')
 
     # Construct the response
     content = {'message': 'Success but no other response necessary'}
@@ -150,6 +152,7 @@ def get_file(fileid):
     # Copy the file to the queue
     dst = os.path.join(SUBSCRIBER_QUEUE, os.path.basename(filepath))
     shutil.copyfile(filepath, dst)
+    logging.info(f'Copied {filepath} to queue: {dst}')
 
     # Add a file queue database record
     entry_date = datetime.datetime.today()
@@ -160,6 +163,7 @@ def get_file(fileid):
                        'entry_date': entry_date,
                        'expires': expiration_date}]
     table.insert().execute(data_to_insert)
+    logging.info(f'Added fileid {fileid} to queue')
 
     # Update transactions table with completion info
     _mark_transaction_complete(transactionid=transactionid)
@@ -246,6 +250,7 @@ def register():
         'registration_date': registration_date,
         'registration_expires': registration_expires}]
     table.insert().execute(data_to_insert)
+    logging.info(f'Registered account for {config["username"]}')
 
     # Add a transactions database record
     transactionid = _update_transactions_table(request)
@@ -254,6 +259,7 @@ def register():
     queue_path = f"{HOME_DIR}/Desktop/{config['username']}_queue/"
     if not os.path.exists(queue_path):
         os.mkdir(queue_path)
+        logging.info(f'Created queue: {queue_path}')
 
     # Construct the response
     content = ''
@@ -273,5 +279,6 @@ if __name__ == '__main__':
         'role': 'admin',
         'registration_date': datetime.datetime.today()}]
     Table('accounts', base.metadata).insert().execute(data_to_insert)
+    logging.info('Registered admin account')
 
     app.run(host=config['endpoint'], port='8000')
