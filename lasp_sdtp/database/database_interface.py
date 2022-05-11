@@ -184,10 +184,12 @@ class Accounts(base):
     """ORM for the ``accounts`` table"""
 
     __tablename__ = 'accounts'
+    __table_args__ = (UniqueConstraint('userid', 'username', 'certuid', name='accounts_uc'),)
 
     # Define the columns
     userid = Column(Integer, primary_key=True)
     username = Column(String(255), unique=True, nullable=False)
+    certuid = Column(String(20), unique=True, nullable=False)
     role = Column(Enum('admin', 'subscriber', name='role'), nullable=False)
     registration_date = Column(DateTime, nullable=False)
     registration_expires = Column(DateTime)

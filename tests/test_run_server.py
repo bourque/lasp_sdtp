@@ -15,6 +15,8 @@ import os
 
 import pytest
 
+from lasp_sdtp.config import config
+from lasp_sdtp.database.database_interface import Accounts
 from lasp_sdtp.database.database_interface import FileMetadata
 from lasp_sdtp.database.database_interface import FileQueue
 from lasp_sdtp.database.database_interface import session
@@ -41,10 +43,10 @@ def _check_transaction(request_url, headers):
     """
 
     # Make sure the transactionid is in the header
-    assert 'transactionid' in headers
+    assert 'SDTP-TransactionID' in headers
 
     # Check that there is a record in the transactions table
-    results = session.query(Transactions).filter(Transactions.transactionid == headers['transactionid']).all()
+    results = session.query(Transactions).filter(Transactions.transactionid == headers['SDTP-TransactionID']).all()
     assert len(results) == 1  # There should only be one db entry
     assert request_url in results[0].__dict__['action']
 
@@ -84,10 +86,16 @@ def test_register(client):
     """Tests that the ``PUT /register`` request works as expected"""
 
     request_url = '/register'
-    response = client.put(request_url)
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{config["username"]}_cert'}
+    response = client.put(request_url, headers=headers)
 
     # Make sure the response status is 200
     assert response.status_code == 200
+
+    # Check that a database entry was made for the Accounts table
+    results = session.query(Accounts).filter(Accounts.username == config['username']).all()
+    assert len(results) == 1  # There should only be one db entry
+    assert results[0].__dict__['username'] == config['username']
 
     _check_transaction(request_url, response.headers)
 

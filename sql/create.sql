@@ -7,6 +7,7 @@ CREATE SEQUENCE accounts_seq
 CREATE TABLE accounts (
     userid NUMBER NOT NULL,
     username VARCHAR2(30) NOT NULL,
+    certuid VARCHAR(20) NOT NULL,
     role VARCHAR2(10) NOT NULL,
     registration_date DATE NOT NULL,
     registration_expires DATE,
