@@ -100,12 +100,27 @@ def test_register(client):
     _check_transaction(request_url, response.headers)
 
 
+def test_authorize(client):
+    """Tests the ``authorize`` function"""
+
+    request_url = '/files'
+    authorized_headers = {'content-type': 'application/json', 'Cert-UID': f'{config["username"]}_cert'}
+    bogus_headers = {'content-type': 'application/json', 'Cert-UID': 'fake_certificate'}
+
+    authorized_response = client.get(request_url, headers=authorized_headers)
+    bogus_response = client.get(request_url, headers=bogus_headers)
+
+    assert authorized_response.status_code == 200
+    assert bogus_response.status_code == 401
+
+
 def test_get_filelist(client):
     """Tests that the ``GET /files`` request works as expected"""
 
     # Send a test request and get the response
     request_url = '/files?stream=prod&ShortName=TSIS2_L1'
-    response = client.get(request_url)
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{config["username"]}_cert'}
+    response = client.get(request_url, headers=headers)
     data = json.loads(response.get_data().decode("utf-8"))
 
     # Make sure the response status is 200
@@ -130,7 +145,8 @@ def test_get_file(client):
 
     # Send a test request and get the response
     request_url = f'/files/{fileid}'
-    response = client.get(request_url)
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{config["username"]}_cert'}
+    response = client.get(request_url, headers=headers)
     data = json.loads(response.get_data().decode("utf-8"))
 
     # Make sure the response status is 200
@@ -156,7 +172,8 @@ def test_delete_file(client):
 
     # Delete the file
     request_url = f'files/{fileid}'
-    response = client.delete(request_url)
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{config["username"]}_cert'}
+    response = client.delete(request_url, headers=headers)
 
     # Make sure the response status is 204
     assert response.status_code == 204
@@ -172,17 +189,19 @@ def test_delete_files(client):
     """Tests that the ``DELETE /files/<fileid_start>-<fileid_end>`` request
     works as expected"""
 
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{config["username"]}_cert'}
+
     # Get a handful of files to test
     file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
     fileid_start = file_metadata[0].__dict__['fileid']
     fileid_end = fileid_start + 5
     fileids = [fileid for fileid in range(fileid_start, fileid_end)]
     for fileid in fileids:
-        client.get(f'/files/{str(fileid)}')
+        client.get(f'/files/{str(fileid)}', headers=headers)
 
     # Delete the files
     request_url = f'/files/{fileid_start}-{fileid_end}'
-    response = client.delete(request_url)
+    response = client.delete(request_url, headers=headers)
 
     # Make sure the response status is 204
     assert response.status_code == 204

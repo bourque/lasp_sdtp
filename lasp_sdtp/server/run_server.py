@@ -16,7 +16,10 @@ import logging
 import os
 import shutil
 
-from flask import Flask, make_response, request
+from flask import abort
+from flask import Flask
+from flask import make_response
+from flask import request
 from sqlalchemy import Table
 
 from lasp_sdtp.config import config
@@ -34,6 +37,27 @@ configure_logging()
 HOME_DIR = os.path.expanduser('~')
 FILESYSTEM_PATH = f'{HOME_DIR}/Desktop/test_filesystem/'
 SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
+
+
+@app.before_request
+def authorize():
+    """Authorize a request before it happens"""
+
+    # Assume user is not authorized until proven otherwise
+    valid_certificate = False
+
+    # Check for a valid certificate in the header
+    if 'Cert-UID' in request.headers:
+        certificate = request.headers['Cert-UID']
+        authorized_certificates = ['ges_disc_cert']  # Probably better to do a db lookup here
+        if certificate in authorized_certificates:
+            valid_certificate = True
+
+    if not valid_certificate:
+        content = 'Unauthorized'
+        status = 401
+        response = make_response(content, status)
+        abort(response)
 
 
 @app.route('/files/<fileid>', methods=['DELETE'])
@@ -240,49 +264,31 @@ def register():
         The response object containing approriate headers and content.
     """
 
-    # Check for a valid certificate in the header
-    valid_certificate = False
-    if 'Cert-UID' in request.headers:
-        certificate = request.headers['Cert-UID']
-        authorized_certificates = ['ges_disc_cert']  # Probably better to do a db lookup here
-        if certificate in authorized_certificates:
-            valid_certificate = True
+    # Add a accounts database record
+    registration_date = datetime.datetime.today()
+    registration_expires = registration_date + datetime.timedelta(days=config['account_expiration_period'])
+    table = Table('accounts', base.metadata)
+    data_to_insert = [{
+        'username': config['username'],
+        'role': 'subscriber',
+        'certuid': f'{config["username"]}_cert',
+        'registration_date': registration_date,
+        'registration_expires': registration_expires}]
+    table.insert().execute(data_to_insert)
+    logging.info(f'Registered account for {config["username"]}')
 
-    if valid_certificate:
+    # Add a transactions database record
+    transactionid = _update_transactions_table(request)
 
-        # Add a accounts database record
-        registration_date = datetime.datetime.today()
-        registration_expires = registration_date + datetime.timedelta(days=config['account_expiration_period'])
-        table = Table('accounts', base.metadata)
-        data_to_insert = [{
-            'username': config['username'],
-            'role': 'subscriber',
-            'certuid': certificate,
-            'registration_date': registration_date,
-            'registration_expires': registration_expires}]
-        table.insert().execute(data_to_insert)
-        logging.info(f'Registered account for {config["username"]}')
-
-        # Add a transactions database record
-        transactionid = _update_transactions_table(request)
-
-        # Create a queue space on filesystem
-        queue_path = f"{HOME_DIR}/Desktop/{config['username']}_queue/"
-        if not os.path.exists(queue_path):
-            os.mkdir(queue_path)
-            logging.info(f'Created queue: {queue_path}')
-
-        # Set response
-        content = ''
-        status = 200
-
-    else:
-
-        # Set response
-        content = 'Unauthorized'
-        status = 401
+    # Create a queue space on filesystem
+    queue_path = f"{HOME_DIR}/Desktop/{config['username']}_queue/"
+    if not os.path.exists(queue_path):
+        os.mkdir(queue_path)
+        logging.info(f'Created queue: {queue_path}')
 
     # Construct the response
+    content = ''
+    status = 200
     response = make_response(content, status)
     response.headers['Content-Type'] = 'application/json'
     response.headers['SDTP-TransactionID'] = transactionid
