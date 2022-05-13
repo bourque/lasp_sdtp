@@ -54,6 +54,7 @@ from sqlalchemy import Float
 from sqlalchemy import Integer
 from sqlalchemy import MetaData
 from sqlalchemy import String
+from sqlalchemy import Table
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -178,6 +179,21 @@ def _update_transactions_table(request, fileid=None):
     logging.info(f'Recorded transaction {transactionid} for request {request}')
 
     return transactionid
+
+
+def insert_data(table_name, data):
+    """Inserts the given data into the given table
+
+    Parameters
+    ----------
+    table_name : str
+        The name of the table (e.g. ``accounts``)
+    data : list of dicts
+        The data to insert
+    """
+
+    table = Table(table_name, base.metadata)
+    table.insert().execute(data)
 
 
 class Accounts(base):

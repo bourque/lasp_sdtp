@@ -12,14 +12,13 @@ Use
 import datetime
 import os
 
-from sqlalchemy import Table
-
 from lasp_sdtp.database.cleanup_database import cleanup_accounts
 from lasp_sdtp.database.cleanup_database import cleanup_file_queue
 from lasp_sdtp.database.database_interface import Accounts
 from lasp_sdtp.database.database_interface import base
 from lasp_sdtp.database.database_interface import FileMetadata
 from lasp_sdtp.database.database_interface import FileQueue
+from lasp_sdtp.database.database_interface import insert_data
 from lasp_sdtp.database.database_interface import session
 
 HOME_DIR = os.path.expanduser('~')
@@ -39,30 +38,27 @@ class TestDatabase():
         self.fileid = 9999
 
         # Add an accounts entry that has expired
-        table = Table('accounts', base.metadata)
-        data_to_insert = [{
+        data = [{
             'username': self.acc_username,
             'certuid': 'test_cert',
             'role': 'subscriber',
             'registration_date': datetime.datetime.today(),
             'registration_expires': datetime.datetime.today() - datetime.timedelta(days=1)
         }]
-        table.insert().execute(data_to_insert)
+        insert_data('accounts', data)
 
         # Add an accounts entry that hasnt expired, for the file_queue test
-        table = Table('accounts', base.metadata)
-        data_to_insert = [{
+        data = [{
             'username': self.fq_username,
             'certuid': 'test_cert2',
             'role': 'subscriber',
             'registration_date': datetime.datetime.today(),
             'registration_expires': datetime.datetime.today() + datetime.timedelta(days=10)
         }]
-        table.insert().execute(data_to_insert)
+        insert_data('accounts', data)
 
         # Add a file metadata entry for file to satisfy foreign key constraint
-        table = Table('file_metadata', base.metadata)
-        data_to_insert = [{
+        data = [{
             'fileid': self.fileid,
             'name': self.test_filename,
             'checksum': 'abcdefg',
@@ -72,26 +68,25 @@ class TestDatabase():
             'shortname': 'TEST_FILE',
             'version': 'v01'
         }]
-        table.insert().execute(data_to_insert)
+        insert_data('file_metadata', data)
 
         # Add a file queue entry for the expired account
-        table = Table('file_queue', base.metadata)
-        data_to_insert = [{
+        data = [{
             'username': self.acc_username,
             'fileid': self.fileid,
             'entry_date': datetime.datetime.today(),
             'expires': datetime.datetime.today() + datetime.timedelta(days=10)  # The file in the queue doesn't necessarily have to be expired
         }]
-        table.insert().execute(data_to_insert)
+        insert_data('file_queue', data)
 
         # Add a file queue entry that is itself expired
-        data_to_insert = [{
+        data = [{
             'username': self.fq_username,
             'fileid': self.fileid,
             'entry_date': datetime.datetime.today(),
             'expires': datetime.datetime.today() - datetime.timedelta(days=10)
         }]
-        table.insert().execute(data_to_insert)
+        insert_data('file_queue', data)
 
         # Add an expired file to the file queue storage
         with open(os.path.join(SUBSCRIBER_QUEUE, self.test_filename), 'w') as f:
@@ -130,10 +125,7 @@ class TestDatabase():
 
         # Remove entries that were added
         session.query(FileQueue).filter(FileQueue.fileid == self.fileid).delete()
-        session.commit()
         session.query(FileMetadata).filter(FileMetadata.fileid == self.fileid).delete()
-        session.commit()
         session.query(Accounts).filter(Accounts.username == self.acc_username).delete()
-        session.commit()
         session.query(Accounts).filter(Accounts.username == self.fq_username).delete()
         session.commit()

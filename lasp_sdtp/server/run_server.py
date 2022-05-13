@@ -26,6 +26,7 @@ from lasp_sdtp.config import config
 from lasp_sdtp.database.database_interface import base
 from lasp_sdtp.database.database_interface import FileMetadata
 from lasp_sdtp.database.database_interface import FileQueue
+from lasp_sdtp.database.database_interface import insert_data
 from lasp_sdtp.database.database_interface import _mark_transaction_complete
 from lasp_sdtp.database.database_interface import session
 from lasp_sdtp.database.database_interface import _update_transactions_table
@@ -99,8 +100,8 @@ def delete_file(fileid):
         logging.info(f'Removed {filepath} from queue')
 
         # Remove entry from database
-        table = Table('file_queue', base.metadata)
-        table.delete().where(FileQueue.fileid == fileid).execute()
+        session.query(FileQueue).filter(FileQueue.fileid == fileid).delete()
+        session.commit()
         logging.info(f'Removed fileid {fileid} from queue')
 
     # Construct the response
@@ -181,12 +182,11 @@ def get_file(fileid):
     # Add a file queue database record
     entry_date = datetime.datetime.today()
     expiration_date = entry_date + datetime.timedelta(days=config['expiration_period'])
-    table = Table('file_queue', base.metadata)
-    data_to_insert = [{'username': config['username'],
-                       'fileid': fileid,
-                       'entry_date': entry_date,
-                       'expires': expiration_date}]
-    table.insert().execute(data_to_insert)
+    data = [{'username': config['username'],
+             'fileid': fileid,
+             'entry_date': entry_date,
+             'expires': expiration_date}]
+    insert_data('file_queue', data)
     logging.info(f'Added fileid {fileid} to queue')
 
     # Update transactions table with completion info
@@ -267,14 +267,13 @@ def register():
     # Add a accounts database record
     registration_date = datetime.datetime.today()
     registration_expires = registration_date + datetime.timedelta(days=config['account_expiration_period'])
-    table = Table('accounts', base.metadata)
-    data_to_insert = [{
+    data = [{
         'username': config['username'],
         'role': 'subscriber',
         'certuid': f'{config["username"]}_cert',
         'registration_date': registration_date,
         'registration_expires': registration_expires}]
-    table.insert().execute(data_to_insert)
+    insert_data('accounts', data)
     logging.info(f'Registered account for {config["username"]}')
 
     # Add a transactions database record
@@ -299,11 +298,11 @@ def register():
 if __name__ == '__main__':
 
     # Register an admin account
-    data_to_insert = [{
+    data = [{
         'username': 'lasp_admin',
         'role': 'admin',
         'registration_date': datetime.datetime.today()}]
-    Table('accounts', base.metadata).insert().execute(data_to_insert)
+    insert_data('accounts', data)
     logging.info('Registered admin account')
 
     app.run(host=config['endpoint'], port='8000')
