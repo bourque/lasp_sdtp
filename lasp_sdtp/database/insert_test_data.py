@@ -20,7 +20,7 @@ import os
 import random
 import string
 
-from lasp_sdtp.config import config
+from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_interface import Accounts
 from lasp_sdtp.database.database_interface import base
 from lasp_sdtp.database.database_interface import FileMetadata
@@ -45,7 +45,7 @@ def _get_checksum():
         the system configuration
     """
 
-    checksum_type = config['checksum_type']
+    checksum_type = subscriber_config['checksum_type']
     checksum_string = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(64))
     checksum = f'{checksum_type}:{checksum_string}'
 
@@ -113,7 +113,7 @@ def insert_test_data():
             'name': os.path.basename(test_file),
             'checksum': _get_checksum(),
             'size': os.path.getsize(test_file),
-            'expires': datetime.datetime.today() + datetime.timedelta(days=config['expiration_period']),
+            'expires': datetime.datetime.today() + datetime.timedelta(days=subscriber_config['expiration_period']),
             'stream': 'prod',
             'shortname': _get_shortname(os.path.basename(test_file)),
             'version': 'v01'

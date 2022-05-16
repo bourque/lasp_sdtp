@@ -25,7 +25,7 @@ HOME_DIR = os.path.expanduser('~')
 SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
 
 
-class TestDatabase():
+class TestCleanupDatabase():
     """Tests for the ``cleanup_database`` module"""
 
     def setup(self, test_method):

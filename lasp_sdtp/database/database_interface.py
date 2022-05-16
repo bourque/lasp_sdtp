@@ -59,7 +59,7 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from lasp_sdtp.config import config
+from lasp_sdtp.config import subscriber_config
 
 
 HOME_DIR = os.path.expanduser('~')
@@ -89,14 +89,14 @@ def load_connection():
         The connection metadata
     """
 
-    connection_string = config['connection_string']
+    connection_string = subscriber_config['connection_string']
     engine = create_engine(connection_string, echo=False)
     base = declarative_base(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
     meta = MetaData(engine)
 
-    logging.info(f'Connected to database {config["connection_string"]}')
+    logging.info(f'Connected to database {subscriber_config["connection_string"]}')
 
     return session, base, engine, meta
 
@@ -142,21 +142,21 @@ def _update_transactions_table(request, fileid=None):
     if request.method == 'PUT':
         data_to_insert = Transactions(
             action=f'{request.method} {request.url}',
-            username=config['username'],
+            username=subscriber_config['username'],
             start_time=datetime.datetime.now())
 
     # For GET /files
     elif request.method == 'GET' and fileid is None:
         data_to_insert = Transactions(
             action=f'{request.method} {request.url}',
-            username=config['username'],
+            username=subscriber_config['username'],
             start_time=datetime.datetime.now())
 
     # For GET /files/<fileid>
     elif request.method == 'GET' and fileid is not None:
         data_to_insert = Transactions(
             action=f'{request.method} {request.url}',
-            username=config['username'],
+            username=subscriber_config['username'],
             start_time=datetime.datetime.now(),
             fileid=fileid,
             source=FILESYSTEM_PATH,
@@ -167,7 +167,7 @@ def _update_transactions_table(request, fileid=None):
         url = os.path.join(os.path.dirname(request.url), str(fileid))
         data_to_insert = Transactions(
             action=f'{request.method} {url}',
-            username=config['username'],
+            username=subscriber_config['username'],
             start_time=datetime.datetime.now())
 
     # Insert the data, and get the transaction id

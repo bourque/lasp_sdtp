@@ -9,13 +9,27 @@ Use
     pytest test_config.py
 """
 
-from lasp_sdtp.config import get_config
+from lasp_sdtp.config import get_admin_config
+from lasp_sdtp.config import get_subscriber_config
 
 
-def test_get_config():
-    """Tests the ``get_config`` function"""
+def test_get_admin_config():
+    """Tests the ``get_admin_config`` function"""
 
-    config = get_config()
+    config = get_admin_config()
+
+    required_keys = [
+        'email_address',
+        'email_password']
+
+    for key in required_keys:
+        assert key in config
+
+
+def test_get_subscriber_config():
+    """Tests the ``get_subscriber_config`` function"""
+
+    config = get_subscriber_config()
 
     required_keys = [
         'account_expiration_period',

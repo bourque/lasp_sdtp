@@ -22,7 +22,7 @@ from flask import make_response
 from flask import request
 from sqlalchemy import Table
 
-from lasp_sdtp.config import config
+from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_interface import base
 from lasp_sdtp.database.database_interface import FileMetadata
 from lasp_sdtp.database.database_interface import FileQueue
@@ -30,7 +30,7 @@ from lasp_sdtp.database.database_interface import insert_data
 from lasp_sdtp.database.database_interface import _mark_transaction_complete
 from lasp_sdtp.database.database_interface import session
 from lasp_sdtp.database.database_interface import _update_transactions_table
-from lasp_sdtp.utils.utils import configure_logging
+from lasp_sdtp.utils.logging import configure_logging
 
 app = Flask(__name__)
 configure_logging()
@@ -91,7 +91,7 @@ def delete_file(fileid):
     queue_data = [item.__dict__ for item in queue_data]
     file_needed = False
     for entry in queue_data:
-        if entry['username'] != config['username']:
+        if entry['username'] != subscriber_config['username']:
             file_needed = True
 
     # If not, delete the file from the queue
@@ -181,8 +181,8 @@ def get_file(fileid):
 
     # Add a file queue database record
     entry_date = datetime.datetime.today()
-    expiration_date = entry_date + datetime.timedelta(days=config['expiration_period'])
-    data = [{'username': config['username'],
+    expiration_date = entry_date + datetime.timedelta(days=subscriber_config['expiration_period'])
+    data = [{'username': subscriber_config['username'],
              'fileid': fileid,
              'entry_date': entry_date,
              'expires': expiration_date}]
@@ -266,21 +266,21 @@ def register():
 
     # Add a accounts database record
     registration_date = datetime.datetime.today()
-    registration_expires = registration_date + datetime.timedelta(days=config['account_expiration_period'])
+    registration_expires = registration_date + datetime.timedelta(days=subscriber_config['account_expiration_period'])
     data = [{
-        'username': config['username'],
+        'username': subscriber_config['username'],
         'role': 'subscriber',
-        'certuid': f'{config["username"]}_cert',
+        'certuid': f'{subscriber_config["username"]}_cert',
         'registration_date': registration_date,
         'registration_expires': registration_expires}]
     insert_data('accounts', data)
-    logging.info(f'Registered account for {config["username"]}')
+    logging.info(f'Registered account for {subscriber_config["username"]}')
 
     # Add a transactions database record
     transactionid = _update_transactions_table(request)
 
     # Create a queue space on filesystem
-    queue_path = f"{HOME_DIR}/Desktop/{config['username']}_queue/"
+    queue_path = f"{HOME_DIR}/Desktop/{subscriber_config['username']}_queue/"
     if not os.path.exists(queue_path):
         os.mkdir(queue_path)
         logging.info(f'Created queue: {queue_path}')
@@ -305,4 +305,4 @@ if __name__ == '__main__':
     insert_data('accounts', data)
     logging.info('Registered admin account')
 
-    app.run(host=config['endpoint'], port='8000')
+    app.run(host=subscriber_config['endpoint'], port='8000')

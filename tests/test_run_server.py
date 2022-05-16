@@ -15,7 +15,7 @@ import os
 
 import pytest
 
-from lasp_sdtp.config import config
+from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_interface import Accounts
 from lasp_sdtp.database.database_interface import FileMetadata
 from lasp_sdtp.database.database_interface import FileQueue
@@ -86,16 +86,16 @@ def test_register(client):
     """Tests that the ``PUT /register`` request works as expected"""
 
     request_url = '/register'
-    headers = {'content-type': 'application/json', 'Cert-UID': f'{config["username"]}_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
     response = client.put(request_url, headers=headers)
 
     # Make sure the response status is 200
     assert response.status_code == 200
 
     # Check that a database entry was made for the Accounts table
-    results = session.query(Accounts).filter(Accounts.username == config['username']).all()
+    results = session.query(Accounts).filter(Accounts.username == subscriber_config['username']).all()
     assert len(results) == 1  # There should only be one db entry
-    assert results[0].__dict__['username'] == config['username']
+    assert results[0].__dict__['username'] == subscriber_config['username']
 
     _check_transaction(request_url, response.headers)
 
@@ -104,7 +104,7 @@ def test_authorize(client):
     """Tests the ``authorize`` function"""
 
     request_url = '/files'
-    authorized_headers = {'content-type': 'application/json', 'Cert-UID': f'{config["username"]}_cert'}
+    authorized_headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
     bogus_headers = {'content-type': 'application/json', 'Cert-UID': 'fake_certificate'}
 
     authorized_response = client.get(request_url, headers=authorized_headers)
@@ -119,7 +119,7 @@ def test_get_filelist(client):
 
     # Send a test request and get the response
     request_url = '/files?stream=prod&ShortName=TSIS2_L1'
-    headers = {'content-type': 'application/json', 'Cert-UID': f'{config["username"]}_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
     response = client.get(request_url, headers=headers)
     data = json.loads(response.get_data().decode("utf-8"))
 
@@ -145,7 +145,7 @@ def test_get_file(client):
 
     # Send a test request and get the response
     request_url = f'/files/{fileid}'
-    headers = {'content-type': 'application/json', 'Cert-UID': f'{config["username"]}_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
     response = client.get(request_url, headers=headers)
     data = json.loads(response.get_data().decode("utf-8"))
 
@@ -172,7 +172,7 @@ def test_delete_file(client):
 
     # Delete the file
     request_url = f'files/{fileid}'
-    headers = {'content-type': 'application/json', 'Cert-UID': f'{config["username"]}_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
     response = client.delete(request_url, headers=headers)
 
     # Make sure the response status is 204
@@ -189,7 +189,7 @@ def test_delete_files(client):
     """Tests that the ``DELETE /files/<fileid_start>-<fileid_end>`` request
     works as expected"""
 
-    headers = {'content-type': 'application/json', 'Cert-UID': f'{config["username"]}_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
 
     # Get a handful of files to test
     file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
