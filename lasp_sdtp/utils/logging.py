@@ -1,4 +1,4 @@
-"""Various utility functions to support the ``lasp_sdtp`` application
+"""Various functions to enable system logging for the ``lasp_sdtp`` application
 
 Authors
 -------
@@ -9,7 +9,7 @@ Use
     Functions within this module are intended to be imported and used within
     other modules, e.g.:
     ::
-        from lasp_sdtp.utils.utils import configure_logging
+        from lasp_sdtp.utils.logging import configure_logging
 """
 
 import datetime

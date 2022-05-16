@@ -1,4 +1,4 @@
-"""Tests for ``utils.py``
+"""Tests for ``logging.py``
 
 Authors
 -------
@@ -6,13 +6,13 @@ Authors
 
 Use
 ---
-    pytest test_utils.py
+    pytest test_logging.py
 """
 
 import logging
 import os
 
-from lasp_sdtp.utils.utils import configure_logging
+from lasp_sdtp.utils.logging import configure_logging
 
 
 def test_configure_logging():
