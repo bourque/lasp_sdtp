@@ -21,17 +21,14 @@ import pandas as pd
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.database.database_interface import Accounts
+from lasp_sdtp.database.database_interface import FileMetadata
+from lasp_sdtp.database.database_interface import FileQueue
 from lasp_sdtp.database.database_interface import session
+from lasp_sdtp.database.database_interface import Transactions
 
 
-def _get_active_subscribers(content_dict):
+def _active_subscribers_report():
     """Return email content to report on active subscribers
-
-    Parameters
-    ----------
-    content_dict : dict
-        A dictionary containing various content to add to the
-        ``email_template.html``
 
     Returns
     -------
@@ -49,6 +46,55 @@ def _get_active_subscribers(content_dict):
 
     # Construct HTML content
     content = '<h2>Active Subscribers</h2><br>'
+    content += results
+
+    return content
+
+
+def _file_queue_report():
+    """Return email content to report on contents of the file queue
+
+    Returns
+    -------
+    content : str
+        HTML code to be rendered in the report email
+    """
+
+    # Get list of files in the queue
+    query = session.query(FileQueue.queueid, FileQueue.fileid, FileMetadata.name, FileQueue.username, FileQueue.entry_date, FileQueue.expires) \
+        .select_from(FileMetadata) \
+        .join(FileQueue, FileMetadata.fileid == FileQueue.fileid) \
+        .filter(FileQueue.expires >= datetime.datetime.today())
+
+    # Store results as an HTML table
+    results = pd.read_sql(query.statement, query.session.bind).to_html(index=False)
+
+    # Construct HTML content
+    content = '<h2>File Queue</h2><br>'
+    content += results
+
+    return content
+
+
+def _recent_transactions_report():
+    """Return email content to report on transactions from the last 24 hours
+
+    Returns
+    -------
+    content : str
+        HTML code to be rendered in the report email
+    """
+
+    # Get list of recent transcations
+    query = session.query(Transactions.transactionid, Transactions.action, Transactions.username, FileMetadata.name, Transactions.start_time,
+                          Transactions.end_time, Transactions.source, Transactions.destination, Transactions.complete) \
+        .join(Transactions, FileMetadata.fileid == Transactions.fileid)
+
+    # Store results as an HTML table
+    results = pd.read_sql(query.statement, query.session.bind).to_html(index=False)
+
+    # Construct HTML content
+    content = '<h2>Recent Transactions</h2><br>'
     content += results
 
     return content
@@ -92,11 +138,13 @@ def generate_daily_report():
     content_dict = {}
 
     # Report active subscribers
-    content_dict['active_subscribers'] = _get_active_subscribers(content_dict)
+    content_dict['active_subscribers'] = _active_subscribers_report()
 
     # Report the current files in the queue
+    content_dict['file_queue_contents'] = _file_queue_report()
 
     # Report the transactions that happened in the past 24 hours
+    content_dict['recent_transactions'] = _recent_transactions_report()
 
     # Report on available files
 
