@@ -7,6 +7,7 @@ DESCRIPTION = ''
 
 REQUIRES = [
     'flask',
+    'pandas',
     'pytest',
     'sqlalchemy'
 ]
