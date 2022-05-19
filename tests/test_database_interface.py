@@ -14,6 +14,8 @@ from collections import namedtuple
 import pytest
 from sqlalchemy import Table
 
+from lasp_sdtp.config import subscriber_config
+from lasp_sdtp.database.database_interface import Accounts
 from lasp_sdtp.database.database_interface import base
 from lasp_sdtp.database.database_interface import FileMetadata
 from lasp_sdtp.database.database_interface import load_connection
@@ -74,3 +76,9 @@ def test_update_transactions_table():
         results = session.query(Transactions).filter(Transactions.transactionid == transactionid).all()
         assert len(results) == 1  # There should only be one db entry
         assert request.url in results[0].__dict__['action']
+
+        # Remove account entry so that it doesn't break future tests
+        if request.method == 'DELETE':
+            session.query(Transactions).filter(Transactions.username == subscriber_config['username']).delete()
+            session.query(Accounts).filter(Accounts.username == subscriber_config['username']).delete()
+            session.commit()

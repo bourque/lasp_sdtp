@@ -1,8 +1,21 @@
-"""
+"""Gathers configuration details for configuration JSON files and makes the
+data available via importable variables
+
+Authors
+-------
+    Matthew Bourque
+
+Use
+---
+    The config variables within this module are inteneded to be imported and
+    used from other modules, e.g.:
+    ::
+        from lasp_sdtp.config import susbsriber_config
 """
 
 import json
 import os
+
 
 def get_admin_config():
     """Return admin configuration details
@@ -34,6 +47,7 @@ def get_subscriber_config():
         config = json.load(f)
 
     return config
+
 
 admin_config = get_admin_config()
 subscriber_config = get_subscriber_config()

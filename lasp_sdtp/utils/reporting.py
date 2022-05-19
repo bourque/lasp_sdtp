@@ -100,8 +100,8 @@ def _recent_transactions_report():
     return content
 
 
-def _send_email(content_dict):
-    """Construct the final report email and send it
+def send_email(content_dict):
+    """Construct the final report email and send it.
 
     Parameters
     ----------
@@ -129,12 +129,11 @@ def _send_email(content_dict):
         smtp.login(admin_config['email_address'], admin_config['email_password'])
         smtp.send_message(msg)
 
-    return content
-
 
 def generate_daily_report():
     """Creates a daily email report of system metrics"""
 
+    # Placeholder to store email content
     content_dict = {}
 
     # Report active subscribers
@@ -146,10 +145,8 @@ def generate_daily_report():
     # Report the transactions that happened in the past 24 hours
     content_dict['recent_transactions'] = _recent_transactions_report()
 
-    # Report on available files
-
     # Send the email
-    _send_email(content_dict)
+    send_email(content_dict)
 
     return content_dict
 

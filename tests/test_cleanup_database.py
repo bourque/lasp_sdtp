@@ -15,117 +15,37 @@ import os
 from lasp_sdtp.database.cleanup_database import cleanup_accounts
 from lasp_sdtp.database.cleanup_database import cleanup_file_queue
 from lasp_sdtp.database.database_interface import Accounts
-from lasp_sdtp.database.database_interface import base
-from lasp_sdtp.database.database_interface import FileMetadata
 from lasp_sdtp.database.database_interface import FileQueue
-from lasp_sdtp.database.database_interface import insert_data
 from lasp_sdtp.database.database_interface import session
 
 HOME_DIR = os.path.expanduser('~')
 SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
 
 
-class TestCleanupDatabase():
-    """Tests for the ``cleanup_database`` module"""
+def test_cleanup_accounts():
+    """Tests the ``cleanup_accounts`` function"""
 
-    def setup(self, test_method):
-        """Method for setting up database entries and files for use in testing"""
+    # Perform cleanup
+    cleanup_accounts()
 
-        # Set some useful attributes
-        self.acc_username = 'test_account'
-        self.fq_username = 'test_account2'
-        self.test_filename = 'test_file.txt'
-        self.fileid = 9999
+    # Check that there are no expired accounts
+    results = session.query(Accounts).filter(Accounts.registration_expires <= datetime.datetime.today()).all()
+    assert len(results) == 0
 
-        # Add an accounts entry that has expired
-        data = [{
-            'username': self.acc_username,
-            'certuid': 'test_cert',
-            'role': 'subscriber',
-            'registration_date': datetime.datetime.today(),
-            'registration_expires': datetime.datetime.today() - datetime.timedelta(days=1)
-        }]
-        insert_data('accounts', data)
+    # Check that there are no files in the queue associated with expired accounts
+    results = session.query(FileQueue).filter(FileQueue.username == 'expired_account').all()
+    assert len(results) == 0
 
-        # Add an accounts entry that hasnt expired, for the file_queue test
-        data = [{
-            'username': self.fq_username,
-            'certuid': 'test_cert2',
-            'role': 'subscriber',
-            'registration_date': datetime.datetime.today(),
-            'registration_expires': datetime.datetime.today() + datetime.timedelta(days=10)
-        }]
-        insert_data('accounts', data)
 
-        # Add a file metadata entry for file to satisfy foreign key constraint
-        data = [{
-            'fileid': self.fileid,
-            'name': self.test_filename,
-            'checksum': 'abcdefg',
-            'size': 1,
-            'expires': datetime.datetime.today() + datetime.timedelta(days=1),
-            'stream': 'prod',
-            'shortname': 'TEST_FILE',
-            'version': 'v01'
-        }]
-        insert_data('file_metadata', data)
+def test_cleanup_file_queue():
+    """Tests the ``cleanup_file_queue`` function"""
 
-        # Add a file queue entry for the expired account
-        data = [{
-            'username': self.acc_username,
-            'fileid': self.fileid,
-            'entry_date': datetime.datetime.today(),
-            'expires': datetime.datetime.today() + datetime.timedelta(days=10)  # The file in the queue doesn't necessarily have to be expired
-        }]
-        insert_data('file_queue', data)
+    # Perform cleanup
+    cleanup_file_queue()
 
-        # Add a file queue entry that is itself expired
-        data = [{
-            'username': self.fq_username,
-            'fileid': self.fileid,
-            'entry_date': datetime.datetime.today(),
-            'expires': datetime.datetime.today() - datetime.timedelta(days=10)
-        }]
-        insert_data('file_queue', data)
+    # Check that there are no expired files in the file queue
+    results = session.query(FileQueue.fileid).filter(FileQueue.expires <= datetime.datetime.today()).all()
+    assert len(results) == 0
 
-        # Add an expired file to the file queue storage
-        with open(os.path.join(SUBSCRIBER_QUEUE, self.test_filename), 'w') as f:
-            f.write('')
-
-    def test_cleanup_accounts(self):
-        """Tests the ``cleanup_accounts`` function"""
-
-        # Perform cleanup
-        cleanup_accounts()
-
-        # Check that there are no expired accounts
-        results = session.query(Accounts).filter(Accounts.registration_expires <= datetime.datetime.today()).all()
-        assert len(results) == 0
-
-        # Check that there are no files in the queue associated with expired accounts
-        results = session.query(FileQueue).filter(FileQueue.username == self.acc_username).all()
-        assert len(results) == 0
-
-    def test_cleanup_file_queue(self):
-        """Tests the ``cleanup_file_queue`` function"""
-
-        # Perform cleanup
-        cleanup_file_queue()
-
-        # Check that there are no expired files in the file queue
-        results = session.query(FileQueue.fileid).filter(FileQueue.expires <= datetime.datetime.today()).all()
-        assert len(results) == 0
-
-        # Check that the expired file was removed from the queue storage
-        assert not os.path.exists(os.path.join(SUBSCRIBER_QUEUE, self.test_filename))
-
-    def teardown(self, test_method):
-        """Method for removing database entries and files that were used for
-        testing"""
-
-        # Remove entries that were added
-        session.query(FileQueue).filter(FileQueue.fileid == self.fileid).delete()
-        session.query(FileMetadata).filter(FileMetadata.fileid == self.fileid).delete()
-        session.query(Accounts).filter(Accounts.username == self.acc_username).delete()
-        session.query(Accounts).filter(Accounts.username == self.fq_username).delete()
-        session.commit()
+    # Check that the expired file was removed from the queue storage
+    assert not os.path.exists(os.path.join(SUBSCRIBER_QUEUE, 'test_cleanup_db_2.txt'))

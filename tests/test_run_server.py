@@ -21,14 +21,10 @@ from lasp_sdtp.database.database_interface import FileMetadata
 from lasp_sdtp.database.database_interface import FileQueue
 from lasp_sdtp.database.database_interface import session
 from lasp_sdtp.database.database_interface import Transactions
-from lasp_sdtp.database.insert_test_data import insert_test_data
 from lasp_sdtp.server.run_server import get_app
 
 HOME_DIR = os.path.expanduser('~')
 SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
-
-# Put testing data into the database
-insert_test_data()
 
 
 def _check_transaction(request_url, headers):

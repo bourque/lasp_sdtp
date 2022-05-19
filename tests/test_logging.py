@@ -19,7 +19,7 @@ def test_configure_logging():
     """Tests the ``configure_logging`` function"""
 
     # Configure a log file
-    log_file = configure_logging()
+    log_file = configure_logging(verbose=False)
 
     # Perform some basic logging
     logging.info('Some information')

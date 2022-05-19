@@ -24,8 +24,13 @@ import os
 HOME_DIR = os.path.join(os.path.expanduser('~'), 'Desktop')
 
 
-def configure_logging():
+def configure_logging(verbose=True):
     """Create and configure a log file with a standard logging format.
+
+    Parameters
+    ----------
+    verbose : boolean
+        Switches on/off printing information to stdout
 
     Returns
     -------
@@ -48,7 +53,8 @@ def configure_logging():
 
     # Create the log file
     logging.basicConfig(filename=log_file, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %H:%M:%S %p', level=logging.INFO)
-    print('Log file initialized to {}'.format(log_file))
+    if verbose:
+        print('Log file initialized to {}'.format(log_file))
 
     # Log system information
     python_version = sys.version.replace("\n", "")
