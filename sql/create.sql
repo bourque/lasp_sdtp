@@ -41,6 +41,7 @@ CREATE TABLE file_metadata (
     stream VARCHAR2(255) NOT NULL,
     shortname VARCHAR(255) NOT NULL,
     version VARCHAR2(3) NOT NULL,
+    "date" DATE NOT NULL,
     CONSTRAINT file_metadata_uc UNIQUE(name, checksum),
     PRIMARY KEY(fileid)
 );

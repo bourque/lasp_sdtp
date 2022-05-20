@@ -226,6 +226,7 @@ class FileMetadata(base):
     stream = Column(String(255), nullable=False)
     shortname = Column(String(255), nullable=False)
     version = Column(String(3), nullable=False)
+    date = Column(DateTime, nullable=False)
 
 
 class FileQueue(base):

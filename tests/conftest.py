@@ -9,6 +9,7 @@ Authors
 
 import datetime
 import glob
+import random
 import os
 
 import pytest
@@ -77,7 +78,8 @@ def _add_file_metadata_entries():
             'expires': datetime.datetime.today() + datetime.timedelta(days=subscriber_config['expiration_period']),
             'stream': 'prod',
             'shortname': get_shortname(os.path.basename(test_file)),
-            'version': 'v01'
+            'version': 'v01',
+            'date': datetime.datetime(2022, 1, 1) + datetime.timedelta(days=i-1)
         }
         data_to_insert.append(data)
     insert_data('file_metadata', data_to_insert)
@@ -91,7 +93,8 @@ def _add_file_metadata_entries():
         'expires': datetime.datetime.today() + datetime.timedelta(days=1),
         'stream': 'prod',
         'shortname': 'TEST_FILE',
-        'version': 'v01'
+        'version': 'v01',
+        'date': datetime.datetime(2022, 1, 1)
     }]
 
     # to satisfy integrity contraint for test_cleanup_database
@@ -103,7 +106,8 @@ def _add_file_metadata_entries():
         'expires': datetime.datetime.today() + datetime.timedelta(days=1),
         'stream': 'prod',
         'shortname': 'TEST_FILE',
-        'version': 'v01'
+        'version': 'v01',
+        'date': datetime.datetime(2022, 1, 1)
     })
 
     # to satisfy integrity contraint for test_reporting
@@ -115,7 +119,8 @@ def _add_file_metadata_entries():
         'expires': datetime.datetime.today() + datetime.timedelta(days=1),
         'stream': 'prod',
         'shortname': 'TEST_FILE',
-        'version': 'v01'
+        'version': 'v01',
+        'date': datetime.datetime(2022, 1, 1)
     })
 
     # A seperate call to insert_data() is needed so that the correct fileids are inserted

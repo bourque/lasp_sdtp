@@ -24,7 +24,15 @@ from lasp_sdtp.database.database_interface import Transactions
 from lasp_sdtp.server.run_server import get_app
 
 HOME_DIR = os.path.expanduser('~')
+FILESYSTEM_PATH = f'{HOME_DIR}/Desktop/test_filesystem/'
 SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
+
+TEST_URLS = [
+    '/files',
+    '/files?stream=prod',
+    '/files?stream=prod&ShortName=TSIS2_L1',
+    '/files?date=2022-01-01',
+    '/files?start_date=2022-01-01&end_date=2022-02-01']
 
 
 def _check_transaction(request_url, headers):
@@ -110,11 +118,11 @@ def test_authorize(client):
     assert bogus_response.status_code == 401
 
 
-def test_get_filelist(client):
+@pytest.mark.parametrize('request_url', TEST_URLS)
+def test_get_filelist(client, request_url):
     """Tests that the ``GET /files`` request works as expected"""
 
     # Send a test request and get the response
-    request_url = '/files?stream=prod&ShortName=TSIS2_L1'
     headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
     response = client.get(request_url, headers=headers)
     data = json.loads(response.get_data().decode("utf-8"))
@@ -123,11 +131,11 @@ def test_get_filelist(client):
     assert response.status_code == 200
 
     # Check if the returned files are in the filesystem
-    test_filesystem = f'{HOME_DIR}/Desktop/test_filesystem/'
-    test_files = glob.glob(os.path.join(test_filesystem, '*'))
-    for test_file in test_files:
-        if os.path.basename(test_file).startswith('tsis2_L1'):
-            assert os.path.basename(test_file) in str(data['files'])
+    test_files = glob.glob(os.path.join(FILESYSTEM_PATH, '*'))
+    for entry in data['files']:
+        filename = os.path.join(FILESYSTEM_PATH, entry['name'])
+        if 'test_cleanup_db' not in filename and 'test_reporting' not in filename:  # ignore files used in other tests
+            assert filename in test_files 
 
     _check_transaction(request_url, response.headers)
 
@@ -206,3 +214,5 @@ def test_delete_files(client):
     for fileid in fileids:
         results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
         assert len(results) == 0
+
+# Tests for faulty requests

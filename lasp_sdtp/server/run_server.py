@@ -38,6 +38,57 @@ FILESYSTEM_PATH = f'{HOME_DIR}/Desktop/test_filesystem/'
 SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
 
 
+def _parse_request_params(request):
+    """Parse the params in the request and store them in a dictionary.  If any
+    unsupported parameters are encountered, a 404 error is raised
+
+    Parameters
+    ----------
+    request : obj
+        The request to parse
+
+    Returns
+    -------
+    params : dict
+        A dictionary of key/value pairs for the request parameters
+    """
+
+    # Check for unsupported parameters
+    supported_parameters = ['stream', 'ShortName', 'version', 'date', 'start_date', 'end_date']
+    for item in request.args.keys():
+        if item not in supported_parameters:
+            abort(400, 'The request is incorrect') 
+
+    params = {}
+
+    params['stream'] = request.args.get('stream', default='prod', type=str)
+    params['shortname'] = request.args.get('ShortName', default='all', type=str)
+    params['version'] = request.args.get('version', default='v01', type=str)
+    params['date'] = request.args.get('date', default=None, type=str)
+    params['start_date'] = request.args.get('start_date', default=None, type=str)
+    params['end_date'] = request.args.get('end_date', default=None, type=str)
+
+    return params
+
+
+def _validate_request_params(params):
+    """Make sure that all of the provided parameters are of valid type and
+    value.  If any of them are not, a 404 error is raised.
+
+    Parameters
+    ----------
+    params : dict
+        A dictionary of key/value pairs for the request parameters
+    """
+
+    # Make sure the date/start_date/end_date combination is valid
+    # e.g. if a date is provided, the start and end dates should be None
+    date_types = (type(params['date']), type(['start_date']), type(['end_date']))
+    valid_date_type_combos = [(type(None), type(None), type(None)), (type(str), type(None), type(None)), (type(None), type(str), type(str))]
+    if date_types not in valid_date_type_combos:
+        abort(400, 'The request is incorrect')
+
+
 @app.before_request
 def authorize():
     """Authorize a request before it happens"""
@@ -217,19 +268,25 @@ def get_filelist():
     transactionid = _update_transactions_table(request)
 
     # Parse paramters from the request
-    stream = request.args.get('stream', default='prod', type=str)
-    shortname = request.args.get('ShortName', default='all', type=str)
-    version = request.args.get('version', default='v01', type=str)
+    params = _parse_request_params(request)
+
+    # Make sure the parameters are valid
+    _validate_request_params(request)
 
     # Determine which files to return based on parameters
-    query = session.query(FileMetadata)\
-        .filter(FileMetadata.stream == stream)\
-        .filter(FileMetadata.version == version)
-    if shortname != 'all':
-        query = query.filter(FileMetadata.shortname == shortname)
+    query = session.query(FileMetadata).filter(FileMetadata.stream == params['stream']).filter(FileMetadata.version == params['version'])  # base query
+    if params['shortname'] != 'all':
+        query = query.filter(FileMetadata.shortname == params['shortname'])
+    if params['date'] is not None:
+        query = query.filter(FileMetadata.date == datetime.datetime.strptime(params['date'], '%Y-%M-%d'))
+    if params['start_date'] and params['end_date'] is not None:
+        query = query.filter(FileMetadata.date >= datetime.datetime.strptime(params['start_date'], '%Y-%M-%d'))
+        query = query.filter(FileMetadata.date <= datetime.datetime.strptime(params['end_date'], '%Y-%M-%d'))
+    
+    # Run the query
     results = query.all()
 
-    # Parse the results
+    # Parse the query results
     data = [item.__dict__ for item in results]
     for item in data:
         del item['_sa_instance_state']
