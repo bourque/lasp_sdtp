@@ -158,7 +158,7 @@ def delete_file(fileid):
     file_metadata = file_metadata[0].__dict__
 
     # Determine where the file exists in the queue
-    filepath = os.path.join(admin_config['subscriber_queues_loc'], file_metadata['name'])
+    filepath = os.path.join(admin_config['subscriber_queues_loc'], subscriber_config['username'], file_metadata['name'])
 
     # Check to see if the file is in the queue for another subscriber
     queue_data = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
@@ -205,6 +205,7 @@ def delete_files(fileid_start, fileid_end):
         The response object containing approriate headers and content.
     """
 
+    # Iterate through the files and delete them individually
     fileids = [fileid for fileid in range(int(fileid_start), int(fileid_end))]
     for fileid in fileids:
         delete_file(fileid)
@@ -249,7 +250,7 @@ def get_file(fileid):
     filepath = os.path.join(admin_config['filesystem_loc'], file_metadata['name'])
 
     # Copy the file to the queue
-    dst = os.path.join(admin_config['subscriber_queues_loc'], os.path.basename(filepath))
+    dst = os.path.join(admin_config['subscriber_queues_loc'], subscriber_config['username'], os.path.basename(filepath))
     shutil.copyfile(filepath, dst)
     logging.info(f'Copied {filepath} to queue: {dst}')
 

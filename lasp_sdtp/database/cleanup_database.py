@@ -18,6 +18,7 @@ import datetime
 import os
 
 from lasp_sdtp.config import admin_config
+from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_interface import Accounts
 from lasp_sdtp.database.database_interface import FileMetadata
 from lasp_sdtp.database.database_interface import FileQueue
@@ -60,7 +61,7 @@ def cleanup_file_queue():
         # Remove file from the file queue storage
         filename = session.query(FileMetadata.name).filter(FileMetadata.fileid == expired_file).all()
         filename = filename[0][0]
-        file_path = os.path.join(admin_config['subscriber_queues_loc'], filename)
+        file_path = os.path.join(admin_config['subscriber_queues_loc'], subscriber_config['username'], filename)
         if os.path.exists(file_path):
             os.remove(file_path)
 

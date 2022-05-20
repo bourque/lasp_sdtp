@@ -155,7 +155,7 @@ def test_get_file(client):
     assert response.status_code == 200
 
     # Check if the file is in the queue
-    assert os.path.exists(os.path.join(admin_config['subscriber_queues_loc'], data['filename']))
+    assert os.path.exists(os.path.join(admin_config['subscriber_queues_loc'], subscriber_config['username'], data['filename']))
 
     # Check that there is a database entry for the file in the queue
     results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
@@ -189,7 +189,8 @@ def test_delete_file(client):
 
 def test_delete_files(client):
     """Tests that the ``DELETE /files/<fileid_start>-<fileid_end>`` request
-    works as expected"""
+    works as expected
+    """
 
     headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
 
@@ -212,5 +213,3 @@ def test_delete_files(client):
     for fileid in fileids:
         results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
         assert len(results) == 0
-
-# Tests for faulty requests
