@@ -59,12 +59,8 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
-
-
-HOME_DIR = os.path.expanduser('~')
-FILESYSTEM_PATH = f'{HOME_DIR}/Desktop/test_filesystem/'
-SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
 
 
 def load_connection():
@@ -159,8 +155,8 @@ def _update_transactions_table(request, fileid=None):
             username=subscriber_config['username'],
             start_time=datetime.datetime.now(),
             fileid=fileid,
-            source=FILESYSTEM_PATH,
-            destination=SUBSCRIBER_QUEUE)
+            source=admin_config['filesystem_loc'],
+            destination=admin_config['subscriber_queues_loc'])
 
     # For DELETE /files/<fileid>
     if request.method == 'DELETE':

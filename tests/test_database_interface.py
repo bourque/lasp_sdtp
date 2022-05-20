@@ -14,6 +14,7 @@ from collections import namedtuple
 import pytest
 from sqlalchemy import Table
 
+from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_interface import Accounts
 from lasp_sdtp.database.database_interface import base

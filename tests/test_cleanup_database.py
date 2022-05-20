@@ -12,14 +12,12 @@ Use
 import datetime
 import os
 
+from lasp_sdtp.config import admin_config
 from lasp_sdtp.database.cleanup_database import cleanup_accounts
 from lasp_sdtp.database.cleanup_database import cleanup_file_queue
 from lasp_sdtp.database.database_interface import Accounts
 from lasp_sdtp.database.database_interface import FileQueue
 from lasp_sdtp.database.database_interface import session
-
-HOME_DIR = os.path.expanduser('~')
-SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
 
 
 def test_cleanup_accounts():
@@ -48,4 +46,4 @@ def test_cleanup_file_queue():
     assert len(results) == 0
 
     # Check that the expired file was removed from the queue storage
-    assert not os.path.exists(os.path.join(SUBSCRIBER_QUEUE, 'test_cleanup_db_2.txt'))
+    assert not os.path.exists(os.path.join(admin_config['subscriber_queues_loc'], 'test_cleanup_db_2.txt'))

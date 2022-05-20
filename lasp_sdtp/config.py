@@ -16,6 +16,8 @@ Use
 import json
 import os
 
+HOME_DIR = os.path.expanduser('~')
+
 
 def get_admin_config():
     """Return admin configuration details
@@ -29,6 +31,10 @@ def get_admin_config():
     config_file_location = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'admin_config.json')
     with open(config_file_location, 'r') as f:
         config = json.load(f)
+
+    # Prepend necessary directory to filesystem and subscriber queues
+    config['filesystem_loc'] = os.path.join(HOME_DIR, config['filesystem_loc'])
+    config['subscriber_queues_loc'] = os.path.join(HOME_DIR, config['subscriber_queues_loc'])
 
     return config
 

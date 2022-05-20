@@ -14,6 +14,7 @@ import os
 
 import pytest
 
+from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_interface import Accounts
 from lasp_sdtp.database.database_interface import FileMetadata
@@ -23,11 +24,6 @@ from lasp_sdtp.database.database_interface import session
 from lasp_sdtp.database.database_interface import Transactions
 from lasp_sdtp.utils.utils import get_checksum
 from lasp_sdtp.utils.utils import get_shortname
-
-HOME_DIR = os.path.expanduser('~')
-FILESYSTEM_PATH = f'{HOME_DIR}/Desktop/test_filesystem/'
-SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
-
 
 def _add_accounts_entries():
     """Add necessary ``accounts`` table entries used for testing"""
@@ -65,8 +61,7 @@ def _add_file_metadata_entries():
     """Add necessary ``file_metadata`` table entries used for testing"""
 
     # Locate test files
-    test_filesystem = f'{HOME_DIR}/Desktop/test_filesystem/'
-    test_files = glob.glob(os.path.join(test_filesystem, '*'))
+    test_files = glob.glob(os.path.join(admin_config['filesystem_loc'], '*'))
 
     # Insert filesystem data (mostly used for test_run_server)
     data_to_insert = []
@@ -147,11 +142,11 @@ def _add_file_queue_entries():
     })
 
     # Add an expired file to the file queue storage associated with expired account (for test_cleanup_database)
-    with open(os.path.join(SUBSCRIBER_QUEUE, 'test_cleanup_db.txt'), 'w') as f:
+    with open(os.path.join(admin_config['subscriber_queues_loc'], 'test_cleanup_db.txt'), 'w') as f:
         f.write('')
 
     # Add an expired file to the file queue storage associated with non-expired account (for test_cleanup_database)
-    with open(os.path.join(SUBSCRIBER_QUEUE, 'test_cleanup_db_2.txt'), 'w') as f:
+    with open(os.path.join(admin_config['subscriber_queues_loc'], 'test_cleanup_db_2.txt'), 'w') as f:
         f.write('')
 
     # for test_reporting

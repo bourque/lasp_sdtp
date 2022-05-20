@@ -21,6 +21,7 @@ from flask import Flask
 from flask import make_response
 from flask import request
 
+from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_interface import FileMetadata
 from lasp_sdtp.database.database_interface import FileQueue
@@ -33,10 +34,34 @@ from lasp_sdtp.utils.logging import configure_logging
 app = Flask(__name__)
 configure_logging()
 
-HOME_DIR = os.path.expanduser('~')
-FILESYSTEM_PATH = f'{HOME_DIR}/Desktop/test_filesystem/'
-SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
 
+def _build_query(params):
+    """Build query to the ``FileMetadata`` table to return file data based on
+    user-provided parameters
+
+    Parameters
+    ----------
+    params : dict
+        A dictionary of key/value pairs for the request parameters
+
+    Returns
+    -------
+    query:
+        A ``sqlalchemy`` query of the ``FileMetadata`` table
+    """
+
+    query = session.query(FileMetadata)  # base query
+    query = query.filter(FileMetadata.stream == params['stream'])  # stream is always supplied via default value
+    query = query.filter(FileMetadata.version == params['version'])  # version is always supplied via default value
+    if params['shortname'] != 'all':
+        query = query.filter(FileMetadata.shortname == params['shortname'])
+    if params['date'] is not None:
+        query = query.filter(FileMetadata.date == datetime.datetime.strptime(params['date'], '%Y-%M-%d'))
+    if params['start_date'] and params['end_date'] is not None:
+        query = query.filter(FileMetadata.date >= datetime.datetime.strptime(params['start_date'], '%Y-%M-%d'))
+        query = query.filter(FileMetadata.date <= datetime.datetime.strptime(params['end_date'], '%Y-%M-%d'))
+
+    return query
 
 def _parse_request_params(request):
     """Parse the params in the request and store them in a dictionary.  If any
@@ -83,8 +108,8 @@ def _validate_request_params(params):
 
     # Make sure the date/start_date/end_date combination is valid
     # e.g. if a date is provided, the start and end dates should be None
-    date_types = (type(params['date']), type(['start_date']), type(['end_date']))
-    valid_date_type_combos = [(type(None), type(None), type(None)), (type(str), type(None), type(None)), (type(None), type(str), type(str))]
+    date_types = (type(params['date']), type(params['start_date']), type(params['end_date']))
+    valid_date_type_combos = [(type(None), type(None), type(None)), (str, type(None), type(None)), (type(None), str, str)]
     if date_types not in valid_date_type_combos:
         abort(400, 'The request is incorrect')
 
@@ -133,7 +158,7 @@ def delete_file(fileid):
     file_metadata = file_metadata[0].__dict__
 
     # Determine where the file exists in the queue
-    filepath = os.path.join(SUBSCRIBER_QUEUE, file_metadata['name'])
+    filepath = os.path.join(admin_config['subscriber_queues_loc'], file_metadata['name'])
 
     # Check to see if the file is in the queue for another subscriber
     queue_data = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
@@ -221,10 +246,10 @@ def get_file(fileid):
     file_metadata = file_metadata[0].__dict__
 
     # Determine where the file exists in the filesystem
-    filepath = os.path.join(FILESYSTEM_PATH, file_metadata['name'])
+    filepath = os.path.join(admin_config['filesystem_loc'], file_metadata['name'])
 
     # Copy the file to the queue
-    dst = os.path.join(SUBSCRIBER_QUEUE, os.path.basename(filepath))
+    dst = os.path.join(admin_config['subscriber_queues_loc'], os.path.basename(filepath))
     shutil.copyfile(filepath, dst)
     logging.info(f'Copied {filepath} to queue: {dst}')
 
@@ -271,19 +296,10 @@ def get_filelist():
     params = _parse_request_params(request)
 
     # Make sure the parameters are valid
-    _validate_request_params(request)
+    _validate_request_params(params)
 
-    # Determine which files to return based on parameters
-    query = session.query(FileMetadata).filter(FileMetadata.stream == params['stream']).filter(FileMetadata.version == params['version'])  # base query
-    if params['shortname'] != 'all':
-        query = query.filter(FileMetadata.shortname == params['shortname'])
-    if params['date'] is not None:
-        query = query.filter(FileMetadata.date == datetime.datetime.strptime(params['date'], '%Y-%M-%d'))
-    if params['start_date'] and params['end_date'] is not None:
-        query = query.filter(FileMetadata.date >= datetime.datetime.strptime(params['start_date'], '%Y-%M-%d'))
-        query = query.filter(FileMetadata.date <= datetime.datetime.strptime(params['end_date'], '%Y-%M-%d'))
-    
-    # Run the query
+    # Build and run the query based on the parameters
+    query = _build_query(params)
     results = query.all()
 
     # Parse the query results
@@ -334,8 +350,8 @@ def register():
     # Add a transactions database record
     transactionid = _update_transactions_table(request)
 
-    # Create a queue space on filesystem
-    queue_path = f"{HOME_DIR}/Desktop/{subscriber_config['username']}_queue/"
+    # Create a queue space in cache
+    queue_path = os.path.join(admin_config['subscriber_queues_loc'], subscriber_config['username'])
     if not os.path.exists(queue_path):
         os.mkdir(queue_path)
         logging.info(f'Created queue: {queue_path}')

@@ -17,13 +17,11 @@ Use
 import datetime
 import os
 
+from lasp_sdtp.config import admin_config
 from lasp_sdtp.database.database_interface import Accounts
 from lasp_sdtp.database.database_interface import FileMetadata
 from lasp_sdtp.database.database_interface import FileQueue
 from lasp_sdtp.database.database_interface import session
-
-HOME_DIR = os.path.expanduser('~')
-SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
 
 
 def cleanup_accounts():
@@ -62,7 +60,7 @@ def cleanup_file_queue():
         # Remove file from the file queue storage
         filename = session.query(FileMetadata.name).filter(FileMetadata.fileid == expired_file).all()
         filename = filename[0][0]
-        file_path = os.path.join(SUBSCRIBER_QUEUE, filename)
+        file_path = os.path.join(admin_config['subscriber_queues_loc'], filename)
         if os.path.exists(file_path):
             os.remove(file_path)
 

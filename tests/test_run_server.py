@@ -15,6 +15,7 @@ import os
 
 import pytest
 
+from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_interface import Accounts
 from lasp_sdtp.database.database_interface import FileMetadata
@@ -23,9 +24,6 @@ from lasp_sdtp.database.database_interface import session
 from lasp_sdtp.database.database_interface import Transactions
 from lasp_sdtp.server.run_server import get_app
 
-HOME_DIR = os.path.expanduser('~')
-FILESYSTEM_PATH = f'{HOME_DIR}/Desktop/test_filesystem/'
-SUBSCRIBER_QUEUE = f'{HOME_DIR}/Desktop/test_queue/'
 
 TEST_URLS = [
     '/files',
@@ -131,9 +129,9 @@ def test_get_filelist(client, request_url):
     assert response.status_code == 200
 
     # Check if the returned files are in the filesystem
-    test_files = glob.glob(os.path.join(FILESYSTEM_PATH, '*'))
+    test_files = glob.glob(os.path.join(admin_config['filesystem_loc'], '*'))
     for entry in data['files']:
-        filename = os.path.join(FILESYSTEM_PATH, entry['name'])
+        filename = os.path.join(admin_config['filesystem_loc'], entry['name'])
         if 'test_cleanup_db' not in filename and 'test_reporting' not in filename:  # ignore files used in other tests
             assert filename in test_files 
 
@@ -157,7 +155,7 @@ def test_get_file(client):
     assert response.status_code == 200
 
     # Check if the file is in the queue
-    assert os.path.exists(os.path.join(SUBSCRIBER_QUEUE, data['filename']))
+    assert os.path.exists(os.path.join(admin_config['subscriber_queues_loc'], data['filename']))
 
     # Check that there is a database entry for the file in the queue
     results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()

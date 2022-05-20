@@ -20,7 +20,9 @@ def test_get_admin_config():
 
     required_keys = [
         'email_address',
-        'email_password']
+        'email_password',
+        'filesystem_loc',
+        'subscriber_queues_loc']
 
     for key in required_keys:
         assert key in config
