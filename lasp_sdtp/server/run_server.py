@@ -18,12 +18,13 @@ import shutil
 
 from flask import abort
 from flask import Flask
-from flask import jsonify
 from flask import make_response
 from flask import request
+from sqlalchemy.exc import IntegrityError
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
+from lasp_sdtp.database.database_interface import Accounts
 from lasp_sdtp.database.database_interface import FileMetadata
 from lasp_sdtp.database.database_interface import FileQueue
 from lasp_sdtp.database.database_interface import insert_data
@@ -64,6 +65,7 @@ def _build_query(params):
 
     return query
 
+
 def _parse_request_params(request):
     """Parse the params in the request and store them in a dictionary.  If any
     unsupported parameters are encountered, a 404 error is raised
@@ -97,6 +99,23 @@ def _parse_request_params(request):
     return params
 
 
+def _register_admin():
+    """Resiters an admin account if it doesn't already exist"""
+
+    # Check if an admin account already exists
+    results = session.query(Accounts).filter(Accounts.username == 'lasp_admin').all()
+
+    # If it doesn't, register one
+    if not results:
+        data = [{
+            'username': 'lasp_admin',
+            'certuid': 'admin_cert',
+            'role': 'admin',
+            'registration_date': datetime.datetime.today()}]
+        insert_data('accounts', data)
+        logging.info('Registered admin account')
+
+
 def _validate_request_params(params):
     """Make sure that all of the provided parameters are of valid type and
     value.  If any of them are not, a 404 error is raised.
@@ -117,7 +136,7 @@ def _validate_request_params(params):
 
 @app.before_request
 def authorize():
-    """Authorize a request before it happens"""
+    """Authorize a request.  This is performed before every request is processed"""
 
     # Assume user is not authorized until proven otherwise
     valid_certificate = False
@@ -136,13 +155,24 @@ def authorize():
 @app.errorhandler(400)
 def custom400(error):
     """Returns custom 400 response"""
-    return make_response({'message': 'The response is incorrect'}, 400)
+    return make_response({'message': 'The request is incorrect'}, 400)
 
 
 @app.errorhandler(401)
 def custom401(error):
     """Returns custom 401 response"""
-    return make_response({'message': 'Unauthorized'}, 401)
+
+    # The message depends on the request method
+    if request.method == 'PUT':
+        return make_response({'message': 'Unauthorized'}, 401)
+    elif request.method == 'GET':
+        return make_response({'message': 'Request is not authenticated'}, 401)
+
+
+@app.errorhandler(404)
+def custom404(error):
+    """Returns custom 400 response"""
+    return make_response({'message': 'The requested resource does not exist'}, 404)
 
 
 @app.route('/files/<fileid>', methods=['DELETE'])
@@ -164,8 +194,11 @@ def delete_file(fileid):
     transactionid = _update_transactions_table(request, fileid=fileid)
 
     # Get the metadata for the file of interest
-    file_metadata = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
-    file_metadata = file_metadata[0].__dict__
+    try:
+        file_metadata = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
+        file_metadata = file_metadata[0].__dict__
+    except IndexError:  # No results, send a 404
+        abort(404)
 
     # Determine where the file exists in the queue
     filepath = os.path.join(admin_config['subscriber_queues_loc'], subscriber_config['username'], file_metadata['name'])
@@ -250,8 +283,23 @@ def get_file(fileid):
         The response object containing approriate headers and content.
     """
 
+    # Make sure given fileid is an integer
+    try:
+        int(fileid)
+    except ValueError:
+        abort(400)
+
+    # Make sure the given fileid is a positive integer that is 15 digits or less
+    if int(fileid) <= 0 or int(fileid) > 999999999999999:
+        abort(400)
+
     # Add a transactions database record
-    transactionid = _update_transactions_table(request, fileid=fileid)
+    # If the record cant be added, it means the file doesn't exist in file_metadata
+    try:
+        transactionid = _update_transactions_table(request, fileid=fileid)
+    except IntegrityError:
+        session.close()  # Needed to avoid rollback during flush
+        abort(404)
 
     # Get the metadata for the file of interest
     file_metadata = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
@@ -369,8 +417,8 @@ def register():
         logging.info(f'Created queue: {queue_path}')
 
     # Construct the response
-    content = ''
-    status = 200
+    content = {'message': 'Success but no other response necessary'}
+    status = 204
     response = make_response(content, status)
     response.headers['Content-Type'] = 'application/json'
     response.headers['SDTP-TransactionID'] = transactionid
@@ -380,12 +428,8 @@ def register():
 
 if __name__ == '__main__':
 
-    # Register an admin account
-    data = [{
-        'username': 'lasp_admin',
-        'role': 'admin',
-        'registration_date': datetime.datetime.today()}]
-    insert_data('accounts', data)
-    logging.info('Registered admin account')
+    # Register an admin account if necessary
+    _register_admin()
 
+    # Run the server
     app.run(host=subscriber_config['endpoint'], port='8000')

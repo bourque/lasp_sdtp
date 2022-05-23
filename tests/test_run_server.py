@@ -37,7 +37,11 @@ INVALID_TEST_URLS = [
     '/files?date=2022-01-01&start_date=2022-01-01',
     '/files?date=2022-01-01&end_date=2022-02-01',
     '/files?start_date=2022-01-01',
-    '/files?end_date=2022-02-01']
+    '/files?end_date=2022-02-01',
+    '/files/foo',
+    '/files/123.4',
+    '/files/-1',
+    '/files/9999999999999999']
 
 
 def _check_transaction(request_url, headers):
@@ -92,14 +96,20 @@ def client(app):
 
 
 def test_register(client):
-    """Tests that the ``PUT /register`` request works as expected"""
+    """Tests that the ``PUT /register`` request works as expected
+
+    Parameters
+    ----------
+    client : flask.testing.FlaskClient object
+        The client to test with
+    """
 
     request_url = '/register'
     headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
     response = client.put(request_url, headers=headers)
 
-    # Make sure the response status is 200
-    assert response.status_code == 200
+    # Make sure the response is correct
+    assert response.status_code == 204
 
     # Check that a database entry was made for the Accounts table
     results = session.query(Accounts).filter(Accounts.username == subscriber_config['username']).all()
@@ -110,22 +120,43 @@ def test_register(client):
 
 
 def test_authorize(client):
-    """Tests the ``authorize`` function"""
+    """Tests the ``authorize`` function
 
-    request_url = '/files'
+    Parameters
+    ----------
+    client : flask.testing.FlaskClient object
+        The client to test with
+    """
+
+    # For authenticated requests
     authorized_headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
-    bogus_headers = {'content-type': 'application/json', 'Cert-UID': 'fake_certificate'}
-
-    authorized_response = client.get(request_url, headers=authorized_headers)
-    bogus_response = client.get(request_url, headers=bogus_headers)
-
+    authorized_response = client.get('/files', headers=authorized_headers)
     assert authorized_response.status_code == 200
-    assert bogus_response.status_code == 401
+
+    # For unauthorized GET request
+    unauthorized_headers = {'content-type': 'application/json', 'Cert-UID': 'fake_certificate'}
+    unathorized_get_response = client.get('/files', headers=unauthorized_headers)
+    data = json.loads(unathorized_get_response.get_data().decode("utf-8"))
+    assert data['message'] == 'Request is not authenticated'
+
+    # For unathorized PUT request
+    unathorized_put_response = client.put('/register', headers=unauthorized_headers)
+    assert unathorized_put_response.status_code == 401
+    data = json.loads(unathorized_put_response.get_data().decode("utf-8"))
+    assert data['message'] == 'Unauthorized'
 
 
 @pytest.mark.parametrize('request_url', TEST_URLS)
 def test_get_filelist(client, request_url):
-    """Tests that the ``GET /files`` request works as expected"""
+    """Tests that the ``GET /files`` request works as expected
+
+    Parameters
+    ----------
+    client : flask.testing.FlaskClient object
+        The client to test with
+    request_url : str
+        The request url to test (e.g. ``/files``)
+    """
 
     # Send a test request and get the response
     headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
@@ -140,19 +171,25 @@ def test_get_filelist(client, request_url):
     for entry in data['files']:
         filename = os.path.join(admin_config['filesystem_loc'], entry['name'])
         if 'test_cleanup_db' not in filename and 'test_reporting' not in filename:  # ignore files used in other tests
-            assert filename in test_files 
+            assert filename in test_files
 
     _check_transaction(request_url, response.headers)
 
 
 def test_get_file(client):
-    """Tests that the ``GET /files/<fileid>`` request works as expected"""
+    """Tests that the ``GET /files/<fileid>`` request works as expected
+
+    Parameters
+    ----------
+    client : flask.testing.FlaskClient object
+        The client to test with
+    """
 
     # Get the lowest fileid that exists
     file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
     fileid = str(file_metadata[0].__dict__['fileid'])
 
-    # Send a test request and get the response
+    # Send a request and get the response
     request_url = f'/files/{fileid}'
     headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
     response = client.get(request_url, headers=headers)
@@ -173,7 +210,13 @@ def test_get_file(client):
 
 
 def test_delete_file(client):
-    """Tests that the ``DELETE /files/<fileid>`` request works as expected"""
+    """Tests that the ``DELETE /files/<fileid>`` request works as expected
+
+    Parameters
+    ----------
+    client : flask.testing.FlaskClient object
+        The client to test with
+    """
 
     # Get the lowest fileid that exists
     file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
@@ -197,6 +240,11 @@ def test_delete_file(client):
 def test_delete_files(client):
     """Tests that the ``DELETE /files/<fileid_start>-<fileid_end>`` request
     works as expected
+
+    Parameters
+    ----------
+    client : flask.testing.FlaskClient object
+        The client to test with
     """
 
     headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
@@ -223,8 +271,16 @@ def test_delete_files(client):
 
 
 @pytest.mark.parametrize('request_url', INVALID_TEST_URLS)
-def test_invalid_requests(client, request_url):
-    """Tests that invalid requests return the expected reponse"""
+def test_incorrect_requests(client, request_url):
+    """Tests that incorrect requests return the expected reponse of 400
+
+    Parameters
+    ----------
+    client : flask.testing.FlaskClient object
+        The client to test with
+    request_url : str
+        The request url to test (e.g. ``/files?start_date=2022-01-01``)
+    """
 
     # Send the request and get the response
     headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
@@ -233,4 +289,27 @@ def test_invalid_requests(client, request_url):
 
     # Make sure the response is correct
     assert response.status_code == 400
-    assert data['message'] == 'The response is incorrect'
+    assert data['message'] == 'The request is incorrect'
+
+
+def test_file_does_not_exist(client):
+    """Tests that a request for a file that doesn't exist returns the expected
+    response of 404
+
+    Parameters
+    ----------
+    client : flask.testing.FlaskClient object
+        The client to test with
+    """
+
+    request_url = '/files/999999999999999'
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
+
+    for method in ['get', 'delete']:
+        response = getattr(client, method)(request_url, headers=headers)
+
+    data = json.loads(response.get_data().decode("utf-8"))
+
+    # Make sure the response is correct
+    assert response.status_code == 404
+    assert data['message'] == 'The requested resource does not exist'
