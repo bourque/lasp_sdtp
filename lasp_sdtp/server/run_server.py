@@ -18,6 +18,7 @@ import shutil
 
 from flask import abort
 from flask import Flask
+from flask import jsonify
 from flask import make_response
 from flask import request
 
@@ -82,7 +83,7 @@ def _parse_request_params(request):
     supported_parameters = ['stream', 'ShortName', 'version', 'date', 'start_date', 'end_date']
     for item in request.args.keys():
         if item not in supported_parameters:
-            abort(400, 'The request is incorrect') 
+            abort(400)
 
     params = {}
 
@@ -111,7 +112,7 @@ def _validate_request_params(params):
     date_types = (type(params['date']), type(params['start_date']), type(params['end_date']))
     valid_date_type_combos = [(type(None), type(None), type(None)), (str, type(None), type(None)), (type(None), str, str)]
     if date_types not in valid_date_type_combos:
-        abort(400, 'The request is incorrect')
+        abort(400)
 
 
 @app.before_request
@@ -129,10 +130,19 @@ def authorize():
             valid_certificate = True
 
     if not valid_certificate:
-        content = 'Unauthorized'
-        status = 401
-        response = make_response(content, status)
-        abort(response)
+        abort(401)
+
+
+@app.errorhandler(400)
+def custom400(error):
+    """Returns custom 400 response"""
+    return make_response({'message': 'The response is incorrect'}, 400)
+
+
+@app.errorhandler(401)
+def custom401(error):
+    """Returns custom 401 response"""
+    return make_response({'message': 'Unauthorized'}, 401)
 
 
 @app.route('/files/<fileid>', methods=['DELETE'])
@@ -221,6 +231,7 @@ def delete_files(fileid_start, fileid_end):
 
 def get_app():
     """Return an instance of the flask app (mostly for testing purposes)"""
+
     return app
 
 

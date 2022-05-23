@@ -32,6 +32,13 @@ TEST_URLS = [
     '/files?date=2022-01-01',
     '/files?start_date=2022-01-01&end_date=2022-02-01']
 
+INVALID_TEST_URLS = [
+    '/files?date=2022-01-01&start_date=2022-01-01&end_date=2022-02-01',
+    '/files?date=2022-01-01&start_date=2022-01-01',
+    '/files?date=2022-01-01&end_date=2022-02-01',
+    '/files?start_date=2022-01-01',
+    '/files?end_date=2022-02-01']
+
 
 def _check_transaction(request_url, headers):
     """Checks that a transaction record was added to the database
@@ -213,3 +220,17 @@ def test_delete_files(client):
     for fileid in fileids:
         results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
         assert len(results) == 0
+
+
+@pytest.mark.parametrize('request_url', INVALID_TEST_URLS)
+def test_invalid_requests(client, request_url):
+    """Tests that invalid requests return the expected reponse"""
+
+    # Send the request and get the response
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
+    response = client.get(request_url, headers=headers)
+    data = json.loads(response.get_data().decode("utf-8"))
+
+    # Make sure the response is correct
+    assert response.status_code == 400
+    assert data['message'] == 'The response is incorrect'
