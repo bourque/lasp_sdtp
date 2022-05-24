@@ -1,4 +1,4 @@
-"""The main module for running the last_sdtp flask application.
+"""The main module for running the ``last_sdtp`` flask application.
 
 Authors
 -------
@@ -7,7 +7,13 @@ Authors
 Use
 ---
 
-    To run a local server, use:
+    If this module is executed via the command line, an ``admin`` account is
+    registered and the server is run from the ``endpoint`` defined in the
+    ``admin_config.json`` file.  A log file is also created, the path to which
+    will be printed to the terminal.
+
+    To run a local server for development or testing purposes, use:
+    ::
         FLASK_APP=server.py FLASK_ENV=development flask run --port 8000
 """
 
@@ -37,38 +43,52 @@ app = Flask(__name__)
 configure_logging()
 
 
-def _build_query(params):
-    """Build query to the ``FileMetadata`` table to return file data based on
-    user-provided parameters
+def _build_query(tags):
+    """Build query to the ``file_metadata`` table to return file data based on
+    user-provided tags.
+
+    For the ``date`` tag, the user may provide a specific date to filter on
+    (e.g. ``date=2022-01-01``) or the user may provide a speicific date range
+    to filter on via the ``start_date`` and ``end_date`` tags (e.g.
+    ``start_date=2022-01-01&end_date=2022-02-01``).  If a ``date`` is provided,
+    then ``start_date`` and ``end_date`` must remain as ``None``.  Alternativly,
+    if both a ``start_date`` and ``end_date`` are provided, the ``date`` tag
+    must remain as ``None``.
 
     Parameters
     ----------
-    params : dict
-        A dictionary of key/value pairs for the request parameters
+    tags : dict
+        A dictionary of key/value pairs for the request tags
 
     Returns
     -------
-    query:
+    query : sqlalchemy.orm.query.Query obj
         A ``sqlalchemy`` query of the ``FileMetadata`` table
     """
 
     query = session.query(FileMetadata)  # base query
-    query = query.filter(FileMetadata.stream == params['stream'])  # stream is always supplied via default value
-    query = query.filter(FileMetadata.version == params['version'])  # version is always supplied via default value
-    if params['shortname'] != 'all':
-        query = query.filter(FileMetadata.shortname == params['shortname'])
-    if params['date'] is not None:
-        query = query.filter(FileMetadata.date == datetime.datetime.strptime(params['date'], '%Y-%M-%d'))
-    if params['start_date'] and params['end_date'] is not None:
-        query = query.filter(FileMetadata.date >= datetime.datetime.strptime(params['start_date'], '%Y-%M-%d'))
-        query = query.filter(FileMetadata.date <= datetime.datetime.strptime(params['end_date'], '%Y-%M-%d'))
+    query = query.filter(FileMetadata.stream == tags['stream'])  # stream is always supplied via default value
+    query = query.filter(FileMetadata.version == tags['version'])  # version is always supplied via default value
+
+    # For non-default shortname values
+    if tags['shortname'] != 'all':
+        query = query.filter(FileMetadata.shortname == tags['shortname'])
+
+    # For non-default date values
+    if tags['date'] is not None:
+        query = query.filter(FileMetadata.date == datetime.datetime.strptime(tags['date'], '%Y-%M-%d'))
+
+    # For non-default start_date and end_date values
+    if tags['start_date'] and tags['end_date'] is not None:
+        query = query.filter(FileMetadata.date >= datetime.datetime.strptime(tags['start_date'], '%Y-%M-%d'))
+        query = query.filter(FileMetadata.date <= datetime.datetime.strptime(tags['end_date'], '%Y-%M-%d'))
 
     return query
 
 
-def _parse_request_params(request):
-    """Parse the params in the request and store them in a dictionary.  If any
-    unsupported parameters are encountered, a 404 error is raised
+def _parse_request_tags(request):
+    """Parse the tags in the request and store them in a dictionary.  If any
+    unsupported tags are encountered, a 404 error is raised.
 
     Parameters
     ----------
@@ -77,35 +97,35 @@ def _parse_request_params(request):
 
     Returns
     -------
-    params : dict
-        A dictionary of key/value pairs for the request parameters
+    tags : dict
+        A dictionary of key/value pairs for the request tags
     """
 
-    # Check for unsupported parameters
-    supported_parameters = ['stream', 'ShortName', 'version', 'date', 'start_date', 'end_date']
+    # Check for unsupported tags
+    supported_tags = ['stream', 'ShortName', 'version', 'date', 'start_date', 'end_date']
     for item in request.args.keys():
-        if item not in supported_parameters:
+        if item not in supported_tags:
             abort(400)
 
-    params = {}
+    # Store supplied tags in a dictionary
+    tags = {}
+    tags['stream'] = request.args.get('stream', default='prod', type=str)
+    tags['shortname'] = request.args.get('ShortName', default='all', type=str)
+    tags['version'] = request.args.get('version', default='v01', type=str)
+    tags['date'] = request.args.get('date', default=None, type=str)
+    tags['start_date'] = request.args.get('start_date', default=None, type=str)
+    tags['end_date'] = request.args.get('end_date', default=None, type=str)
 
-    params['stream'] = request.args.get('stream', default='prod', type=str)
-    params['shortname'] = request.args.get('ShortName', default='all', type=str)
-    params['version'] = request.args.get('version', default='v01', type=str)
-    params['date'] = request.args.get('date', default=None, type=str)
-    params['start_date'] = request.args.get('start_date', default=None, type=str)
-    params['end_date'] = request.args.get('end_date', default=None, type=str)
-
-    return params
+    return tags
 
 
 def _register_admin():
-    """Resiters an admin account if it doesn't already exist"""
+    """Resiters an ``admin`` account if it doesn't already exist"""
 
     # Check if an admin account already exists
     results = session.query(Accounts).filter(Accounts.username == 'lasp_admin').all()
 
-    # If it doesn't, register one
+    # If it doesn't, create one
     if not results:
         data = [{
             'username': 'lasp_admin',
@@ -116,19 +136,19 @@ def _register_admin():
         logging.info('Registered admin account')
 
 
-def _validate_request_params(params):
-    """Make sure that all of the provided parameters are of valid type and
-    value.  If any of them are not, a 404 error is raised.
+def _validate_request_tags(tags):
+    """Make sure that all of the provided tags are of valid type and value.  If
+    any of them are not, a 404 error is raised.
 
     Parameters
     ----------
-    params : dict
-        A dictionary of key/value pairs for the request parameters
+    tags : dict
+        A dictionary of key/value pairs for the request tags
     """
 
     # Make sure the date/start_date/end_date combination is valid
     # e.g. if a date is provided, the start and end dates should be None
-    date_types = (type(params['date']), type(params['start_date']), type(params['end_date']))
+    date_types = (type(tags['date']), type(tags['start_date']), type(tags['end_date']))
     valid_date_type_combos = [(type(None), type(None), type(None)), (str, type(None), type(None)), (type(None), str, str)]
     if date_types not in valid_date_type_combos:
         abort(400)
@@ -144,7 +164,7 @@ def authorize():
     # Check for a valid certificate in the header
     if 'Cert-UID' in request.headers:
         certificate = request.headers['Cert-UID']
-        authorized_certificates = ['ges_disc_cert']  # Probably better to do a db lookup here
+        authorized_certificates = ['ges_disc_cert']  # Probably better to do a db lookup here?
         if certificate in authorized_certificates:
             valid_certificate = True
 
@@ -178,6 +198,11 @@ def custom404(error):
 @app.route('/files/<fileid>', methods=['DELETE'])
 def delete_file(fileid):
     """Delete a given file from the queue, if applicable.
+
+    A file is only deleted from the queue if it is not being used by any other
+    subscriber.
+
+    If the file of interest doesn't exist, a 404 error is returned.
 
     Parameters
     ----------
@@ -263,7 +288,13 @@ def delete_files(fileid_start, fileid_end):
 
 
 def get_app():
-    """Return an instance of the flask app (mostly for testing purposes)"""
+    """Return an instance of the flask app (used for testing purposes)
+
+    Returns
+    -------
+    app : flask.app.Flask obj
+        An instance of the flask application
+    """
 
     return app
 
@@ -271,6 +302,9 @@ def get_app():
 @app.route('/files/<fileid>', methods=['GET'])
 def get_file(fileid):
     """Return the contents of a given file.
+
+    If the supplied ``fileid`` is not a valid positive integer, a 404 error is
+    returned.  Also, if the file does not exist, a 404 error is returned.
 
     Parameters
     ----------
@@ -344,6 +378,9 @@ def get_file(fileid):
 def get_filelist():
     """Return a list of files available in the filesystem.
 
+    If any supplied tags in the request are not valid or doesn't exist, a 400
+    error is returned.
+
     Returns
     -------
     response : dict
@@ -353,13 +390,13 @@ def get_filelist():
     transactionid = _update_transactions_table(request)
 
     # Parse paramters from the request
-    params = _parse_request_params(request)
+    tags = _parse_request_tags(request)
 
-    # Make sure the parameters are valid
-    _validate_request_params(params)
+    # Make sure the tags are valid
+    _validate_request_tags(tags)
 
-    # Build and run the query based on the parameters
-    query = _build_query(params)
+    # Build and run the query based on the tags
+    query = _build_query(tags)
     results = query.all()
 
     # Parse the query results
@@ -388,6 +425,14 @@ def home():
 @app.route('/register', methods=['PUT'])
 def register():
     """Register a subscriber.
+
+    When a new subscriber is registered, an account is added to the ``accounts``
+    database table and a new queue space is created in the data cache.
+    Subscribers are only registered if their authentication certificate is
+    valid.
+
+    Currently, a simple string value for the certificate is used and is checked
+    against a hard-coded list of acceptable certificates.
 
     Returns
     -------
@@ -432,4 +477,4 @@ if __name__ == '__main__':
     _register_admin()
 
     # Run the server
-    app.run(host=subscriber_config['endpoint'], port='8000')
+    app.run(host=admin_config['endpoint'], port='8000')

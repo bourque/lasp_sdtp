@@ -1,5 +1,5 @@
-"""Gathers configuration details for configuration JSON files and makes the
-data available via importable variables
+"""Gathers configuration details from the ``admin_config`` and ``subscriber_config``
+JSON files and makes the data available via importable variables
 
 Authors
 -------
@@ -8,8 +8,9 @@ Authors
 Use
 ---
     The config variables within this module are inteneded to be imported and
-    used from other modules, e.g.:
+    used from other modules, i.e.:
     ::
+        from lasp_sdtp.config import admin_config
         from lasp_sdtp.config import susbsriber_config
 """
 
@@ -20,12 +21,12 @@ HOME_DIR = os.path.expanduser('~')
 
 
 def get_admin_config():
-    """Return admin configuration details
+    """Return admin configuration data
 
     Returns
     -------
     config : dict
-        A dictionary containing configuration details
+        A dictionary containing the configuration details
     """
 
     config_file_location = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'admin_config.json')
@@ -45,7 +46,7 @@ def get_subscriber_config():
     Returns
     -------
     config : dict
-        A dictionary containing configuration details
+        A dictionary containing the configuration details
     """
 
     config_file_location = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'subscriber_config.json')
@@ -55,5 +56,6 @@ def get_subscriber_config():
     return config
 
 
+# Make the config data global so it can easily be imported
 admin_config = get_admin_config()
 subscriber_config = get_subscriber_config()

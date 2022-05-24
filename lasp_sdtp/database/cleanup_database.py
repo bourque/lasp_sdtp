@@ -1,5 +1,4 @@
-"""
-This module contains various functions to remove expired accounts and files
+"""This module contains various functions to remove expired accounts and files
 from the database and file queue
 
 Authors
@@ -26,7 +25,7 @@ from lasp_sdtp.database.database_interface import session
 
 
 def cleanup_accounts():
-    """Removes expired accounts"""
+    """Remove expired accounts"""
 
     # Identify any expired accounts
     today = datetime.datetime.today()
@@ -45,7 +44,8 @@ def cleanup_accounts():
 
 
 def cleanup_file_queue():
-    """Removes expired files from the queue"""
+    """Remove expired files from the ``file_queue`` database table and queue
+    storage"""
 
     # Identify any expired files
     today = datetime.datetime.today()

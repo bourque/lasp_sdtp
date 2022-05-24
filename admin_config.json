@@ -1,0 +1,7 @@
+{
+	"email_address": "address@example.com",
+	"email_password": "some_password",
+	"endpoint": "0.0.0.0",
+	"filesystem_loc": "location/of/filesystem/",
+	"subscriber_queues_loc": "location/of/subscriber_queues/" 
+}

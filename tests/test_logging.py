@@ -1,4 +1,4 @@
-"""Tests for ``logging.py``
+"""Tests for the ``logging.py`` module
 
 Authors
 -------
@@ -6,7 +6,9 @@ Authors
 
 Use
 ---
-    pytest test_logging.py
+    To run these tests use:
+    ::
+        pytest -s test_logging.py
 """
 
 import logging

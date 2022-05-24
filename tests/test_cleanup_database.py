@@ -1,4 +1,4 @@
-"""Tests for ``cleanup_database.py``
+"""Tests for then ``cleanup_database.py`` module
 
 Authors
 -------
@@ -6,7 +6,9 @@ Authors
 
 Use
 ---
-    pytest test_cleanup_database.py
+    To run these tests use:
+    ::
+        pytest -s test_cleanup_database.py
 """
 
 import datetime
@@ -24,7 +26,7 @@ from lasp_sdtp.database.database_interface import session
 def test_cleanup_accounts():
     """Tests the ``cleanup_accounts`` function"""
 
-    # Perform cleanup
+    # Perform the cleanup
     cleanup_accounts()
 
     # Check that there are no expired accounts
@@ -39,7 +41,7 @@ def test_cleanup_accounts():
 def test_cleanup_file_queue():
     """Tests the ``cleanup_file_queue`` function"""
 
-    # Perform cleanup
+    # Perform the cleanup
     cleanup_file_queue()
 
     # Check that there are no expired files in the file queue

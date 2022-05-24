@@ -1,4 +1,4 @@
-"""Various utility functions to support the ``lasp_sdtp`` application
+"""Various utility functions to help support the ``lasp_sdtp`` application
 
 Authors
 -------
@@ -19,7 +19,8 @@ from lasp_sdtp.config import subscriber_config
 
 
 def get_checksum():
-    """Return a randomly generated checksum
+    """Return a randomly generated checksum.  Currently only supports the
+    ``sha256`` checksum type.
 
     Returns
     -------
@@ -36,7 +37,8 @@ def get_checksum():
 
 
 def get_shortname(filename):
-    """Return the appropriate ``ShortName`` for the given filename.
+    """Return the appropriate value for the ``ShortName`` tag for the given
+    filename.  Currently this is hard-coded to only support TSIS-2.
 
     Parameters
     ----------

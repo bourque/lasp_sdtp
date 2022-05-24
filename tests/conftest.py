@@ -1,15 +1,18 @@
-"""This module contains code to perform setup and teardown needed to run the
-test suite contained within the ``tests`` directory.  This module gets executed
-before any tests when using ``pytest -s .``
+"""This module contains code to perform the setup and teardown neccessary to
+run the test suite contained within the ``tests`` directory.
 
 Authors
 -------
     Matthew Bourque
+
+Use
+---
+    This module gets automatically executed before any tests when using
+    ``pytest -s .`` or ``pytest -s <module>``
 """
 
 import datetime
 import glob
-import random
 import os
 
 import pytest
@@ -25,10 +28,11 @@ from lasp_sdtp.database.database_interface import Transactions
 from lasp_sdtp.utils.utils import get_checksum
 from lasp_sdtp.utils.utils import get_shortname
 
+
 def _add_accounts_entries():
     """Add necessary ``accounts`` table entries used for testing"""
 
-    # Nominal test account for general testing
+    # Add nominal test account used for general testing
     data_to_insert = [{
         'username': 'test_account',
         'certuid': 'test_cert',
@@ -36,7 +40,7 @@ def _add_accounts_entries():
         'registration_date': datetime.datetime.today(),
         'registration_expires': datetime.datetime.today() + datetime.timedelta(days=1)}]
 
-    # Add an entry for the subscriber (for test_database_interface)
+    # Add an account for the subscriber (used for test_database_interface)
     data_to_insert.append({
         'username': subscriber_config['username'],
         'certuid': 'test_cert',
@@ -45,7 +49,7 @@ def _add_accounts_entries():
         'registration_expires': datetime.datetime.today() + datetime.timedelta(days=1)}
     )
 
-    # Add an entry that has expired (for test_cleanup_database)
+    # Add an account that has expired (used for test_cleanup_database)
     data_to_insert.append({
         'username': 'expired_account',
         'certuid': 'test_cert',
@@ -60,10 +64,10 @@ def _add_accounts_entries():
 def _add_file_metadata_entries():
     """Add necessary ``file_metadata`` table entries used for testing"""
 
-    # Locate test files
+    # Locate files in test filesystem
     test_files = glob.glob(os.path.join(admin_config['filesystem_loc'], '*'))
 
-    # Insert filesystem data (mostly used for test_run_server)
+    # Insert test file data (mostly used for test_run_server)
     data_to_insert = []
     for i, test_file in enumerate(test_files):
         data = {
@@ -74,12 +78,12 @@ def _add_file_metadata_entries():
             'stream': 'prod',
             'shortname': get_shortname(os.path.basename(test_file)),
             'version': 'v01',
-            'date': datetime.datetime(2022, 1, 1) + datetime.timedelta(days=i-1)
+            'date': datetime.datetime(2022, 1, 1) + datetime.timedelta(days=i - 1)
         }
         data_to_insert.append(data)
     insert_data('file_metadata', data_to_insert)
 
-    # to satisfy integrity contraint for test_cleanup_database
+    # Add entries to satisfy integrity constraint for test_cleanup_database
     data_to_insert = [{
         'fileid': 12345,
         'name': 'test_cleanup_db.txt',
@@ -91,8 +95,6 @@ def _add_file_metadata_entries():
         'version': 'v01',
         'date': datetime.datetime(2022, 1, 1)
     }]
-
-    # to satisfy integrity contraint for test_cleanup_database
     data_to_insert.append({
         'fileid': 12346,
         'name': 'test_cleanup_db_2.txt',
@@ -105,7 +107,7 @@ def _add_file_metadata_entries():
         'date': datetime.datetime(2022, 1, 1)
     })
 
-    # to satisfy integrity contraint for test_reporting
+    # Add entry to satisfy integrity constraint for test_reporting
     data_to_insert.append({
         'fileid': 67890,
         'name': 'test_reporting.txt',
@@ -125,7 +127,7 @@ def _add_file_metadata_entries():
 def _add_file_queue_entries():
     """Add necessary ``file_queue`` table entries used for testing"""
 
-    # Add a file queue entry associated with the expired account (for test_cleanup_database)
+    # Add an entry associated with the expired account (for test_cleanup_database)
     data_to_insert = [{
         'username': 'expired_account',
         'fileid': 12345,
@@ -133,7 +135,7 @@ def _add_file_queue_entries():
         'expires': datetime.datetime.today() - datetime.timedelta(days=10)
     }]
 
-    # Add a file queue entry not associated with the expired account (for test_cleanup_database)
+    # Add an entry not associated with the expired account (for test_cleanup_database)
     data_to_insert.append({
         'username': 'test_account',
         'fileid': 12346,
@@ -149,7 +151,7 @@ def _add_file_queue_entries():
     with open(os.path.join(admin_config['subscriber_queues_loc'], 'test_cleanup_db_2.txt'), 'w') as f:
         f.write('')
 
-    # for test_reporting
+    # Add an entry used for test_reporting
     data_to_insert.append({
         'username': 'test_account',
         'fileid': 67890,
@@ -163,7 +165,7 @@ def _add_file_queue_entries():
 def _add_transactions_entries():
     """Add necessary ``transactions`` table entries used for testing"""
 
-    # Add a transaction (for test_reporting)
+    # Add a transaction for test_reporting
     data_to_insert = [{
         'transactionid': 999,
         'action': 'GET /files/666',
@@ -183,7 +185,7 @@ def _add_transactions_entries():
 def setup(request):
     """Setup function"""
 
-    # Remove any data that already exists in the database
+    # Remove any data that may already exist in the database
     session.query(FileQueue).delete()
     session.query(Transactions).delete()
     session.query(Accounts).delete()

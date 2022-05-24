@@ -1,4 +1,4 @@
-"""Tests for ``run_server.py``
+"""Tests for the ``run_server.py`` module
 
 Authors
 -------
@@ -6,7 +6,9 @@ Authors
 
 Use
 ---
-    pytest test_run_server.py
+    To run these tests use:
+    ::
+        pytest -s test_run_server.py
 """
 
 import glob
@@ -30,22 +32,24 @@ TEST_URLS = [
     '/files?stream=prod',
     '/files?stream=prod&ShortName=TSIS2_L1',
     '/files?date=2022-01-01',
-    '/files?start_date=2022-01-01&end_date=2022-02-01']
+    '/files?start_date=2022-01-01&end_date=2022-02-01',
+    '/files?date=2050-01-01']  # No files, but should still return 200
 
 INVALID_TEST_URLS = [
-    '/files?date=2022-01-01&start_date=2022-01-01&end_date=2022-02-01',
-    '/files?date=2022-01-01&start_date=2022-01-01',
-    '/files?date=2022-01-01&end_date=2022-02-01',
-    '/files?start_date=2022-01-01',
-    '/files?end_date=2022-02-01',
-    '/files/foo',
-    '/files/123.4',
-    '/files/-1',
-    '/files/9999999999999999']
+    '/files?date=2022-01-01&start_date=2022-01-01&end_date=2022-02-01',  # Invalid date options
+    '/files?date=2022-01-01&start_date=2022-01-01',  # Invalid date options
+    '/files?date=2022-01-01&end_date=2022-02-01',  # Invalid date options
+    '/files?start_date=2022-01-01',  # Invalid date options
+    '/files?end_date=2022-02-01',  # Invalid date options
+    '/files?bogus_tag=foo',  # Invalid tag
+    '/files/foo',  # fileid is not an integer 15 digits or less
+    '/files/123.4',  # fileid is not an integer 15 digits or less
+    '/files/-1',  # fileid is not an integer 15 digits or less
+    '/files/1234567890123456']  # fileid is not an integer 15 digits or less
 
 
 def _check_transaction(request_url, headers):
-    """Checks that a transaction record was added to the database
+    """Checks that a transaction record was added to the ``transactions`` table
 
     Parameters
     ----------
@@ -55,19 +59,18 @@ def _check_transaction(request_url, headers):
         The response header object
     """
 
-    # Make sure the transactionid is in the header
+    # Make sure the transaction ID is in the header
     assert 'SDTP-TransactionID' in headers
 
     # Check that there is a record in the transactions table
     results = session.query(Transactions).filter(Transactions.transactionid == headers['SDTP-TransactionID']).all()
-    assert len(results) == 1  # There should only be one db entry
+    assert len(results) == 1  # There should only be one entry
     assert request_url in results[0].__dict__['action']
 
 
 @pytest.fixture()
 def app():
-    """Create an instance of the application to test with.  Also perform any
-    necessary build up and tear down needed to run the tests.
+    """Create an instance of the flask application to test with.
 
     Yeilds
     ------
@@ -83,12 +86,13 @@ def app():
 
 @pytest.fixture()
 def client(app):
-    """Create a test client from the ``flask`` app
+    """Create a test client from the ``flask`` app.  The ``client`` object is
+    used to send requests to the server.
 
     Returns
     -------
     client : flask.testing.FlaskClient object
-        The client to test with
+        The client object to test with
     """
 
     client = app.test_client()
@@ -113,7 +117,7 @@ def test_register(client):
 
     # Check that a database entry was made for the Accounts table
     results = session.query(Accounts).filter(Accounts.username == subscriber_config['username']).all()
-    assert len(results) == 1  # There should only be one db entry
+    assert len(results) == 1  # There should only be one entry
     assert results[0].__dict__['username'] == subscriber_config['username']
 
     _check_transaction(request_url, response.headers)
@@ -203,7 +207,7 @@ def test_get_file(client):
 
     # Check that there is a database entry for the file in the queue
     results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
-    assert len(results) == 1  # There should only be one db entry
+    assert len(results) == 1  # There should only be one entry
     assert results[0].__dict__['fileid'] == int(fileid)
 
     _check_transaction(request_url, response.headers)
@@ -272,7 +276,8 @@ def test_delete_files(client):
 
 @pytest.mark.parametrize('request_url', INVALID_TEST_URLS)
 def test_incorrect_requests(client, request_url):
-    """Tests that incorrect requests return the expected reponse of 400
+    """Tests that incorrect ``GET /files`` requests return the expected reponse
+    of 400
 
     Parameters
     ----------
@@ -293,8 +298,8 @@ def test_incorrect_requests(client, request_url):
 
 
 def test_file_does_not_exist(client):
-    """Tests that a request for a file that doesn't exist returns the expected
-    response of 404
+    """Tests that a ``GET /files/{fileid}`` and a ``DELETE /files/{fileid}``
+    request for a file that doesn't exist returns the expected response of 404
 
     Parameters
     ----------

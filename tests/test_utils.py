@@ -1,4 +1,4 @@
-"""Tests for ``utils.py``
+"""Tests for the ``utils.py`` module
 
 Authors
 -------
@@ -6,7 +6,9 @@ Authors
 
 Use
 ---
-    pytest utils.py
+    To run these tests use:
+    ::
+        pytest -s test_utils.py
 """
 
 from lasp_sdtp.config import subscriber_config

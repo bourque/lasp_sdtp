@@ -1,5 +1,7 @@
 """Various functions to enable system reporting for the ``lasp_sdtp``
-application
+application.  When this module is executed, an email is constructed and sent
+to the email provided in the ``admin_config.json`` file that contains
+a daily report of information about the system.
 
 Authors
 -------
@@ -28,7 +30,7 @@ from lasp_sdtp.database.database_interface import Transactions
 
 
 def _active_subscribers_report():
-    """Return email content to report on active subscribers
+    """Return email content to report on currently active subscribers
 
     Returns
     -------
@@ -52,7 +54,7 @@ def _active_subscribers_report():
 
 
 def _file_queue_report():
-    """Return email content to report on contents of the file queue
+    """Return email content to report on the current contents of the file queue
 
     Returns
     -------
@@ -77,7 +79,8 @@ def _file_queue_report():
 
 
 def _recent_transactions_report():
-    """Return email content to report on transactions from the last 24 hours
+    """Return email content to report on transactions that occurred within the
+    last 24 hours
 
     Returns
     -------
@@ -131,7 +134,13 @@ def send_email(content_dict):
 
 
 def generate_daily_report():
-    """Creates a daily email report of system metrics"""
+    """Creates a daily email report of system information
+
+    Returns
+    -------
+    content_dict : dict
+        A dictionary containing various content that was sent in the email
+    """
 
     # Placeholder to store email content
     content_dict = {}

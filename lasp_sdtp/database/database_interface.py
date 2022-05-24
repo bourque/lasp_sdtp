@@ -1,19 +1,20 @@
-"""
-A module to interact with the a testing database for the LASP SDTP implementation.
+"""This module is used to interact with the database for the LASP SDTP
+interface.
 
-The ``load_connection()`` function within this module allows the user to connect
-to the ``lasp_sdtp_db`` database via the ``session``, ``base``, and ``engine``
-objects (described below).  The classes within serve as ORMs (Object-relational
-mappings) that define the individual tables of the relational database.
+The ``load_connection()`` function within this module allows the user to
+connect to the ``lasp_sdtp_db`` database via the ``session``, ``base``, and
+``engine`` objects (described below).  The classes within serve as ORMs that
+define the individual tables of the relational database.
 
-The ``engine`` object serves as the low-level database API and perhaps most importantly
-contains dialects which allows the ``sqlalchemy`` module to communicate with the database.
+The ``engine`` object serves as the low-level database API and perhaps most
+importantly contains dialects which allows the ``sqlalchemy`` module to
+communicate with the database.
 
-The ``base`` object serves as a base class for class definitions.  It produces ``Table``
-objects and constructs ORMs.
+The ``base`` object serves as a base class for class definitions.  It produces
+``Table`` objects and constructs ORMs.
 
-The ``session`` object manages operations on ORM-mapped objects, as construced by the base.
-These operations include querying, for example.
+The ``session`` object manages operations on ORM-mapped objects, as construced
+by the base. These operations include querying, for example.
 
 Authors
 -------
@@ -22,16 +23,8 @@ Authors
 Use
 ---
 
-    Executing the module on the command line will build the database
-    tables defined within:
-
-    ::
-
-        python database.py
-
-    Users wishing to interact with the existing database may do so by
-    importing various connection objects and database tables, for
-    example:
+    Users can interact with the existing database tables by importing various
+    connection objects and database tables, for example:
 
     ::
 
@@ -97,7 +90,7 @@ def load_connection():
     return session, base, engine, meta
 
 
-# Define a global session so that it can easily be imported
+# Create a global session so that it can easily be imported
 session, base, engine, meta = load_connection()
 
 

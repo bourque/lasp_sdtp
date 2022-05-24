@@ -6,7 +6,9 @@ Authors
 
 Use
 ---
-    pytest test_database_interface.py
+    To run these tests use:
+    ::
+        pytest -s test_database_interface.py
 """
 
 from collections import namedtuple
@@ -14,7 +16,6 @@ from collections import namedtuple
 import pytest
 from sqlalchemy import Table
 
-from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_interface import Accounts
 from lasp_sdtp.database.database_interface import base
@@ -33,7 +34,7 @@ def test_load_connection():
 
 
 def test_fileid_boundary():
-    """Tests that the fileid cannot exceed 15 digits"""
+    """Tests that the ``fileid`` cannot exceed 15 digits"""
 
     table = Table('file_metadata', base.metadata)
 
@@ -48,7 +49,7 @@ def test_fileid_boundary():
         'version': '001'
     }
 
-    # Insert data into database
+    # Try to insert data into database
     with pytest.raises(Exception) as error:
         table.insert().execute([data])
     assert 'ORA-01438' in str(error.value)  # ORA-01438: value larger than specified precision allowed
@@ -61,7 +62,7 @@ def test_update_transactions_table():
     file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
     test_fileid = str(file_metadata[0].__dict__['fileid'])
 
-    # Create a dummy request
+    # Create dummy requests
     Request = namedtuple('request', ['method', 'url'])
     requests = [Request('PUT', '/register'),
                 Request('GET', '/files'),
@@ -75,7 +76,7 @@ def test_update_transactions_table():
 
         # Check that there is a record in the transactions table
         results = session.query(Transactions).filter(Transactions.transactionid == transactionid).all()
-        assert len(results) == 1  # There should only be one db entry
+        assert len(results) == 1  # There should only be one entry
         assert request.url in results[0].__dict__['action']
 
         # Remove account entry so that it doesn't break future tests

@@ -1,4 +1,3 @@
 *egg-info/
 *__pycache__/
-admin_config.json
-subscriber_config.json
+*.coverage

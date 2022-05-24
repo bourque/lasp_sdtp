@@ -1,10 +1,6 @@
 from setuptools import setup
 from setuptools import find_packages
 
-VERSION = '0.0.0'
-AUTHORS = 'Matthew Bourque'
-DESCRIPTION = ''
-
 REQUIRES = [
     'flask',
     'pandas',
@@ -14,10 +10,10 @@ REQUIRES = [
 
 setup(
     name='lasp_sdtp',
-    version=VERSION,
-    description=DESCRIPTION,
+    version='0.0.0',
+    description='Implementation of the NASA Standard Data Transfer Protocol (SDTP) Interface for LASP-based applications',
     url='https://bitbucket.lasp.colorado.edu/scm/sds/lasp_sdtp.git',
-    author=AUTHORS,
+    author='Matthew Bourque',
     author_email='matthew.bourque@lasp.colorado.edu',
     packages=find_packages(),
     install_requires=REQUIRES,
