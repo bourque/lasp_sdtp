@@ -23,13 +23,13 @@ Requirements for the `lasp_sdtp` package will be included in the `lasp-sdtp` `co
 
 Clone the current version of `lasp_sdtp` from the BitBucket repository:
 
-```
+```bash
 git clone https://bitbucket.lasp.colorado.edu/scm/sds/lasp_sdtp.git
 ```
 
 or, if you would rather use `SSH` instead of `https`, use
 
-```
+```bash
 git clone ssh://git@bitbucket.lasp.colorado.edu:2222/sds/lasp_sdtp.git
 ```
 
@@ -38,7 +38,7 @@ git clone ssh://git@bitbucket.lasp.colorado.edu:2222/sds/lasp_sdtp.git
 
 Install the `lasp-sdtp` `conda` environment via the `environment.yml` file, which contains all of the dependencies needed for the application:
 
-```
+```bash
 cd lasp_sdtp/
 conda env create -f environment.yml
 ```
@@ -77,6 +77,55 @@ Fill out the ``admin_config.json`` and ``subscriber_config.json`` files appropri
 }
 ```
 
+## Usage
+
+To start the server:
+
+```bash
+cd lasp_sdtp/server/
+python run_server.py
+```
+
+or, to start the server in development mode:
+
+```bash
+cd lasp_sdtp/server/
+FLASK_APP=run_server.py FLASK_ENV=development flask run --port 8000
+```
+
+When the server is started, a log file is initialized (the path to which is printed to the terminal).  This log file records various environment information and server activity.
+
+## Testing
+
+To insert some testing data into the database, run:
+
+```bash
+cd tests/
+python insert_test_data.py
+```
+
+Once the server is running and test data have been added, one can send requests to the server, e.g.:
+
+```bash
+curl -X GET "http://localhost:8000/files" -H "Accept: application/json" -H "Cert-UID: ges_disc_cert"
+curl -X GET "http://localhost:8000/files?stream=prod&ShortName=TSIS2_L1" -H "Accept: application/json" -H "Cert-UID: ges_disc_cert"
+curl -X GET "http://localhost:8000/files/{fileid}" "Accept: application/json" -H "Cert-UID: ges_disc_cert"
+curl -X DELETE "http://localhost:8000/files/{fileid}" "Accept: application/json" -H "Cert-UID: ges_disc_cert"
+curl -X DELETE "http://localhost:8000/files/{fileid_start}-{fileid_end}" "Accept: application/json" -H "Cert-UID: ges_disc_cert"
+```
+
+To get a list of all of the available `fileid`s (convenience for testing out `curl` commands):
+
+```bash
+curl -X GET "http://localhost:8000/files" "Accept: application/json" -H "Cert-UID: ges_disc_cert" | grep 'fileid'
+```
+
+To run the `pytest` testing suite:
+
+```bash
+cd tests/
+pytest -s .
+```
 
 ## Contributions
 

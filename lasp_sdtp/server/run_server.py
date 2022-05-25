@@ -236,10 +236,11 @@ def delete_file(fileid):
         if entry['username'] != subscriber_config['username']:
             file_needed = True
 
-    # If not, delete the file from the queue
+    # If not, delete the file from the queue if it is still there
     if not file_needed:
-        os.remove(filepath)
-        logging.info(f'Removed {filepath} from queue')
+        if os.path.exists(filepath):
+            os.remove(filepath)
+            logging.info(f'Removed {filepath} from queue')
 
         # Remove entry from database
         session.query(FileQueue).filter(FileQueue.fileid == fileid).delete()
@@ -274,7 +275,7 @@ def delete_files(fileid_start, fileid_end):
     """
 
     # Iterate through the files and delete them individually
-    fileids = [fileid for fileid in range(int(fileid_start), int(fileid_end))]
+    fileids = [fileid for fileid in range(int(fileid_start), int(fileid_end) + 1)]
     for fileid in fileids:
         delete_file(fileid)
 
@@ -342,30 +343,34 @@ def get_file(fileid):
     # Determine where the file exists in the filesystem
     filepath = os.path.join(admin_config['filesystem_loc'], file_metadata['name'])
 
-    # Copy the file to the queue
-    dst = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], os.path.basename(filepath))
-    shutil.copyfile(filepath, dst)
-    logging.info(f'Copied {filepath} to queue: {dst}')
+    # Copy the file to the queue if it doesn't already exist
+    dst = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], file_metadata['name'])
 
-    # Add a file queue database record
-    entry_date = datetime.datetime.today()
-    expiration_date = entry_date + datetime.timedelta(days=subscriber_config['expiration_period'])
-    data = [{'username': subscriber_config['username'],
-             'fileid': fileid,
-             'entry_date': entry_date,
-             'expires': expiration_date}]
-    insert_data('file_queue', data)
-    logging.info(f'Added fileid {fileid} to queue')
+    try:
+        shutil.copyfile(filepath, dst)
+        logging.info(f'Copied {filepath} to queue: {dst}')
+
+        # Add a file queue database record
+        entry_date = datetime.datetime.today()
+        expiration_date = entry_date + datetime.timedelta(days=subscriber_config['expiration_period'])
+        data = [{'username': subscriber_config['username'],
+                 'fileid': fileid,
+                 'entry_date': entry_date,
+                 'expires': expiration_date}]
+        insert_data('file_queue', data)
+        logging.info(f'Added fileid {fileid} to queue')
+    except IntegrityError:
+        logging.warning(f'{fileid} is already in the queue')
 
     # Update transactions table with completion info
     _mark_transaction_complete(transactionid=transactionid)
 
     # Get the file contents
-    with open(filepath, 'r') as f:
+    with open(dst, 'r') as f:
         contents = f.readlines()
 
     # Construct the response
-    content = {'filename': os.path.basename(filepath), 'contents': contents}
+    content = {'filename': os.path.basename(dst), 'contents': contents}
     status = 200
     response = make_response(content, status)
     response.headers['Content-Type'] = 'application/json'
