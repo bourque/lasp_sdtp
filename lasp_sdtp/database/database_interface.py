@@ -78,14 +78,14 @@ def load_connection():
         The connection metadata
     """
 
-    connection_string = subscriber_config['connection_string']
+    connection_string = admin_config['db_connection_string']
     engine = create_engine(connection_string, echo=False)
     base = declarative_base(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
     meta = MetaData(engine)
 
-    logging.info(f'Connected to database {subscriber_config["connection_string"]}')
+    logging.info(f'Connected to database {admin_config["db_connection_string"]}')
 
     return session, base, engine, meta
 
@@ -96,7 +96,7 @@ session, base, engine, meta = load_connection()
 
 def _mark_transaction_complete(transactionid):
     """Update the ``transactions`` table to mark the given ``transactionid`` as
-    ``complete``
+    complete by adding the ``end_time``
 
     Parameters
     ----------
@@ -105,7 +105,7 @@ def _mark_transaction_complete(transactionid):
     """
 
     end_time = datetime.datetime.now()
-    session.query(Transactions).filter(Transactions.transactionid == transactionid).update({'end_time': end_time, 'complete': 1})
+    session.query(Transactions).filter(Transactions.transactionid == transactionid).update({'end_time': end_time})
     session.commit()
     logging.info(f'Transaction {transactionid} marked complete')
 
@@ -246,4 +246,3 @@ class Transactions(base):
     source = Column(String(255))
     destination = Column(String(255))
     end_time = Column(DateTime)
-    complete = Column(Boolean)

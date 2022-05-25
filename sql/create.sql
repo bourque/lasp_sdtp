@@ -99,7 +99,6 @@ CREATE TABLE transactions (
     source VARCHAR2(255),
     destination VARCHAR2(255),
     end_time DATE,
-    complete NUMBER(1) CHECK (complete IN (0,1)),
     FOREIGN KEY(fileid) REFERENCES file_metadata(fileid),
     FOREIGN KEY(username) REFERENCES accounts(username),
     PRIMARY KEY(transactionid)

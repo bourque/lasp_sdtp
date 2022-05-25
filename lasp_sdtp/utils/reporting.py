@@ -90,7 +90,7 @@ def _recent_transactions_report():
 
     # Get list of recent transcations
     query = session.query(Transactions.transactionid, Transactions.action, Transactions.username, FileMetadata.name, Transactions.start_time,
-                          Transactions.end_time, Transactions.source, Transactions.destination, Transactions.complete) \
+                          Transactions.end_time, Transactions.source, Transactions.destination) \
         .join(Transactions, FileMetadata.fileid == Transactions.fileid)
 
     # Store results as an HTML table

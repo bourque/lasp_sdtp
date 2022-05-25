@@ -19,6 +19,7 @@ def test_get_admin_config():
     """Tests the ``get_admin_config`` function"""
 
     required_keys = {
+        'db_connection_string': str,
         'email_address': str,
         'email_password': str,
         'endpoint': str,
@@ -43,7 +44,6 @@ def test_get_subscriber_config():
     required_keys = {
         'account_expiration_period': int,
         'checksum_type': str,
-        'connection_string': str,
         'expiration_period': int,
         'max_num_files': int,
         'num_download_threads': int,

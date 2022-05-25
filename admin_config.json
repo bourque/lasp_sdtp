@@ -1,7 +1,8 @@
 {
-	"email_address": "address@example.com",
-	"email_password": "some_password",
+	"db_connection_string": "oracle://server:username@database:port/?service_name=service",
+	"email_address": "email_address@example.com",
+	"email_password": "password",
 	"endpoint": "0.0.0.0",
-	"filesystem_loc": "location/of/filesystem/",
-	"subscriber_queues_loc": "location/of/subscriber_queues/" 
+	"filesystem_loc": "path/to/filesystem/",
+	"subscriber_queues_loc": "path/to/subscriber_queues/" 
 }

@@ -175,7 +175,6 @@ def _add_transactions_entries():
         'source': '/some/starting/location/',
         'destination': '/some/ending/location',
         'end_time': datetime.datetime.now() + datetime.timedelta(hours=1),
-        'complete': True
     }]
 
     insert_data('transactions', data_to_insert)
