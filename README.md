@@ -1,11 +1,13 @@
 # The LASP SDTP Application
 
+
 The Laboratory for Atmospheric and Space Physics (LASP) Standard Data Transfer Protocol (SDTP) Application is used to transfer LASP-based data products to the Goddard Earth Sciences Data Information Services (GES DISC).
 
 More information can be found here: https://confluence.lasp.colorado.edu/pages/viewpage.action?pageId=86215664
 
 
 ## Installation
+
 
 ### Prerequisites
 
@@ -15,6 +17,7 @@ It is suggested that contributors have a working installation of `anaconda` or `
 - [Anaconda](https://www.continuum.io/downloads)
 
 Requirements for the `lasp_sdtp` package will be included in the `lasp-sdtp` `conda` environment, which is included in the installation instructions below.
+
 
 ### Clone the `lasp_sdtp` repository
 
@@ -30,6 +33,7 @@ or, if you would rather use `SSH` instead of `https`, use
 git clone ssh://git@bitbucket.lasp.colorado.edu:2222/sds/lasp_sdtp.git
 ```
 
+
 ### Environment Installation
 
 Install the `lasp-sdtp` `conda` environment via the `environment.yml` file, which contains all of the dependencies needed for the application:
@@ -39,12 +43,14 @@ cd lasp_sdtp/
 conda env create -f environment.yml
 ```
 
+
 ### Configuration Files
 
 Fill out the ``admin_config.json`` and ``subscriber_config.json`` files appropriately.  The values within these files are used by the application to define and apply necessary configurations.  A description of each field is given below:
 
 
-#### `admin_config.json`
+
+`admin_config.json`:
 
 ```python
 {
@@ -57,7 +63,8 @@ Fill out the ``admin_config.json`` and ``subscriber_config.json`` files appropri
 }
 ```
 
-#### `subscriber_config.json`
+
+`subscriber_config.json`:
 
 ```python
 {
