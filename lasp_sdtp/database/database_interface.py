@@ -149,7 +149,7 @@ def _update_transactions_table(request, fileid=None):
             start_time=datetime.datetime.now(),
             fileid=fileid,
             source=admin_config['filesystem_loc'],
-            destination=admin_config['subscriber_queues_loc'])
+            destination=admin_config['data_cache_loc'])
 
     # For DELETE /files/<fileid>
     if request.method == 'DELETE':

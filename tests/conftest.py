@@ -144,11 +144,11 @@ def _add_file_queue_entries():
     })
 
     # Add an expired file to the file queue storage associated with expired account (for test_cleanup_database)
-    with open(os.path.join(admin_config['subscriber_queues_loc'], 'test_cleanup_db.txt'), 'w') as f:
+    with open(os.path.join(admin_config['data_cache_loc'], 'test_cleanup_db.txt'), 'w') as f:
         f.write('')
 
     # Add an expired file to the file queue storage associated with non-expired account (for test_cleanup_database)
-    with open(os.path.join(admin_config['subscriber_queues_loc'], 'test_cleanup_db_2.txt'), 'w') as f:
+    with open(os.path.join(admin_config['data_cache_loc'], 'test_cleanup_db_2.txt'), 'w') as f:
         f.write('')
 
     # Add an entry used for test_reporting

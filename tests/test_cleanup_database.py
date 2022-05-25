@@ -49,4 +49,4 @@ def test_cleanup_file_queue():
     assert len(results) == 0
 
     # Check that the expired file was removed from the queue storage
-    assert not os.path.exists(os.path.join(admin_config['subscriber_queues_loc'], subscriber_config['username'], 'test_cleanup_db_2.txt'))
+    assert not os.path.exists(os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], 'test_cleanup_db_2.txt'))

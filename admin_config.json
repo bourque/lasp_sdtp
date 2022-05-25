@@ -1,8 +1,8 @@
 {
 	"db_connection_string": "oracle://server:username@database:port/?service_name=service",
-	"email_address": "email_address@example.com",
+	"email_address": "email@example.com",
 	"email_password": "password",
 	"endpoint": "0.0.0.0",
 	"filesystem_loc": "path/to/filesystem/",
-	"subscriber_queues_loc": "path/to/subscriber_queues/" 
+	"data_cache_loc": "path/to/data_cache/" 
 }

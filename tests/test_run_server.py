@@ -203,7 +203,7 @@ def test_get_file(client):
     assert response.status_code == 200
 
     # Check if the file is in the queue
-    assert os.path.exists(os.path.join(admin_config['subscriber_queues_loc'], subscriber_config['username'], data['filename']))
+    assert os.path.exists(os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], data['filename']))
 
     # Check that there is a database entry for the file in the queue
     results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()

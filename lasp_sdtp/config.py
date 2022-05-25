@@ -35,7 +35,7 @@ def get_admin_config():
 
     # Prepend necessary directory to filesystem and subscriber queues
     config['filesystem_loc'] = os.path.join(HOME_DIR, config['filesystem_loc'])
-    config['subscriber_queues_loc'] = os.path.join(HOME_DIR, config['subscriber_queues_loc'])
+    config['data_cache_loc'] = os.path.join(HOME_DIR, config['data_cache_loc'])
 
     return config
 

@@ -226,7 +226,7 @@ def delete_file(fileid):
         abort(404)
 
     # Determine where the file exists in the queue
-    filepath = os.path.join(admin_config['subscriber_queues_loc'], subscriber_config['username'], file_metadata['name'])
+    filepath = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], file_metadata['name'])
 
     # Check to see if the file is in the queue for another subscriber
     queue_data = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
@@ -343,7 +343,7 @@ def get_file(fileid):
     filepath = os.path.join(admin_config['filesystem_loc'], file_metadata['name'])
 
     # Copy the file to the queue
-    dst = os.path.join(admin_config['subscriber_queues_loc'], subscriber_config['username'], os.path.basename(filepath))
+    dst = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], os.path.basename(filepath))
     shutil.copyfile(filepath, dst)
     logging.info(f'Copied {filepath} to queue: {dst}')
 
@@ -456,7 +456,7 @@ def register():
     transactionid = _update_transactions_table(request)
 
     # Create a queue space in cache
-    queue_path = os.path.join(admin_config['subscriber_queues_loc'], subscriber_config['username'])
+    queue_path = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'])
     if not os.path.exists(queue_path):
         os.mkdir(queue_path)
         logging.info(f'Created queue: {queue_path}')

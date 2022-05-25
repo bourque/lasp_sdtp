@@ -61,7 +61,7 @@ def cleanup_file_queue():
         # Remove file from the file queue storage
         filename = session.query(FileMetadata.name).filter(FileMetadata.fileid == expired_file).all()
         filename = filename[0][0]
-        file_path = os.path.join(admin_config['subscriber_queues_loc'], subscriber_config['username'], filename)
+        file_path = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], filename)
         if os.path.exists(file_path):
             os.remove(file_path)
 

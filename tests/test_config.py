@@ -24,7 +24,7 @@ def test_get_admin_config():
         'email_password': str,
         'endpoint': str,
         'filesystem_loc': str,
-        'subscriber_queues_loc': str
+        'data_cache_loc': str
     }
 
     # Get the config data
