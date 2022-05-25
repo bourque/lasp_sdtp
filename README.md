@@ -23,13 +23,13 @@ Requirements for the `lasp_sdtp` package will be included in the `lasp-sdtp` `co
 
 Clone the current version of `lasp_sdtp` from the BitBucket repository:
 
-```bash
+```
 git clone https://bitbucket.lasp.colorado.edu/scm/sds/lasp_sdtp.git
 ```
 
 or, if you would rather use `SSH` instead of `https`, use
 
-```bash
+```
 git clone ssh://git@bitbucket.lasp.colorado.edu:2222/sds/lasp_sdtp.git
 ```
 
@@ -38,7 +38,7 @@ git clone ssh://git@bitbucket.lasp.colorado.edu:2222/sds/lasp_sdtp.git
 
 Install the `lasp-sdtp` `conda` environment via the `environment.yml` file, which contains all of the dependencies needed for the application:
 
-```bash
+```
 cd lasp_sdtp/
 conda env create -f environment.yml
 ```
@@ -81,14 +81,14 @@ Fill out the ``admin_config.json`` and ``subscriber_config.json`` files appropri
 
 To start the server:
 
-```bash
+```
 cd lasp_sdtp/server/
 python run_server.py
 ```
 
 or, to start the server in development mode:
 
-```bash
+```
 cd lasp_sdtp/server/
 FLASK_APP=run_server.py FLASK_ENV=development flask run --port 8000
 ```
@@ -99,7 +99,7 @@ When the server is started, a log file is initialized (the path to which is prin
 
 To insert some testing data into the database, run:
 
-```bash
+```
 cd tests/
 python insert_test_data.py
 ```
@@ -122,7 +122,7 @@ curl -X GET "http://localhost:8000/files" "Accept: application/json" -H "Cert-UI
 
 To run the `pytest` testing suite:
 
-```bash
+```
 cd tests/
 pytest -s .
 ```
