@@ -94,9 +94,10 @@ def load_connection():
 session, base, engine, meta = load_connection()
 
 
-def _mark_transaction_complete(transactionid):
-    """Update the ``transactions`` table to mark the given ``transactionid`` as
-    complete by adding the ``end_time``
+def _mark_transaction_complete(fileid):
+    """Update the ``transactions`` table to mark the the GET request
+    transaction corresponding to the given ``fileid`` as complete by adding the
+    ``end_time``
 
     Parameters
     ----------
@@ -105,9 +106,12 @@ def _mark_transaction_complete(transactionid):
     """
 
     end_time = datetime.datetime.now()
-    session.query(Transactions).filter(Transactions.transactionid == transactionid).update({'end_time': end_time})
+    session.query(Transactions).\
+        filter(Transactions.fileid == fileid).\
+        filter(Transactions.username == subscriber_config['username']).\
+        update({'end_time': end_time})
     session.commit()
-    logging.info(f'Transaction {transactionid} marked complete')
+    logging.info(f'Transaction for {fileid} for {subscriber_config["username"]} account marked complete')
 
 
 def _update_transactions_table(request, fileid=None):

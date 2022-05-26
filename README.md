@@ -3,7 +3,7 @@
 
 The Laboratory for Atmospheric and Space Physics (LASP) Standard Data Transfer Protocol (SDTP) Application is used to transfer LASP-based data products to the Goddard Earth Sciences Data Information Services (GES DISC).
 
-More information can be found here: https://confluence.lasp.colorado.edu/pages/viewpage.action?pageId=86215664
+This README covers the installation and usage of the application.  More information about the design and implementation of the application can be found here: https://confluence.lasp.colorado.edu/pages/viewpage.action?pageId=86215664
 
 
 ## Installation
@@ -11,7 +11,7 @@ More information can be found here: https://confluence.lasp.colorado.edu/pages/v
 
 ### Prerequisites
 
-It is suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.9.  Downloads and installation instructions are  available here:
+It is suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.9.  Downloads and installation instructions are available here:
 
 - [Miniconda](https://conda.io/miniconda.html)
 - [Anaconda](https://www.continuum.io/downloads)
@@ -109,9 +109,9 @@ Once the server is running and test data have been added, one can send requests 
 ```bash
 curl -X GET "http://localhost:8000/files" -H "Accept: application/json" -H "Cert-UID: ges_disc_cert"
 curl -X GET "http://localhost:8000/files?stream=prod&ShortName=TSIS2_L1" -H "Accept: application/json" -H "Cert-UID: ges_disc_cert"
-curl -X GET "http://localhost:8000/files/{fileid}" "Accept: application/json" -H "Cert-UID: ges_disc_cert"
-curl -X DELETE "http://localhost:8000/files/{fileid}" "Accept: application/json" -H "Cert-UID: ges_disc_cert"
-curl -X DELETE "http://localhost:8000/files/{fileid_start}-{fileid_end}" "Accept: application/json" -H "Cert-UID: ges_disc_cert"
+curl -X GET "http://localhost:8000/files/{fileid}" -H "Accept: application/json" -H "Cert-UID: ges_disc_cert"
+curl -X DELETE "http://localhost:8000/files/{fileid}" -H "Accept: application/json" -H "Cert-UID: ges_disc_cert"
+curl -X DELETE "http://localhost:8000/files/{fileid_start}-{fileid_end}" -H "Accept: application/json" -H "Cert-UID: ges_disc_cert"
 ```
 
 To get a list of all of the available `fileid`s (convenience for testing out `curl` commands):

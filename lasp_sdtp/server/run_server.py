@@ -136,7 +136,28 @@ def _register_admin():
         logging.info('Registered admin account')
 
 
-def _validate_request_tags(tags):
+def _validate_fileid(fileid):
+    """Make sure that the provided ``fileid`` is a positive integer that is 15
+    digits or less.  If it is not, a 400 error is raised.
+
+    Parameters
+    ----------
+    fileid : str
+        The ``fileid`` given in the request
+    """
+
+    # Make sure given fileid is an integer
+    try:
+        int(fileid)
+    except ValueError:
+        abort(400)
+
+    # Make sure the given fileid is a positive integer that is 15 digits or less
+    if int(fileid) <= 0 or int(fileid) > 999999999999999:
+        abort(400)
+
+
+def _validate_tags(tags):
     """Make sure that all of the provided tags are of valid type and value.  If
     any of them are not, a 404 error is raised.
 
@@ -215,18 +236,24 @@ def delete_file(fileid):
         The response object containing approriate headers and content.
     """
 
+    # Make sure the fileid is valid
+    _validate_fileid(fileid)
+
     # Add a transactions database record
     transactionid = _update_transactions_table(request, fileid=fileid)
 
+    # Mark the corresponding GET request transaction as complete
+    _mark_transaction_complete(fileid)
+
     # Get the metadata for the file of interest
     try:
-        file_metadata = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
-        file_metadata = file_metadata[0].__dict__
+        file_metadata = session.query(FileMetadata.name).filter(FileMetadata.fileid == fileid).all()
+        filename = file_metadata[0][0]
     except IndexError:  # No results, send a 404
         abort(404)
 
     # Determine where the file exists in the queue
-    filepath = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], file_metadata['name'])
+    filepath = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], filename)
 
     # Check to see if the file is in the queue for another subscriber
     queue_data = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
@@ -318,15 +345,8 @@ def get_file(fileid):
         The response object containing approriate headers and content.
     """
 
-    # Make sure given fileid is an integer
-    try:
-        int(fileid)
-    except ValueError:
-        abort(400)
-
-    # Make sure the given fileid is a positive integer that is 15 digits or less
-    if int(fileid) <= 0 or int(fileid) > 999999999999999:
-        abort(400)
+    # Make sure the fileid is valid
+    _validate_fileid(fileid)
 
     # Add a transactions database record
     # If the record cant be added, it means the file doesn't exist in file_metadata
@@ -336,15 +356,16 @@ def get_file(fileid):
         session.close()  # Needed to avoid rollback during flush
         abort(404)
 
-    # Get the metadata for the file of interest
-    file_metadata = session.query(FileMetadata).filter(FileMetadata.fileid == fileid).all()
-    file_metadata = file_metadata[0].__dict__
+
+    # Get the filename for the file of interest
+    file_metadata = session.query(FileMetadata.name).filter(FileMetadata.fileid == fileid).all()
+    filename = file_metadata[0][0]
 
     # Determine where the file exists in the filesystem
-    filepath = os.path.join(admin_config['filesystem_loc'], file_metadata['name'])
+    filepath = os.path.join(admin_config['filesystem_loc'], filename)
 
     # Copy the file to the queue if it doesn't already exist
-    dst = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], file_metadata['name'])
+    dst = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], filename)
 
     try:
         shutil.copyfile(filepath, dst)
@@ -361,9 +382,6 @@ def get_file(fileid):
         logging.info(f'Added fileid {fileid} to queue')
     except IntegrityError:
         logging.warning(f'{fileid} is already in the queue')
-
-    # Update transactions table with completion info
-    _mark_transaction_complete(transactionid=transactionid)
 
     # Get the file contents
     with open(dst, 'r') as f:
@@ -398,7 +416,7 @@ def get_filelist():
     tags = _parse_request_tags(request)
 
     # Make sure the tags are valid
-    _validate_request_tags(tags)
+    _validate_tags(tags)
 
     # Build and run the query based on the tags
     query = _build_query(tags)
