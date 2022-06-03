@@ -9,7 +9,7 @@ Use
     Functions within this module are intended to be imported and used within
     other modules, e.g.:
     ::
-        from lasp_sdtp.utils.logging import configure_logging
+        from lasp_sdtp.utils.logging import configure
 """
 
 import datetime
@@ -24,7 +24,7 @@ import os
 HOME_DIR = os.path.join(os.path.expanduser('~'), 'Desktop')
 
 
-def configure_logging(verbose=True):
+def configure(verbose=True) -> str:
     """Create and configure a log file with a standard logging format.
 
     Parameters
@@ -64,14 +64,14 @@ def configure_logging(verbose=True):
     logging.info(f'Python Executable Path: {sys.executable}')
 
     # Get list of dependencies
-    setup_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'setup.py')
+    setup_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'setup.cfg')
     with open(setup_file, 'r') as f:
         data = f.readlines()
     for i, line in enumerate(data):
-        if 'REQUIRES = [' in line:
+        if 'install_requires =' in line:
             begin = i + 1
-        elif 'setup(' in line:
-            end = i - 2
+        elif 'python_requires =' in line:
+            end = i - 1
     dependencies = data[begin:end]
     dependencies = [item.strip().replace("'", "").replace(',', '').split('=')[0].split('>')[0].split('<')[0] for item in dependencies]
 

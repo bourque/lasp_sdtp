@@ -19,14 +19,8 @@ import pytest
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
-from lasp_sdtp.database.database_interface import Accounts
-from lasp_sdtp.database.database_interface import FileMetadata
-from lasp_sdtp.database.database_interface import FileQueue
-from lasp_sdtp.database.database_interface import insert_data
-from lasp_sdtp.database.database_interface import session
-from lasp_sdtp.database.database_interface import Transactions
-from lasp_sdtp.utils.utils import get_checksum
-from lasp_sdtp.utils.utils import get_shortname
+from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.utils import utils
 
 
 def _add_accounts_entries():
@@ -58,7 +52,7 @@ def _add_accounts_entries():
         'registration_expires': datetime.datetime.today() - datetime.timedelta(days=1)}
     )
 
-    insert_data('accounts', data_to_insert)
+    db.insert_data('accounts', data_to_insert)
 
 
 def _add_file_metadata_entries():
@@ -72,16 +66,16 @@ def _add_file_metadata_entries():
     for i, test_file in enumerate(test_files):
         data = {
             'name': os.path.basename(test_file),
-            'checksum': get_checksum(),
+            'checksum': utils.get_checksum(),
             'size': os.path.getsize(test_file),
             'expires': datetime.datetime.today() + datetime.timedelta(days=subscriber_config['expiration_period']),
             'stream': 'prod',
-            'shortname': get_shortname(os.path.basename(test_file)),
+            'shortname': utils.get_shortname(os.path.basename(test_file)),
             'version': 'v01',
             'date': datetime.datetime(2022, 1, 1) + datetime.timedelta(days=i - 1)
         }
         data_to_insert.append(data)
-    insert_data('file_metadata', data_to_insert)
+    db.insert_data('file_metadata', data_to_insert)
 
     # Add entries to satisfy integrity constraint for test_cleanup_database
     data_to_insert = [{
@@ -121,7 +115,7 @@ def _add_file_metadata_entries():
     })
 
     # A seperate call to insert_data() is needed so that the correct fileids are inserted
-    insert_data('file_metadata', data_to_insert)
+    db.insert_data('file_metadata', data_to_insert)
 
 
 def _add_file_queue_entries():
@@ -159,7 +153,7 @@ def _add_file_queue_entries():
         'expires': datetime.datetime.today() + datetime.timedelta(days=1)
     })
 
-    insert_data('file_queue', data_to_insert)
+    db.insert_data('file_queue', data_to_insert)
 
 
 def _add_transactions_entries():
@@ -177,7 +171,7 @@ def _add_transactions_entries():
         'end_time': datetime.datetime.now() + datetime.timedelta(hours=1),
     }]
 
-    insert_data('transactions', data_to_insert)
+    db.insert_data('transactions', data_to_insert)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -185,11 +179,11 @@ def setup(request):
     """Setup function"""
 
     # Remove any data that may already exist in the database
-    session.query(FileQueue).delete()
-    session.query(Transactions).delete()
-    session.query(Accounts).delete()
-    session.query(FileMetadata).delete()
-    session.commit()
+    db.session.query(db.FileQueue).delete()
+    db.session.query(db.Transactions).delete()
+    db.session.query(db.Accounts).delete()
+    db.session.query(db.FileMetadata).delete()
+    db.session.commit()
 
     # Add entries to database tables to support tests
     _add_accounts_entries()
@@ -205,8 +199,8 @@ def teardown():
     """Teardown function"""
 
     # Clean out the database
-    session.query(FileQueue).delete()
-    session.query(Transactions).delete()
-    session.query(Accounts).delete()
-    session.query(FileMetadata).delete()
-    session.commit()
+    db.session.query(db.FileQueue).delete()
+    db.session.query(db.Transactions).delete()
+    db.session.query(db.Accounts).delete()
+    db.session.query(db.FileMetadata).delete()
+    db.session.commit()

@@ -18,7 +18,7 @@ import string
 from lasp_sdtp.config import subscriber_config
 
 
-def get_checksum():
+def get_checksum() -> str:
     """Return a randomly generated checksum.  Currently only supports the
     ``sha256`` checksum type.
 
@@ -36,7 +36,7 @@ def get_checksum():
     return checksum
 
 
-def get_shortname(filename):
+def get_shortname(filename: str) -> str:
     """Return the appropriate value for the ``ShortName`` tag for the given
     filename.  Currently this is hard-coded to only support TSIS-2.
 

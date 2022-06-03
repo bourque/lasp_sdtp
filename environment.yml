@@ -28,6 +28,7 @@ dependencies:
   - pytest=7.1.1
   - python=3.9
   - sqlalchemy=1.4.35
+  - werkzeug=2.0.3
 
   - pip:
 

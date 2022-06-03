@@ -19,11 +19,7 @@ import pytest
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
-from lasp_sdtp.database.database_interface import Accounts
-from lasp_sdtp.database.database_interface import FileMetadata
-from lasp_sdtp.database.database_interface import FileQueue
-from lasp_sdtp.database.database_interface import session
-from lasp_sdtp.database.database_interface import Transactions
+from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.server.run_server import get_app
 
 
@@ -63,7 +59,7 @@ def _check_transaction(request_url, headers):
     assert 'SDTP-TransactionID' in headers
 
     # Check that there is a record in the transactions table
-    results = session.query(Transactions).filter(Transactions.transactionid == headers['SDTP-TransactionID']).all()
+    results = db.session.query(db.Transactions).filter(db.Transactions.transactionid == headers['SDTP-TransactionID']).all()
     assert len(results) == 1  # There should only be one entry
     assert request_url in results[0].__dict__['action']
 
@@ -116,7 +112,7 @@ def test_register(client):
     assert response.status_code == 204
 
     # Check that a database entry was made for the Accounts table
-    results = session.query(Accounts).filter(Accounts.username == subscriber_config['username']).all()
+    results = db.session.query(db.Accounts).filter(db.Accounts.username == subscriber_config['username']).all()
     assert len(results) == 1  # There should only be one entry
     assert results[0].__dict__['username'] == subscriber_config['username']
 
@@ -190,7 +186,7 @@ def test_get_file(client):
     """
 
     # Get the lowest fileid that exists
-    file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
+    file_metadata = db.session.query(db.FileMetadata).filter().order_by(db.FileMetadata.fileid).all()
     fileid = str(file_metadata[0].__dict__['fileid'])
 
     # Send a request and get the response
@@ -206,7 +202,7 @@ def test_get_file(client):
     assert os.path.exists(os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], data['filename']))
 
     # Check that there is a database entry for the file in the queue
-    results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
+    results = db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).all()
     assert len(results) == 1  # There should only be one entry
     assert results[0].__dict__['fileid'] == int(fileid)
 
@@ -223,7 +219,7 @@ def test_delete_file(client):
     """
 
     # Get the lowest fileid that exists
-    file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
+    file_metadata = db.session.query(db.FileMetadata).filter().order_by(db.FileMetadata.fileid).all()
     fileid = str(file_metadata[0].__dict__['fileid'])
 
     # Delete the file
@@ -235,7 +231,7 @@ def test_delete_file(client):
     assert response.status_code == 204
 
     # Check that the database entry was removed
-    results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
+    results = db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).all()
     assert len(results) == 0
 
     _check_transaction(request_url, response.headers)
@@ -254,7 +250,7 @@ def test_delete_files(client):
     headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
 
     # Get a handful of files to test
-    file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
+    file_metadata = db.session.query(db.FileMetadata).filter().order_by(db.FileMetadata.fileid).all()
     fileid_start = file_metadata[0].__dict__['fileid']
     fileid_end = fileid_start + 5
     fileids = [fileid for fileid in range(fileid_start, fileid_end)]
@@ -270,7 +266,7 @@ def test_delete_files(client):
 
     # Check that the database entries were removed
     for fileid in fileids:
-        results = session.query(FileQueue).filter(FileQueue.fileid == fileid).all()
+        results = db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).all()
         assert len(results) == 0
 
 

@@ -20,7 +20,7 @@ import os
 HOME_DIR = os.path.expanduser('~')
 
 
-def get_admin_config():
+def get_admin_config() -> dict:
     """Return admin configuration data
 
     Returns
@@ -40,7 +40,7 @@ def get_admin_config():
     return config
 
 
-def get_subscriber_config():
+def get_subscriber_config() -> dict:
     """Return subscriber configuration details
 
     Returns

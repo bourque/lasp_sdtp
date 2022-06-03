@@ -18,10 +18,7 @@ import os
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
-from lasp_sdtp.database.database_interface import Accounts
-from lasp_sdtp.database.database_interface import FileMetadata
-from lasp_sdtp.database.database_interface import FileQueue
-from lasp_sdtp.database.database_interface import session
+from lasp_sdtp.database.database_controller import db
 
 
 def cleanup_accounts():
@@ -29,18 +26,18 @@ def cleanup_accounts():
 
     # Identify any expired accounts
     today = datetime.datetime.today()
-    expired_accounts = session.query(Accounts.username).filter(Accounts.registration_expires <= today).all()
+    expired_accounts = db.session.query(db.Accounts.username).filter(db.Accounts.registration_expires <= today).all()
     expired_accounts = [item[0] for item in expired_accounts]
 
     for expired_account in expired_accounts:
 
         # Remove any files in the queue related to the account
-        session.query(FileQueue).filter(FileQueue.username == expired_account).delete()
-        session.commit()
+        db.session.query(db.FileQueue).filter(db.FileQueue.username == expired_account).delete()
+        db.session.commit()
 
         # Remove the expired account
-        session.query(Accounts).filter(Accounts.username == expired_account).delete()
-        session.commit()
+        db.session.query(db.Accounts).filter(db.Accounts.username == expired_account).delete()
+        db.session.commit()
 
 
 def cleanup_file_queue():
@@ -49,17 +46,17 @@ def cleanup_file_queue():
 
     # Identify any expired files
     today = datetime.datetime.today()
-    expired_files = session.query(FileQueue.fileid).filter(FileQueue.expires <= today).all()
+    expired_files = db.session.query(db.FileQueue.fileid).filter(db.FileQueue.expires <= today).all()
     expired_files = [item[0] for item in expired_files]
 
     for expired_file in expired_files:
 
         # Remove file from the file queue table
-        session.query(FileQueue).filter(FileQueue.fileid == expired_file).delete()
-        session.commit()
+        db.session.query(db.FileQueue).filter(db.FileQueue.fileid == expired_file).delete()
+        db.session.commit()
 
         # Remove file from the file queue storage
-        filename = session.query(FileMetadata.name).filter(FileMetadata.fileid == expired_file).all()
+        filename = db.session.query(db.FileMetadata.name).filter(db.FileMetadata.fileid == expired_file).all()
         filename = filename[0][0]
         file_path = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], filename)
         if os.path.exists(file_path):

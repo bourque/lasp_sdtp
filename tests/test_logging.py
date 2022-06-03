@@ -14,14 +14,14 @@ Use
 import logging
 import os
 
-from lasp_sdtp.utils.logging import configure_logging
+from lasp_sdtp.utils.logging import configure
 
 
-def test_configure_logging():
-    """Tests the ``configure_logging`` function"""
+def test_configure():
+    """Tests the ``configure`` function"""
 
     # Configure a log file
-    log_file = configure_logging(verbose=False)
+    log_file = configure(verbose=False)
 
     # Perform some basic logging
     logging.info('Some information')

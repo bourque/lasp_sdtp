@@ -17,26 +17,20 @@ import pytest
 from sqlalchemy import Table
 
 from lasp_sdtp.config import subscriber_config
-from lasp_sdtp.database.database_interface import Accounts
-from lasp_sdtp.database.database_interface import base
-from lasp_sdtp.database.database_interface import FileMetadata
-from lasp_sdtp.database.database_interface import load_connection
-from lasp_sdtp.database.database_interface import session
-from lasp_sdtp.database.database_interface import Transactions
-from lasp_sdtp.database.database_interface import _update_transactions_table
+from lasp_sdtp.database.database_controller import db
 
 
-def test_load_connection():
+def test_connect():
     """Tests the ``load_connection`` function"""
 
-    session, base, engine, meta = load_connection()
-    assert 'oracle://' in str(session.bind.url)
+    _session, _base, _engine, _meta = db.connect()
+    assert 'oracle://' in str(_session.bind.url)
 
 
 def test_fileid_boundary():
     """Tests that the ``fileid`` cannot exceed 15 digits"""
 
-    table = Table('file_metadata', base.metadata)
+    table = Table('file_metadata', db.base.metadata)
 
     data = {
         'fileid': 9999999999999999,  # 16 digits
@@ -56,10 +50,10 @@ def test_fileid_boundary():
 
 
 def test_update_transactions_table():
-    """Tests the ``_update_transactions_table`` function"""
+    """Tests the ``update_transactions_table`` function"""
 
     # Get the lowest fileid that exists
-    file_metadata = session.query(FileMetadata).filter().order_by(FileMetadata.fileid).all()
+    file_metadata = db.session.query(db.FileMetadata).filter().order_by(db.FileMetadata.fileid).all()
     test_fileid = str(file_metadata[0].__dict__['fileid'])
 
     # Create dummy requests
@@ -72,15 +66,15 @@ def test_update_transactions_table():
 
     for request, fileid in zip(requests, fileids):
 
-        transactionid = _update_transactions_table(request, fileid)
+        transactionid = db.update_transactions_table(request, fileid)
 
         # Check that there is a record in the transactions table
-        results = session.query(Transactions).filter(Transactions.transactionid == transactionid).all()
+        results = db.session.query(db.Transactions).filter(db.Transactions.transactionid == transactionid).all()
         assert len(results) == 1  # There should only be one entry
         assert request.url in results[0].__dict__['action']
 
         # Remove account entry so that it doesn't break future tests
         if request.method == 'DELETE':
-            session.query(Transactions).filter(Transactions.username == subscriber_config['username']).delete()
-            session.query(Accounts).filter(Accounts.username == subscriber_config['username']).delete()
-            session.commit()
+            db.session.query(db.Transactions).filter(db.Transactions.username == subscriber_config['username']).delete()
+            db.session.query(db.Accounts).filter(db.Accounts.username == subscriber_config['username']).delete()
+            db.session.commit()

@@ -13,29 +13,21 @@ Use
         python insert_test_eata.py
 """
 
-from lasp_sdtp.database.database_interface import Accounts
-from lasp_sdtp.database.database_interface import FileMetadata
-from lasp_sdtp.database.database_interface import FileQueue
-from lasp_sdtp.database.database_interface import session
-from lasp_sdtp.database.database_interface import Transactions
+from lasp_sdtp.database.database_controller import db
 
-from conftest import _add_accounts_entries
-from conftest import _add_file_metadata_entries
-from conftest import _add_file_queue_entries
-from conftest import _add_transactions_entries
-
+import conftest
 
 if __name__ == '__main__':
 
     # Remove any data that may already exist in the database
-    session.query(FileQueue).delete()
-    session.query(Transactions).delete()
-    session.query(Accounts).delete()
-    session.query(FileMetadata).delete()
-    session.commit()
+    db.session.query(db.FileQueue).delete()
+    db.session.query(db.Transactions).delete()
+    db.session.query(db.Accounts).delete()
+    db.session.query(db.FileMetadata).delete()
+    db.session.commit()
 
     # Add entries to database tables to support tests
-    _add_accounts_entries()
-    _add_file_metadata_entries()
-    _add_file_queue_entries()
-    _add_transactions_entries()
+    conftest._add_accounts_entries()
+    conftest._add_file_metadata_entries()
+    conftest._add_file_queue_entries()
+    conftest._add_transactions_entries()
