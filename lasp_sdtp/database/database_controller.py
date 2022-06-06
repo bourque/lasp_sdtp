@@ -93,6 +93,18 @@ class DatabaseController():
 
         return session, base, engine, meta
 
+    def delete_file_from_queue(self, fileid: int):
+        """Remove the ``file_queue`` database entry for the given ``fileid``
+
+        Parameters
+        ----------
+        fileid : int
+            The ``fileid`` of interest
+        """
+
+        self.session.query(self.FileQueue).filter(self.FileQueue.fileid == fileid).delete()
+        self.session.commit()
+
     def insert_data(self, table_name: str, data: list[dict]):
         """Inserts the given data into the given table
 
@@ -106,7 +118,7 @@ class DatabaseController():
 
         table = Table(table_name, self.base.metadata, autoload=True)
         for row in data:
-            db.engine.execute(table.insert().values(row))
+            self.engine.execute(table.insert().values(row))
 
     def mark_transaction_complete(self, fileid: int):
         """Update the ``transactions`` table to mark the the GET request
@@ -185,6 +197,114 @@ class DatabaseController():
         logging.info(f'Recorded transaction {transactionid} for request {request}')
 
         return transactionid
+
+    def query_for_account(self, username: str) -> list:
+        """Return account information for the given ``username``
+
+        Paramaters
+        ----------
+        username : str
+            The username of interest
+
+        Returns
+        -------
+        account : dict
+            The account information
+        """
+
+        results = self.session.query(self.Accounts).filter(self.Accounts.username == username).all()
+        account = results[0].__dict__
+
+        return account
+
+    def query_for_filelist(self, tags: dict) -> list:
+        """Return a list of files (and their metadata) based on user-provided
+        tags.
+
+        For the ``date`` tag, the user may provide a specific date to filter on
+        (e.g. ``date=2022-01-01``) or the user may provide a speicific date range
+        to filter on via the ``start_date`` and ``end_date`` tags (e.g.
+        ``start_date=2022-01-01&end_date=2022-02-01``).  If a ``date`` is provided,
+        then ``start_date`` and ``end_date`` must remain as ``None``.  Alternativly,
+        if both a ``start_date`` and ``end_date`` are provided, the ``date`` tag
+        must remain as ``None``.
+
+        Parameters
+        ----------
+        tags : dict
+            A dictionary of key/value pairs for the request tags
+
+        Returns
+        -------
+        results : list
+            A list of database entries freturned by the query
+        """
+
+        query = self.session.query(self.FileMetadata)  # base query
+        query = query.filter(self.FileMetadata.stream == tags['stream'])  # stream is always supplied via default value
+        query = query.filter(self.FileMetadata.version == tags['version'])  # version is always supplied via default value
+
+        # For non-default shortname values
+        if tags['shortname'] != 'all':
+            query = query.filter(self.FileMetadata.shortname == tags['shortname'])
+
+        # For non-default date values
+        if tags['date'] is not None:
+            query = query.filter(self.FileMetadata.date == datetime.datetime.strptime(tags['date'], '%Y-%M-%d'))
+
+        # For non-default start_date and end_date values
+        if tags['start_date'] and tags['end_date'] is not None:
+            query = query.filter(self.FileMetadata.date >= datetime.datetime.strptime(tags['start_date'], '%Y-%M-%d'))
+            query = query.filter(self.FileMetadata.date <= datetime.datetime.strptime(tags['end_date'], '%Y-%M-%d'))
+
+        results = query.all()
+
+        # Parse the query results
+        results = [item.__dict__ for item in results]
+        for item in results:
+            del item['_sa_instance_state']
+
+        return results
+
+    def query_for_filename(self, fileid: int) -> str:
+        """Return the filename associated with the given ``fileid``
+
+        Parameters
+        ----------
+        fileid : int
+            The ``fileid`` of interest
+
+        Returns
+        -------
+        filename : str
+            The name of the file for the given ``fileid``
+        """
+
+        file_metadata = self.session.query(self.FileMetadata.name).filter(self.FileMetadata.fileid == fileid).all()
+        filename = file_metadata[0][0]
+
+        return filename
+
+    def query_for_queue_entries(self, fileid: int) -> list:
+        """Return a list of queue database table entries that exist for the
+        given ``fileid``
+
+        Parameters
+        ----------
+        fileid : int
+            The ``fileid`` of interest
+
+        Returns
+        -------
+        queue_entries : list
+            A list of database entries that exist in the queue for the given
+            ``fileid``
+        """
+
+        queue_entries = self.session.query(self.FileQueue).filter(self.FileQueue.fileid == fileid).all()
+        queue_entries = [item.__dict__ for item in queue_entries]
+
+        return queue_entries
 
 
 db = DatabaseController()

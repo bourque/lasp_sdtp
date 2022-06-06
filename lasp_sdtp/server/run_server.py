@@ -26,10 +26,8 @@ from flask import abort
 from flask import Flask
 from flask import make_response
 from flask import request
-from flask.app import Flask
 from flask.wrappers import Response
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm.query import Query
 from werkzeug import exceptions
 
 from lasp_sdtp.config import admin_config
@@ -39,49 +37,6 @@ from lasp_sdtp.utils import logging as lasp_sdtp_logging
 
 app = Flask(__name__)
 lasp_sdtp_logging.configure()
-
-
-def _build_query(tags: dict) -> Query:
-    """Build query to the ``file_metadata`` table to return file data based on
-    user-provided tags.
-
-    For the ``date`` tag, the user may provide a specific date to filter on
-    (e.g. ``date=2022-01-01``) or the user may provide a speicific date range
-    to filter on via the ``start_date`` and ``end_date`` tags (e.g.
-    ``start_date=2022-01-01&end_date=2022-02-01``).  If a ``date`` is provided,
-    then ``start_date`` and ``end_date`` must remain as ``None``.  Alternativly,
-    if both a ``start_date`` and ``end_date`` are provided, the ``date`` tag
-    must remain as ``None``.
-
-    Parameters
-    ----------
-    tags : dict
-        A dictionary of key/value pairs for the request tags
-
-    Returns
-    -------
-    query : sqlalchemy.orm.query.Query obj
-        A ``sqlalchemy`` query of the ``FileMetadata`` table
-    """
-
-    query = db.session.query(db.FileMetadata)  # base query
-    query = query.filter(db.FileMetadata.stream == tags['stream'])  # stream is always supplied via default value
-    query = query.filter(db.FileMetadata.version == tags['version'])  # version is always supplied via default value
-
-    # For non-default shortname values
-    if tags['shortname'] != 'all':
-        query = query.filter(db.FileMetadata.shortname == tags['shortname'])
-
-    # For non-default date values
-    if tags['date'] is not None:
-        query = query.filter(db.FileMetadata.date == datetime.datetime.strptime(tags['date'], '%Y-%M-%d'))
-
-    # For non-default start_date and end_date values
-    if tags['start_date'] and tags['end_date'] is not None:
-        query = query.filter(db.FileMetadata.date >= datetime.datetime.strptime(tags['start_date'], '%Y-%M-%d'))
-        query = query.filter(db.FileMetadata.date <= datetime.datetime.strptime(tags['end_date'], '%Y-%M-%d'))
-
-    return query
 
 
 def _parse_request_tags(request: object) -> dict:
@@ -123,10 +78,10 @@ def _register_admin():
     """Resiters an ``admin`` account if it doesn't already exist"""
 
     # Check if an admin account already exists
-    results = db.session.query(db.Accounts).filter(db.Accounts.username == 'lasp_admin').all()
+    account = db.query_for_account('lasp_admin')
 
     # If it doesn't, create one
-    if not results:
+    if not account:
         data = [{
             'username': 'lasp_admin',
             'certuid': 'admin_cert',
@@ -262,8 +217,7 @@ def delete_file(fileid: int) -> Response:
 
     # Get the metadata for the file of interest
     try:
-        file_metadata = db.session.query(db.FileMetadata.name).filter(db.FileMetadata.fileid == fileid).all()
-        filename = file_metadata[0][0]
+        filename = db.query_for_filename(fileid)
     except IndexError:  # No results, send a 404
         abort(404)
 
@@ -271,10 +225,9 @@ def delete_file(fileid: int) -> Response:
     filepath = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], filename)
 
     # Check to see if the file is in the queue for another subscriber
-    queue_data = db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).all()
-    queue_data = [item.__dict__ for item in queue_data]
+    queue_entries = db.query_for_queue_entries(fileid)
     file_needed = False
-    for entry in queue_data:
+    for entry in queue_entries:
         if entry['username'] != subscriber_config['username']:
             file_needed = True
 
@@ -285,8 +238,7 @@ def delete_file(fileid: int) -> Response:
             logging.info(f'Removed {filepath} from queue')
 
         # Remove entry from database
-        db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).delete()
-        db.session.commit()
+        db.delete_file_from_queue(fileid)
         logging.info(f'Removed fileid {fileid} from queue')
 
     # Construct the response
@@ -373,12 +325,8 @@ def get_file(fileid: int) -> Response:
         db.session.close()  # Needed to avoid rollback during flush
         abort(404)
 
-
-    # Get the filename for the file of interest
-    file_metadata = db.session.query(db.FileMetadata.name).filter(db.FileMetadata.fileid == fileid).all()
-    filename = file_metadata[0][0]
-
     # Determine where the file exists in the filesystem
+    filename = db.query_for_filename(fileid)
     filepath = os.path.join(admin_config['filesystem_loc'], filename)
 
     # Copy the file to the queue if it doesn't already exist
@@ -437,17 +385,11 @@ def get_filelist() -> Response:
     if not valid:
         abort(400)
 
-    # Build and run the query based on the tags
-    query = _build_query(tags)
-    results = query.all()
-
-    # Parse the query results
-    data = [item.__dict__ for item in results]
-    for item in data:
-        del item['_sa_instance_state']
+    # Run the query based on the tags
+    results = db.query_for_filelist(tags)
 
     # Construct the response
-    content = {'files': data}
+    content = {'files': results}
     status = 200
     response = make_response(content, status)
     response.headers['Content-Type'] = 'application/json'
