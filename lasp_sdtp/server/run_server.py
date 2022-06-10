@@ -19,7 +19,7 @@ Use
 
 import datetime
 import logging
-import os
+from pathlib import Path
 import shutil
 
 from flask import abort
@@ -86,7 +86,7 @@ def _register_admin():
             'username': 'lasp_admin',
             'certuid': 'admin_cert',
             'role': 'admin',
-            'registration_date': datetime.datetime.today()}]
+            'registration_date': datetime.datetime.utcnow().date()}]
         db.insert_data('accounts', data)
         logging.info('Registered admin account')
 
@@ -222,7 +222,7 @@ def delete_file(fileid: int) -> Response:
         abort(404)
 
     # Determine where the file exists in the queue
-    filepath = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], filename)
+    filepath = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / filename
 
     # Check to see if the file is in the queue for another subscriber
     queue_entries = db.query_for_queue_entries(fileid)
@@ -233,8 +233,8 @@ def delete_file(fileid: int) -> Response:
 
     # If not, delete the file from the queue if it is still there
     if not file_needed:
-        if os.path.exists(filepath):
-            os.remove(filepath)
+        if filepath.exists:
+            filepath.unlink(missing_ok=True)
             logging.info(f'Removed {filepath} from queue')
 
         # Remove entry from database
@@ -327,17 +327,17 @@ def get_file(fileid: int) -> Response:
 
     # Determine where the file exists in the filesystem
     filename = db.query_for_filename(fileid)
-    filepath = os.path.join(admin_config['filesystem_loc'], filename)
+    filepath = Path(admin_config['filesystem_loc']) / filename
 
     # Copy the file to the queue if it doesn't already exist
-    dst = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], filename)
+    dst = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / filename
 
     try:
         shutil.copyfile(filepath, dst)
         logging.info(f'Copied {filepath} to queue: {dst}')
 
         # Add a file queue database record
-        entry_date = datetime.datetime.today()
+        entry_date = datetime.datetime.utcnow().date()
         expiration_date = entry_date + datetime.timedelta(days=subscriber_config['expiration_period'])
         data = [{'username': subscriber_config['username'],
                  'fileid': fileid,
@@ -353,7 +353,7 @@ def get_file(fileid: int) -> Response:
         contents = f.readlines()
 
     # Construct the response
-    content = {'filename': os.path.basename(dst), 'contents': contents}
+    content = {'filename': Path(dst).name, 'contents': contents}
     status = 200
     response = make_response(content, status)
     response.headers['Content-Type'] = 'application/json'
@@ -425,7 +425,7 @@ def register() -> Response:
     """
 
     # Add a accounts database record
-    registration_date = datetime.datetime.today()
+    registration_date = datetime.datetime.utcnow().date()
     registration_expires = registration_date + datetime.timedelta(days=subscriber_config['account_expiration_period'])
     data = [{
         'username': subscriber_config['username'],
@@ -440,9 +440,9 @@ def register() -> Response:
     transactionid = db.update_transactions_table(request)
 
     # Create a queue space in cache
-    queue_path = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'])
-    if not os.path.exists(queue_path):
-        os.mkdir(queue_path)
+    queue_path = Path(admin_config['data_cache_loc']) / subscriber_config['username']
+    if not queue_path.exists:
+        queue_path.mkdir()
         logging.info(f'Created queue: {queue_path}')
 
     # Construct the response

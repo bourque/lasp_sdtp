@@ -13,7 +13,7 @@ Use
 
 import glob
 import json
-import os
+from pathlib import Path
 
 import pytest
 
@@ -167,11 +167,12 @@ def test_get_filelist(client, request_url):
     assert response.status_code == 200
 
     # Check if the returned files are in the filesystem
-    test_files = glob.glob(os.path.join(admin_config['filesystem_loc'], '*'))
+    test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / '*'))
+    ignore_files = ['test_cleanup_db.txt', 'test_cleanup_db2.txt', 'test_reporting.txt', 'test_db_controller.txt'] # ignore files used in other tests
     for entry in data['files']:
-        filename = os.path.join(admin_config['filesystem_loc'], entry['name'])
-        if 'test_cleanup_db' not in filename and 'test_reporting' not in filename:  # ignore files used in other tests
-            assert filename in test_files
+        filename = Path(admin_config['filesystem_loc']) / entry['name']
+        if filename.name not in ignore_files:
+            assert str(filename) in test_files
 
     _check_transaction(request_url, response.headers)
 
@@ -199,7 +200,8 @@ def test_get_file(client):
     assert response.status_code == 200
 
     # Check if the file is in the queue
-    assert os.path.exists(os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], data['filename']))
+    filepath = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / data['filename']
+    assert filepath.exists()
 
     # Check that there is a database entry for the file in the queue
     results = db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).all()

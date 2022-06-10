@@ -12,35 +12,67 @@ Use
 """
 
 from collections import namedtuple
+import datetime
 
 import pytest
-from sqlalchemy import Table
+import sqlalchemy as sa
 
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
 
 
 def test_connect():
-    """Tests the ``load_connection`` function"""
+    """Tests the ``load_connection`` method"""
 
     _session, _base, _engine, _meta = db.connect()
     assert 'oracle://' in str(_session.bind.url)
 
 
+def test_delete_file_from_queue():
+    """Tests the ``delete_file_from_queue`` method"""
+
+    # Delete a file from the queue
+    fileid = 78901
+    db.delete_file_from_queue(fileid)
+
+    # Check that there is no record in the file_queue table
+    results = db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).all()
+    assert len(results) == 0
+
+def test_insert_data():
+    """Tests the ``insert_data`` method"""
+
+    data = {
+        'fileid': 98765,
+        'name': 'insert_data.txt',
+        'checksum': 'hash',
+        'size': 1,
+        'expires': datetime.datetime.utcnow().date(),
+        'stream': 'prod',
+        'shortname': 'foo',
+        'version': '001',
+        'date': datetime.datetime.utcnow().date()
+    }
+    db.insert_data('file_metadata', [data])
+
+    results = db.session.query(db.FileMetadata).filter(db.FileMetadata.fileid == 98765).all()
+    assert len(results) == 1  # There should only be one entry
+
 def test_fileid_boundary():
     """Tests that the ``fileid`` cannot exceed 15 digits"""
 
-    table = Table('file_metadata', db.base.metadata)
+    table = sa.Table('file_metadata', db.base.metadata)
 
     data = {
         'fileid': 9999999999999999,  # 16 digits
         'name': 'foo',
         'checksum': 'foo',
         'size': 1,
-        'expires': '2022-12-31',
+        'expires': datetime.datetime.utcnow().date(),
         'stream': 'prod',
         'shortname': 'foo',
-        'version': '001'
+        'version': '001',
+        'date': datetime.datetime.utcnow().date()
     }
 
     # Try to insert data into database
@@ -50,7 +82,7 @@ def test_fileid_boundary():
 
 
 def test_update_transactions_table():
-    """Tests the ``update_transactions_table`` function"""
+    """Tests the ``update_transactions_table`` method"""
 
     # Get the lowest fileid that exists
     file_metadata = db.session.query(db.FileMetadata).filter().order_by(db.FileMetadata.fileid).all()
@@ -78,3 +110,38 @@ def test_update_transactions_table():
             db.session.query(db.Transactions).filter(db.Transactions.username == subscriber_config['username']).delete()
             db.session.query(db.Accounts).filter(db.Accounts.username == subscriber_config['username']).delete()
             db.session.commit()
+
+
+def test_query_for_account():
+    """Tests the ``query_for_account`` method"""
+
+    account = db.query_for_account('test_account')
+    assert account['username'] == 'test_account'
+
+
+def test_query_for_filelist():
+    """Tests the ``query_for_filelist`` method"""
+
+    tags = {
+        'stream': 'prod',
+        'version': 'v01',
+        'shortname': 'TSIS2_L1',
+        'date': None,
+        'start_date': None,
+        'end_date': None}
+    filelist = db.query_for_filelist(tags=tags)
+    assert len(filelist) == 5
+
+
+def test_query_for_filename():
+    """Tests the ``query_for_filename`` method"""
+
+    filename = db.query_for_filename(98765)
+    assert filename == 'insert_data.txt'
+
+
+def test_query_for_queue_entries():
+    """Tests the ``query_for_queue_entries`` method"""
+
+    queue_entries = db.query_for_queue_entries(67890)
+    assert len(queue_entries) > 0

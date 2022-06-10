@@ -12,7 +12,7 @@ Use
 """
 
 import datetime
-import os
+from pathlib import Path
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
@@ -28,7 +28,7 @@ def test_cleanup_accounts():
     cleanup_accounts()
 
     # Check that there are no expired accounts
-    results = db.session.query(db.Accounts).filter(db.Accounts.registration_expires <= datetime.datetime.today()).all()
+    results = db.session.query(db.Accounts).filter(db.Accounts.registration_expires <= datetime.datetime.utcnow().date()).all()
     assert len(results) == 0
 
     # Check that there are no files in the queue associated with expired accounts
@@ -43,8 +43,9 @@ def test_cleanup_file_queue():
     cleanup_file_queue()
 
     # Check that there are no expired files in the file queue
-    results = db.session.query(db.FileQueue.fileid).filter(db.FileQueue.expires <= datetime.datetime.today()).all()
+    results = db.session.query(db.FileQueue.fileid).filter(db.FileQueue.expires <= datetime.datetime.utcnow().date()).all()
     assert len(results) == 0
 
     # Check that the expired file was removed from the queue storage
-    assert not os.path.exists(os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], 'test_cleanup_db_2.txt'))
+    filepath = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / 'test_cleanup_db_2.txt'
+    assert not filepath.exists()

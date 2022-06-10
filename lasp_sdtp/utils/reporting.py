@@ -16,7 +16,7 @@ Use
 
 import datetime
 from email.message import EmailMessage
-import os
+from pathlib import Path
 import smtplib
 
 import pandas as pd
@@ -37,7 +37,7 @@ def _active_subscribers_report() -> str:
     # Get list of active accounts
     query = db.session.query(db.Accounts.userid, db.Accounts.username, db.Accounts.registration_date, db.Accounts.registration_expires) \
         .filter(db.Accounts.role == 'subscriber') \
-        .filter(db.Accounts.registration_expires >= datetime.datetime.today())
+        .filter(db.Accounts.registration_expires >= datetime.datetime.utcnow().date())
 
     # Store results as an HTML table
     results = pd.read_sql(query.statement, query.session.bind).to_html(index=False)
@@ -85,7 +85,7 @@ def _file_queue_report() -> str:
     query = db.session.query(db.FileQueue.queueid, db.FileQueue.fileid, db.FileMetadata.name, db.FileQueue.username, db.FileQueue.entry_date, db.FileQueue.expires) \
         .select_from(db.FileMetadata) \
         .join(db.FileQueue, db.FileMetadata.fileid == db.FileQueue.fileid) \
-        .filter(db.FileQueue.expires >= datetime.datetime.today())
+        .filter(db.FileQueue.expires >= datetime.datetime.utcnow().date())
 
     # Store results as an HTML table
     results = pd.read_sql(query.statement, query.session.bind).to_html(index=False)
@@ -133,7 +133,7 @@ def send_email(content_dict: dict):
     """
 
     # Get the template
-    email_template_file = os.path.join(os.path.dirname(__file__), 'email_template.html')
+    email_template_file = Path(__file__).parent / 'email_template.html'
     with open(email_template_file) as f:
         content = f.read().replace('\n', '')
 
@@ -177,11 +177,6 @@ def generate_daily_report() -> dict:
     # content_dict['expires_soon'] = _expires_soon_report()
 
     # Send the email
-    send_email(content_dict)
+    #send_email(content_dict)
 
     return content_dict
-
-
-if __name__ == '__main__':
-
-    generate_daily_report()

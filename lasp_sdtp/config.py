@@ -15,9 +15,7 @@ Use
 """
 
 import json
-import os
-
-HOME_DIR = os.path.expanduser('~')
+from pathlib import Path
 
 
 def get_admin_config() -> dict:
@@ -29,13 +27,13 @@ def get_admin_config() -> dict:
         A dictionary containing the configuration details
     """
 
-    config_file_location = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'admin_config.json')
+    config_file_location = Path(__file__).parents[1] / 'admin_config.json'
     with open(config_file_location, 'r') as f:
         config = json.load(f)
 
     # Prepend necessary directory to filesystem and subscriber queues
-    config['filesystem_loc'] = os.path.join(HOME_DIR, config['filesystem_loc'])
-    config['data_cache_loc'] = os.path.join(HOME_DIR, config['data_cache_loc'])
+    config['filesystem_loc'] = str(Path.home() / config['filesystem_loc'])
+    config['data_cache_loc'] = str(Path.home() / config['data_cache_loc'])
 
     return config
 
@@ -49,7 +47,7 @@ def get_subscriber_config() -> dict:
         A dictionary containing the configuration details
     """
 
-    config_file_location = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'subscriber_config.json')
+    config_file_location = Path(__file__).parents[1] / 'subscriber_config.json'
     with open(config_file_location, 'r') as f:
         config = json.load(f)
 

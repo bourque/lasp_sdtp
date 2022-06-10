@@ -16,13 +16,13 @@ import datetime
 import getpass
 import importlib
 import logging
+from pathlib import Path
 import socket
 import subprocess
 import sys
-import os
+import time
 
-HOME_DIR = os.path.join(os.path.expanduser('~'), 'Desktop')
-
+HOME_DIR = Path.home() / 'Desktop'
 
 def configure(verbose=True) -> str:
     """Create and configure a log file with a standard logging format.
@@ -39,19 +39,19 @@ def configure(verbose=True) -> str:
     """
 
     # Build filename
-    timestamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+    timestamp = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
     filename = f'lasp_sdtp_{timestamp}.log'
-    log_file = os.path.join(HOME_DIR, 'logs', filename)
+    log_file = HOME_DIR / 'logs' / filename
 
     # Make sure parent directory exists
-    if not os.path.exists(os.path.dirname(log_file)):
-        os.makedirs(os.path.dirname(log_file))
+    log_file.parent.mkdir(exist_ok=True)
 
     # Make sure no other root handlers exist before configuring the logger
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
 
     # Create the log file
+    logging.Formatter.converter = time.gmtime. # Timestamps are in UTC
     logging.basicConfig(filename=log_file, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %H:%M:%S %p', level=logging.INFO)
     if verbose:
         print('Log file initialized to {}'.format(log_file))
@@ -64,7 +64,7 @@ def configure(verbose=True) -> str:
     logging.info(f'Python Executable Path: {sys.executable}')
 
     # Get list of dependencies
-    setup_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'setup.cfg')
+    setup_file = Path(__file__).parents[2] / 'setup.cfg'
     with open(setup_file, 'r') as f:
         data = f.readlines()
     for i, line in enumerate(data):

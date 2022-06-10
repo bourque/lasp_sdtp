@@ -12,7 +12,7 @@ Use
 """
 
 import logging
-import os
+from pathlib import Path
 
 from lasp_sdtp.utils.logging import configure
 
@@ -29,7 +29,7 @@ def test_configure():
     logging.critical('A critical error')
 
     # Check that the log file was created
-    assert os.path.exists(log_file)
+    assert Path(log_file).exists
 
     # Open the log file and check the contents
     with open(log_file, 'r') as f:

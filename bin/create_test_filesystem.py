@@ -53,7 +53,7 @@ def create_test_filesystem():
                 next_day = datetime.datetime.strftime(datetime.datetime.strptime(date, '%Y%m%d') + datetime.timedelta(days=1), '%Y%m%d')
                 base_filename = base_filename.replace('<date2>', next_day)
 
-            filename = os.path.join(admin_config['filesystem_loc'], base_filename)
+            filename = Path(admin_config['filesystem_loc']) / base_filename
             with open(filename, 'w') as f:
                 f.write(f'File contents for {filename}')
             print(f'Created test file: {filename}')

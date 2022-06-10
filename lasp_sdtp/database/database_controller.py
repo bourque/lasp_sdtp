@@ -23,17 +23,18 @@ Authors
 Use
 ---
 
-tbd
-
+    To interact with the database, simply import the instantiated
+    ``DatabaseController`` class:
+    ::
+        from lasp_sdtp.database.database_controller import db
 """
 
 import datetime
 import logging
-import os
+from pathlib import Path
 from typing import Optional
 
-from sqlalchemy import Table
-from sqlalchemy import create_engine
+import sqlalchemy as sa
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -83,7 +84,7 @@ class DatabaseController():
         """
 
         connection_string = admin_config['db_connection_string']
-        engine = create_engine(connection_string, echo=False)
+        engine = sa.create_engine(connection_string, echo=False)
         base = declarative_base(engine)
         Session = sessionmaker(bind=engine)
         session = Session()
@@ -116,7 +117,7 @@ class DatabaseController():
             The data to insert
         """
 
-        table = Table(table_name, self.base.metadata, autoload=True)
+        table = sa.Table(table_name, self.base.metadata, autoload=True)
         for row in data:
             self.engine.execute(table.insert().values(row))
 
@@ -131,7 +132,7 @@ class DatabaseController():
             The ``transactionid`` of interest
         """
 
-        end_time = datetime.datetime.now()
+        end_time = datetime.datetime.utcnow()
         self.session.query(self.Transactions).\
             filter(self.Transactions.fileid == fileid).\
             filter(self.Transactions.username == subscriber_config['username']).\
@@ -161,32 +162,32 @@ class DatabaseController():
             data_to_insert = self.Transactions(
                 action=f'{request.method} {request.url}',
                 username=subscriber_config['username'],
-                start_time=datetime.datetime.now())
+                start_time=datetime.datetime.utcnow())
 
         # For GET /files
         elif request.method == 'GET' and fileid is None:
             data_to_insert = self.Transactions(
                 action=f'{request.method} {request.url}',
                 username=subscriber_config['username'],
-                start_time=datetime.datetime.now())
+                start_time=datetime.datetime.utcnow())
 
         # For GET /files/<fileid>
         elif request.method == 'GET' and fileid is not None:
             data_to_insert = self.Transactions(
                 action=f'{request.method} {request.url}',
                 username=subscriber_config['username'],
-                start_time=datetime.datetime.now(),
+                start_time=datetime.datetime.utcnow(),
                 fileid=fileid,
                 source=admin_config['filesystem_loc'],
                 destination=admin_config['data_cache_loc'])
 
         # For DELETE /files/<fileid>
         if request.method == 'DELETE':
-            url = os.path.join(os.path.dirname(request.url), str(fileid))
+            url = Path(request.url).parent / str(fileid)
             data_to_insert = self.Transactions(
                 action=f'{request.method} {url}',
                 username=subscriber_config['username'],
-                start_time=datetime.datetime.now())
+                start_time=datetime.datetime.utcnow())
 
         # Insert the data, and get the transaction id
         self.session.add(data_to_insert)

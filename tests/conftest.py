@@ -14,6 +14,7 @@ Use
 import datetime
 import glob
 import os
+from pathlib import Path
 
 import pytest
 
@@ -31,16 +32,16 @@ def _add_accounts_entries():
         'username': 'test_account',
         'certuid': 'test_cert',
         'role': 'subscriber',
-        'registration_date': datetime.datetime.today(),
-        'registration_expires': datetime.datetime.today() + datetime.timedelta(days=1)}]
+        'registration_date': datetime.datetime.utcnow().date(),
+        'registration_expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1)}]
 
     # Add an account for the subscriber (used for test_database_interface)
     data_to_insert.append({
         'username': subscriber_config['username'],
         'certuid': 'test_cert',
         'role': 'subscriber',
-        'registration_date': datetime.datetime.today(),
-        'registration_expires': datetime.datetime.today() + datetime.timedelta(days=1)}
+        'registration_date': datetime.datetime.utcnow().date(),
+        'registration_expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1)}
     )
 
     # Add an account that has expired (used for test_cleanup_database)
@@ -48,8 +49,8 @@ def _add_accounts_entries():
         'username': 'expired_account',
         'certuid': 'test_cert',
         'role': 'subscriber',
-        'registration_date': datetime.datetime.today(),
-        'registration_expires': datetime.datetime.today() - datetime.timedelta(days=1)}
+        'registration_date': datetime.datetime.utcnow().date(),
+        'registration_expires': datetime.datetime.utcnow().date() - datetime.timedelta(days=1)}
     )
 
     db.insert_data('accounts', data_to_insert)
@@ -59,18 +60,18 @@ def _add_file_metadata_entries():
     """Add necessary ``file_metadata`` table entries used for testing"""
 
     # Locate files in test filesystem
-    test_files = glob.glob(os.path.join(admin_config['filesystem_loc'], '*'))
+    test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / '*'))
 
     # Insert test file data (mostly used for test_run_server)
     data_to_insert = []
     for i, test_file in enumerate(test_files):
         data = {
-            'name': os.path.basename(test_file),
+            'name': Path(test_file).name,
             'checksum': utils.get_checksum(),
             'size': os.path.getsize(test_file),
-            'expires': datetime.datetime.today() + datetime.timedelta(days=subscriber_config['expiration_period']),
+            'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period']),
             'stream': 'prod',
-            'shortname': utils.get_shortname(os.path.basename(test_file)),
+            'shortname': utils.get_shortname(Path(test_file).name),
             'version': 'v01',
             'date': datetime.datetime(2022, 1, 1) + datetime.timedelta(days=i - 1)
         }
@@ -83,7 +84,7 @@ def _add_file_metadata_entries():
         'name': 'test_cleanup_db.txt',
         'checksum': 'foo',
         'size': 1,
-        'expires': datetime.datetime.today() + datetime.timedelta(days=1),
+        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
         'stream': 'prod',
         'shortname': 'TEST_FILE',
         'version': 'v01',
@@ -91,10 +92,10 @@ def _add_file_metadata_entries():
     }]
     data_to_insert.append({
         'fileid': 12346,
-        'name': 'test_cleanup_db_2.txt',
+        'name': 'test_cleanup_db2.txt',
         'checksum': 'bar',
         'size': 1,
-        'expires': datetime.datetime.today() + datetime.timedelta(days=1),
+        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
         'stream': 'prod',
         'shortname': 'TEST_FILE',
         'version': 'v01',
@@ -107,7 +108,20 @@ def _add_file_metadata_entries():
         'name': 'test_reporting.txt',
         'checksum': 'bop',
         'size': 1,
-        'expires': datetime.datetime.today() + datetime.timedelta(days=1),
+        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
+        'stream': 'prod',
+        'shortname': 'TEST_FILE',
+        'version': 'v01',
+        'date': datetime.datetime(2022, 1, 1)
+    })
+
+    # Add entry to satisfy integrity constraint for test_database_controller
+    data_to_insert.append({
+        'fileid': 78901,
+        'name': 'test_db_controller.txt',
+        'checksum': 'bat',
+        'size': 1,
+        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
         'stream': 'prod',
         'shortname': 'TEST_FILE',
         'version': 'v01',
@@ -125,32 +139,40 @@ def _add_file_queue_entries():
     data_to_insert = [{
         'username': 'expired_account',
         'fileid': 12345,
-        'entry_date': datetime.datetime.today(),
-        'expires': datetime.datetime.today() - datetime.timedelta(days=10)
+        'entry_date': datetime.datetime.utcnow().date(),
+        'expires': datetime.datetime.utcnow().date() - datetime.timedelta(days=10)
     }]
 
     # Add an entry not associated with the expired account (for test_cleanup_database)
     data_to_insert.append({
         'username': 'test_account',
         'fileid': 12346,
-        'entry_date': datetime.datetime.today(),
-        'expires': datetime.datetime.today() - datetime.timedelta(days=10)
+        'entry_date': datetime.datetime.utcnow().date(),
+        'expires': datetime.datetime.utcnow().date() - datetime.timedelta(days=10)
     })
 
     # Add an expired file to the file queue storage associated with expired account (for test_cleanup_database)
-    with open(os.path.join(admin_config['data_cache_loc'], 'test_cleanup_db.txt'), 'w') as f:
+    with open(Path(admin_config['data_cache_loc']) / 'test_cleanup_db.txt', 'w') as f:
         f.write('')
 
     # Add an expired file to the file queue storage associated with non-expired account (for test_cleanup_database)
-    with open(os.path.join(admin_config['data_cache_loc'], 'test_cleanup_db_2.txt'), 'w') as f:
+    with open(Path(admin_config['data_cache_loc']) / 'test_cleanup_db_2.txt', 'w') as f:
         f.write('')
 
     # Add an entry used for test_reporting
     data_to_insert.append({
         'username': 'test_account',
         'fileid': 67890,
-        'entry_date': datetime.datetime.today(),
-        'expires': datetime.datetime.today() + datetime.timedelta(days=1)
+        'entry_date': datetime.datetime.utcnow().date(),
+        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
+    })
+
+    # Add an entry used for test_database_controller
+    data_to_insert.append({
+        'username': 'test_account',
+        'fileid': 78901,
+        'entry_date': datetime.datetime.utcnow().date(),
+        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
     })
 
     db.insert_data('file_queue', data_to_insert)
@@ -164,11 +186,11 @@ def _add_transactions_entries():
         'transactionid': 999,
         'action': 'GET /files/666',
         'username': 'test_account',
-        'start_time': datetime.datetime.now(),
+        'start_time': datetime.datetime.utcnow(),
         'fileid': 67890,
         'source': '/some/starting/location/',
         'destination': '/some/ending/location',
-        'end_time': datetime.datetime.now() + datetime.timedelta(hours=1),
+        'end_time': datetime.datetime.utcnow() + datetime.timedelta(hours=1),
     }]
 
     db.insert_data('transactions', data_to_insert)

@@ -1,5 +1,5 @@
-"""This module contains various functions to remove expired accounts and files
-from the database and file queue
+"""This module contains functions to remove expired accounts and files from the
+database and file queue
 
 Authors
 -------
@@ -8,13 +8,15 @@ Authors
 Use
 ---
 
-    This module is intended to be executed via the command line as such:
+    This module is intended to be imported and used by
+    ``bin/run_cleanup_database.py``:
     ::
-        python cleanup_database.py
+        from lasp_sdtp.database import cleanup_database
+        cleanup_database.cleanup_accounts()
 """
 
 import datetime
-import os
+from pathlib import Path
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
@@ -25,7 +27,7 @@ def cleanup_accounts():
     """Remove expired accounts"""
 
     # Identify any expired accounts
-    today = datetime.datetime.today()
+    today = datetime.datetime.utcnow().date()
     expired_accounts = db.session.query(db.Accounts.username).filter(db.Accounts.registration_expires <= today).all()
     expired_accounts = [item[0] for item in expired_accounts]
 
@@ -45,7 +47,7 @@ def cleanup_file_queue():
     storage"""
 
     # Identify any expired files
-    today = datetime.datetime.today()
+    today = datetime.datetime.utcnow().date()
     expired_files = db.session.query(db.FileQueue.fileid).filter(db.FileQueue.expires <= today).all()
     expired_files = [item[0] for item in expired_files]
 
@@ -58,12 +60,5 @@ def cleanup_file_queue():
         # Remove file from the file queue storage
         filename = db.session.query(db.FileMetadata.name).filter(db.FileMetadata.fileid == expired_file).all()
         filename = filename[0][0]
-        file_path = os.path.join(admin_config['data_cache_loc'], subscriber_config['username'], filename)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-
-
-if __name__ == '__main__':
-
-    cleanup_file_queue()
-    cleanup_accounts()
+        file_path = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / filename
+        file_path.unlink(missing_ok=True)
