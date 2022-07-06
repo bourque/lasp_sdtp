@@ -21,15 +21,16 @@ channels:
   - defaults
 
 dependencies:
-  - cryptography=37.0.1
-  - cx_oracle=8.3.0
-  - flask=2.0.3
-  - pandas=1.4.1
-  - pip=21.2.4
-  - pytest=7.1.1
-  - python=3.9
-  - sqlalchemy=1.4.35
-  - werkzeug=2.0.3
+  - cryptography
+  - cx_oracle
+  - flask
+  - jinja2
+  - pandas
+  - pip
+  - pytest
+  - python
+  - sqlalchemy
+  - werkzeug
 
   - pip:
 

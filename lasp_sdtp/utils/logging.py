@@ -16,11 +16,11 @@ import datetime
 import getpass
 import importlib
 import logging
-from pathlib import Path
 import socket
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 HOME_DIR = Path.home() / 'Desktop'
 
@@ -51,17 +51,17 @@ def configure(verbose=True) -> str:
         logging.root.removeHandler(handler)
 
     # Create the log file
-    logging.Formatter.converter = time.gmtime. # Timestamps are in UTC
-    logging.basicConfig(filename=log_file, format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %H:%M:%S %p', level=logging.INFO)
+    logging.Formatter.converter = time.gmtime  # Timestamps are in UTC
+    logging.basicConfig(filename=log_file, format='%(asctime)s.%(msecs)03d %(levelname)s: %(message)s', datefmt='%Y-%m-%dT%H:%M:%S', level=logging.DEBUG)
     if verbose:
         print('Log file initialized to {}'.format(log_file))
 
     # Log system information
     python_version = sys.version.replace("\n", "")
-    logging.info(f'User: {getpass.getuser()}')
-    logging.info(f'System: {socket.gethostname()}')
-    logging.info(f'Python Version: {python_version}')
-    logging.info(f'Python Executable Path: {sys.executable}')
+    logging.debug(f'User: {getpass.getuser()}')
+    logging.debug(f'System: {socket.gethostname()}')
+    logging.debug(f'Python Version: {python_version}')
+    logging.debug(f'Python Executable Path: {sys.executable}')
 
     # Get list of dependencies
     setup_file = Path(__file__).parents[2] / 'setup.cfg'
@@ -79,15 +79,15 @@ def configure(verbose=True) -> str:
     for dependency in dependencies:
         try:
             mod = importlib.import_module(dependency)
-            logging.info(f'{dependency} Version: {mod.__version__}')
-            logging.info(f'{dependency} Path: {mod.__path__[0]}')
+            logging.debug(f'{dependency} Version: {mod.__version__}')
+            logging.debug(f'{dependency} Path: {mod.__path__[0]}')
         except (ImportError, AttributeError) as error:
             logging.warning(error)
 
     # Log environment information
     environment = subprocess.check_output(['conda', 'env', 'export'], universal_newlines=True)
-    logging.info('Conda Environment:')
+    logging.debug('Conda Environment:')
     for line in environment.split('\n'):
-        logging.info(f'\t{line}')
+        logging.debug(f'\t{line}')
 
     return log_file

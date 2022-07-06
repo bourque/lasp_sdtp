@@ -22,6 +22,8 @@ def test_get_admin_config():
         'db_connection_string': str,
         'email_address': str,
         'email_password': str,
+        'email_port': int,
+        'email_server': str,
         'endpoint': str,
         'filesystem_loc': str,
         'data_cache_loc': str

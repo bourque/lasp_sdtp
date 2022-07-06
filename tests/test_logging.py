@@ -24,7 +24,8 @@ def test_configure():
     log_file = configure(verbose=False)
 
     # Perform some basic logging
-    logging.info('Some information')
+    logging.debug('Some system information')
+    logging.info('Some information for users')
     logging.warning('A warning')
     logging.critical('A critical error')
 
@@ -35,6 +36,6 @@ def test_configure():
     with open(log_file, 'r') as f:
         data = f.readlines()
     data = str([line.strip() for line in data])
-    testable_content = ['User:', 'System:', 'Python Executable Path:', 'Conda Environment:', 'INFO:', 'WARNING:', 'CRITICAL:']
+    testable_content = ['User:', 'System:', 'Python Executable Path:', 'Conda Environment:', 'DEBUG:', 'INFO:', 'WARNING:', 'CRITICAL:']
     for item in testable_content:
         assert item in data

@@ -186,11 +186,11 @@ def _add_transactions_entries():
         'transactionid': 999,
         'action': 'GET /files/666',
         'username': 'test_account',
-        'start_time': datetime.datetime.utcnow(),
+        'start_time': datetime.datetime.utcnow() - datetime.timedelta(hours=36),  # A "long" transfer
         'fileid': 67890,
         'source': '/some/starting/location/',
         'destination': '/some/ending/location',
-        'end_time': datetime.datetime.utcnow() + datetime.timedelta(hours=1),
+        'end_time': None,
     }]
 
     db.insert_data('transactions', data_to_insert)

@@ -18,6 +18,7 @@ by the base. These operations include querying, for example.
 
 Authors
 -------
+
     - Matthew Bourque
 
 Use
@@ -48,12 +49,16 @@ from lasp_sdtp.database import database_interface
 
 
 class DatabaseController():
-    """
+    """A class for interacting with the ``lasp_sdtp`` database.
+
+    Attributes
+    ----------
+
+    Methods
+    -------
     """
 
     def __init__(self):
-        """
-        """
 
         self.session, self.base, self.engine, self.meta = self.connect()
         self.Accounts = database_interface.Accounts
@@ -105,6 +110,7 @@ class DatabaseController():
 
         self.session.query(self.FileQueue).filter(self.FileQueue.fileid == fileid).delete()
         self.session.commit()
+        logging.info(f'Deleted {fileid} from file queue')
 
     def insert_data(self, table_name: str, data: list[dict]):
         """Inserts the given data into the given table
@@ -133,71 +139,15 @@ class DatabaseController():
         """
 
         end_time = datetime.datetime.utcnow()
-        self.session.query(self.Transactions).\
-            filter(self.Transactions.fileid == fileid).\
-            filter(self.Transactions.username == subscriber_config['username']).\
-            update({'end_time': end_time})
+        self.session.query(
+            self.Transactions
+        ).filter(
+            self.Transactions.fileid == fileid,
+            self.Transactions.username == subscriber_config['username']
+        ).update(
+            {'end_time': end_time})
         self.session.commit()
         logging.info(f'Transaction for {fileid} for {subscriber_config["username"]} account marked complete')
-
-    def update_transactions_table(self, request: object, fileid: Optional[int] = None) -> int:
-        """Insert information for a new transaction in the ``transactions`` table
-
-        Parameters
-        ----------
-        request : ``request`` obj
-            The request made by the server.  Must have ``method`` and a ``url``
-            attributes
-        fileid : int, optional
-            The ``fileid`` that is part of the request, if applicable
-
-        Returns
-        -------
-        transactionid : int
-            The ``transactionid`` that was used in the database table entry
-        """
-
-        # For PUT /register
-        if request.method == 'PUT':
-            data_to_insert = self.Transactions(
-                action=f'{request.method} {request.url}',
-                username=subscriber_config['username'],
-                start_time=datetime.datetime.utcnow())
-
-        # For GET /files
-        elif request.method == 'GET' and fileid is None:
-            data_to_insert = self.Transactions(
-                action=f'{request.method} {request.url}',
-                username=subscriber_config['username'],
-                start_time=datetime.datetime.utcnow())
-
-        # For GET /files/<fileid>
-        elif request.method == 'GET' and fileid is not None:
-            data_to_insert = self.Transactions(
-                action=f'{request.method} {request.url}',
-                username=subscriber_config['username'],
-                start_time=datetime.datetime.utcnow(),
-                fileid=fileid,
-                source=admin_config['filesystem_loc'],
-                destination=admin_config['data_cache_loc'])
-
-        # For DELETE /files/<fileid>
-        if request.method == 'DELETE':
-            url = Path(request.url).parent / str(fileid)
-            data_to_insert = self.Transactions(
-                action=f'{request.method} {url}',
-                username=subscriber_config['username'],
-                start_time=datetime.datetime.utcnow())
-
-        # Insert the data, and get the transaction id
-        self.session.add(data_to_insert)
-        self.session.flush()
-        transactionid = data_to_insert.transactionid
-        self.session.commit()
-
-        logging.info(f'Recorded transaction {transactionid} for request {request}')
-
-        return transactionid
 
     def query_for_account(self, username: str) -> list:
         """Return account information for the given ``username``
@@ -306,6 +256,68 @@ class DatabaseController():
         queue_entries = [item.__dict__ for item in queue_entries]
 
         return queue_entries
+
+    def update_transactions_table(self, request: object, fileid: Optional[int] = None) -> int:
+        """Insert information for a new transaction in the ``transactions`` table
+
+        Parameters
+        ----------
+        request : ``request`` obj
+            The request made by the server.  Must have ``method`` and a ``url``
+            attributes
+        fileid : int, optional
+            The ``fileid`` that is part of the request, if applicable
+
+        Returns
+        -------
+        transactionid : int
+            The ``transactionid`` that was used in the database table entry
+        """
+
+        # For PUT /register
+        if request.method == 'PUT':
+            data_to_insert = self.Transactions(
+                action=f'{request.method} {request.url}',
+                username=subscriber_config['username'],
+                start_time=datetime.datetime.utcnow())
+
+        # For GET /files
+        elif request.method == 'GET' and fileid is None:
+            data_to_insert = self.Transactions(
+                action=f'{request.method} {request.url}',
+                username=subscriber_config['username'],
+                start_time=datetime.datetime.utcnow())
+
+        # For GET /files/<fileid>
+        elif request.method == 'GET' and fileid is not None:
+            data_to_insert = self.Transactions(
+                action=f'{request.method} {request.url}',
+                username=subscriber_config['username'],
+                start_time=datetime.datetime.utcnow(),
+                fileid=fileid,
+                source=admin_config['filesystem_loc'],
+                destination=admin_config['data_cache_loc'])
+
+        # For DELETE /files/<fileid>
+        elif request.method == 'DELETE':
+            url = Path(request.url).parent / str(fileid)
+            data_to_insert = self.Transactions(
+                action=f'{request.method} {url}',
+                username=subscriber_config['username'],
+                start_time=datetime.datetime.utcnow())
+
+        else:
+            raise ValueError(f'Request method {request.method} is not recorgnized')
+
+        # Insert the data, and get the transaction id
+        self.session.add(data_to_insert)
+        self.session.flush()
+        transactionid = data_to_insert.transactionid
+        self.session.commit()
+
+        logging.info(f'Recorded transaction {transactionid} for request {request}')
+
+        return transactionid
 
 
 db = DatabaseController()

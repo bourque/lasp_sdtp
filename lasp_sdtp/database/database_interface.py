@@ -25,10 +25,9 @@ class Accounts(Base):
     """ORM for the ``accounts`` table"""
 
     __tablename__ = 'accounts'
-    __table_args__ = (sa.UniqueConstraint('userid', 'username', 'certuid', name='accounts_uc'),)
+    __table_args__ = (sa.UniqueConstraint('username', 'certuid', name='accounts_uc'),)
 
-    userid = sa.Column(sa.Integer, primary_key=True)
-    username = sa.Column(sa.String(255), unique=True, nullable=False)
+    username = sa.Column(sa.String(255), primary_key=True)
     certuid = sa.Column(sa.String(20), unique=True, nullable=False)
     role = sa.Column(sa.Enum('admin', 'subscriber', name='role'), nullable=False)
     registration_date = sa.Column(sa.DateTime, nullable=False)

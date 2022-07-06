@@ -15,168 +15,175 @@ Use
 """
 
 import datetime
-from email.message import EmailMessage
-from pathlib import Path
+import logging
 import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from pathlib import Path
 
 import pandas as pd
+from jinja2 import Template
+from sqlalchemy.orm.query import Query
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.database.database_controller import db
 
 
-def _active_subscribers_report() -> str:
-    """Return email content to report on currently active subscribers
+def construct_content(header: str, query: Query) -> str:
+    """Takes a query and turns it into an HTML table to render in the report
+    email
+
+    Parameters
+    ----------
+    header: str
+        A ``<h2>`` header to use for the content in the email
+    query : sqlalchemy.orm.query.Query obj
+        The query to use to generate the content
 
     Returns
     -------
     content : str
-        HTML code to be rendered in the report email
+        HTML content to add to the report email
     """
 
-    # Get list of active accounts
-    query = db.session.query(db.Accounts.userid, db.Accounts.username, db.Accounts.registration_date, db.Accounts.registration_expires) \
-        .filter(db.Accounts.role == 'subscriber') \
-        .filter(db.Accounts.registration_expires >= datetime.datetime.utcnow().date())
-
-    # Store results as an HTML table
+    # Store query results as an HTML table
     results = pd.read_sql(query.statement, query.session.bind).to_html(index=False)
 
     # Construct HTML content
-    content = '<h2>Active Subscribers</h2><br>'
+    content = f'<h2>{header}</h2><br>'
     content += results
 
     return content
 
 
-# def _expires_soon_report() -> str:
-#     """Return email content to report on files and accounts that are about to
-#     expire
-
-#     Returns
-#     -------
-#     content : str
-#         HTML code to be rendered in the report email
-#     """
-
-#     # Get list of accounts that are set to expire within a month
-
-
-#     # Store results as an HTML table
-#     results = pd.read_sql(query.statement, query.session.bind).to_html(index=False)
-
-#     # Construct HTML content
-#     content = '<h2>Active Subscribers</h2><br>'
-#     content += results
-
-#     return content
-
-
-def _file_queue_report() -> str:
-    """Return email content to report on the current contents of the file queue
+def generate_daily_report() -> str:
+    """Creates a daily email report of system information
 
     Returns
     -------
     content : str
-        HTML code to be rendered in the report email
+        The HTML content of the report email
     """
 
-    # Get list of files in the queue
-    query = db.session.query(db.FileQueue.queueid, db.FileQueue.fileid, db.FileMetadata.name, db.FileQueue.username, db.FileQueue.entry_date, db.FileQueue.expires) \
-        .select_from(db.FileMetadata) \
-        .join(db.FileQueue, db.FileMetadata.fileid == db.FileQueue.fileid) \
-        .filter(db.FileQueue.expires >= datetime.datetime.utcnow().date())
+    queries = get_report_queries()
 
-    # Store results as an HTML table
-    results = pd.read_sql(query.statement, query.session.bind).to_html(index=False)
+    # Construct the email content for each of the queries
+    content = ''
+    for header, query in queries:
+        content += construct_content(header, query)
 
-    # Construct HTML content
-    content = '<h2>File Queue</h2><br>'
-    content += results
+    # Send the email
+    send_email(content)
 
     return content
 
 
-def _recent_transactions_report() -> str:
-    """Return email content to report on transactions that occurred within the
-    last 24 hours
+def get_report_queries() -> list:
+    """Return a list of queries used to generate content for the report email
 
     Returns
     -------
-    content : str
-        HTML code to be rendered in the report email
+    queries : list of ``sqlalchemy.orm.query.Query`` objects
     """
 
-    # Get list of recent transcations
-    query = db.session.query(db.Transactions.transactionid, db.Transactions.action, db.Transactions.username, db.FileMetadata.name, db.Transactions.start_time,
-                          db.Transactions.end_time, db.Transactions.source, db.Transactions.destination) \
-        .join(db.Transactions, db.FileMetadata.fileid == db.Transactions.fileid)
+    # List to hold the queries
+    queries = []
 
-    # Store results as an HTML table
-    results = pd.read_sql(query.statement, query.session.bind).to_html(index=False)
+    # Active accounts
+    queries.append((
+        'Active Subscribers', 
+        db.session.query(
+            db.Accounts.username, db.Accounts.registration_date, db.Accounts.registration_expires
+        ).filter(
+            db.Accounts.role == 'subscriber',
+            db.Accounts.registration_expires >= datetime.datetime.utcnow().date())))
 
-    # Construct HTML content
-    content = '<h2>Recent Transactions</h2><br>'
-    content += results
+    # Recent transactions
+    queries.append((
+        'Recent Transactions',
+        db.session.query(
+            db.Transactions.transactionid, db.Transactions.action, db.Transactions.username, db.FileMetadata.name,
+            db.Transactions.start_time, db.Transactions.end_time, db.Transactions.source, db.Transactions.destination
+        ).join(
+            db.Transactions, db.FileMetadata.fileid == db.Transactions.fileid)))
 
-    return content
+    # File queue contents
+    queries.append((
+        'File Queue Contents',
+        db.session.query(
+            db.FileQueue.queueid, db.FileQueue.fileid, db.FileMetadata.name, db.FileQueue.username, db.FileQueue.entry_date, db.FileQueue.expires
+        ).select_from(
+            db.FileMetadata
+        ).join(
+            db.FileQueue, db.FileMetadata.fileid == db.FileQueue.fileid
+        ).filter(
+            db.FileQueue.expires >= datetime.datetime.utcnow().date())))
+
+    # Files that are taking too long
+    queries.append((
+        'Long Transfers',
+        db.session.query(
+            db.Transactions.transactionid, db.Transactions.action, db.Transactions.username, db.FileMetadata.name,
+            db.Transactions.start_time, db.Transactions.end_time, db.Transactions.source, db.Transactions.destination
+        ).join(
+            db.Transactions, db.FileMetadata.fileid == db.Transactions.fileid
+        ).filter(
+            db.Transactions.end_time == None,
+            db.Transactions.start_time <= datetime.datetime.utcnow() - datetime.timedelta(hours=24))))
+
+    # Expiring files
+    queries.append((
+        'Expiring Files',
+        db.session.query(
+            db.FileQueue.queueid, db.FileQueue.fileid, db.FileMetadata.name, db.FileQueue.username, db.FileQueue.entry_date, db.FileQueue.expires
+        ).select_from(
+            db.FileMetadata
+        ).join(
+            db.FileQueue, db.FileMetadata.fileid == db.FileQueue.fileid
+        ).filter(
+            db.FileQueue.expires <= datetime.datetime.utcnow().date() + datetime.timedelta(days=7))))
+
+    # Expiring accounts
+    queries.append((
+        'Expiring Accounts',
+        db.session.query(
+            db.Accounts.username, db.Accounts.registration_date, db.Accounts.registration_expires
+        ).filter(
+            db.Accounts.role == 'subscriber'
+        ).filter(
+            db.Accounts.registration_expires <= datetime.datetime.utcnow().date() + datetime.timedelta(days=30))))
+
+    return queries
 
 
-def send_email(content_dict: dict):
+def send_email(content: str):
     """Construct the final report email and send it.
 
     Parameters
     ----------
-    content_dict : dict
-        A dictionary containing various content to add to the
-        ``email_template.html``
+    content : str
+        The content to add to ``email_template.html``
     """
 
     # Get the template
     email_template_file = Path(__file__).parent / 'email_template.html'
     with open(email_template_file) as f:
-        content = f.read().replace('\n', '')
+        template = Template(f.read())
 
-    # Add to the content
-    for content_name in content_dict:
-        content = content.replace(f'<{content_name}_div>', content_dict[content_name])
+    # Add content
+    body = template.render(content=content)
 
-    msg = EmailMessage()
+    # Construct email message
+    msg = MIMEMultipart()
     msg['Subject'] = 'LASP SDTP Daily Report'
-    msg['From'] = 'test.tsis.tim@gmail.com'
+    msg['From'] = admin_config['email_address']
     msg['To'] = 'matthew.bourque@lasp.colorado.edu'
-    msg.set_content(content, subtype='html')
-
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-        smtp.login(admin_config['email_address'], admin_config['email_password'])
-        smtp.send_message(msg)
-
-
-def generate_daily_report() -> dict:
-    """Creates a daily email report of system information
-
-    Returns
-    -------
-    content_dict : dict
-        A dictionary containing various content that was sent in the email
-    """
-
-    # Placeholder to store email content
-    content_dict = {}
-
-    # Report active subscribers
-    content_dict['active_subscribers'] = _active_subscribers_report()
-
-    # Report the current files in the queue
-    content_dict['file_queue_contents'] = _file_queue_report()
-
-    # Report the transactions that happened in the past 24 hours
-    content_dict['recent_transactions'] = _recent_transactions_report()
-
-    # # Report files that are about to expire
-    # content_dict['expires_soon'] = _expires_soon_report()
+    msg.attach(MIMEText(body, 'html'))
 
     # Send the email
-    #send_email(content_dict)
-
-    return content_dict
+    server = smtplib.SMTP(admin_config['email_server'], admin_config['email_port'])
+    server.starttls()
+    #server.login(admin_config['email_address'], admin_config['email_password'])
+    text = msg.as_string()
+    #server.sendmail(admin_config['email_address'], 'matthew,bourque@lasp.colorado.edu', text)
+    server.quit()

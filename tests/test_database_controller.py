@@ -11,8 +11,8 @@ Use
         pytest -s test_database_interface.py
 """
 
-from collections import namedtuple
 import datetime
+from collections import namedtuple
 
 import pytest
 import sqlalchemy as sa

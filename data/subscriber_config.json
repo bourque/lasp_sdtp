@@ -1,6 +1,7 @@
 {
 	"account_expiration_period": 1800,
 	"checksum_type": "sha256",
+	"distinguished_name": "",
 	"expiration_period": 180,
 	"max_num_files": 10000,
 	"num_download_threads": 5,

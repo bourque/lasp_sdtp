@@ -27,7 +27,7 @@ def get_admin_config() -> dict:
         A dictionary containing the configuration details
     """
 
-    config_file_location = Path(__file__).parents[1] / 'admin_config.json'
+    config_file_location = Path(__file__).parents[1] / 'data' / 'admin_config.json'
     with open(config_file_location, 'r') as f:
         config = json.load(f)
 
@@ -47,7 +47,7 @@ def get_subscriber_config() -> dict:
         A dictionary containing the configuration details
     """
 
-    config_file_location = Path(__file__).parents[1] / 'subscriber_config.json'
+    config_file_location = Path(__file__).parents[1] / 'data' / 'subscriber_config.json'
     with open(config_file_location, 'r') as f:
         config = json.load(f)
 
