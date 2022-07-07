@@ -22,13 +22,14 @@ import sys
 import time
 from pathlib import Path
 
-HOME_DIR = Path.home() / 'Desktop'
 
-def configure(verbose=True) -> str:
+def configure(log_file_loc: str, verbose=True) -> str:
     """Create and configure a log file with a standard logging format.
 
     Parameters
     ----------
+    log_file_loc : str
+        The parent directory in which to save the log file
     verbose : boolean
         Switches on/off printing information to stdout
 
@@ -41,7 +42,7 @@ def configure(verbose=True) -> str:
     # Build filename
     timestamp = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
     filename = f'lasp_sdtp_{timestamp}.log'
-    log_file = HOME_DIR / 'logs' / filename
+    log_file = Path(log_file_loc) / filename
 
     # Make sure parent directory exists
     log_file.parent.mkdir(exist_ok=True)

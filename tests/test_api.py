@@ -20,7 +20,7 @@ import pytest
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.server.run_server import get_app
+from lasp_sdtp.server.api import get_app
 
 
 TEST_URLS = [
@@ -168,7 +168,7 @@ def test_get_filelist(client, request_url):
 
     # Check if the returned files are in the filesystem
     test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / '*'))
-    ignore_files = ['test_cleanup_db.txt', 'test_cleanup_db2.txt', 'test_reporting.txt', 'test_db_controller.txt'] # ignore files used in other tests
+    ignore_files = ['test_cleanup_db.txt', 'test_cleanup_db2.txt', 'test_reporting.txt', 'test_db_controller.txt']  # ignore files used in other tests
     for entry in data['files']:
         filename = Path(admin_config['filesystem_loc']) / entry['name']
         if filename.name not in ignore_files:

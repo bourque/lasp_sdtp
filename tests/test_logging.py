@@ -21,7 +21,7 @@ def test_configure():
     """Tests the ``configure`` function"""
 
     # Configure a log file
-    log_file = configure(verbose=False)
+    log_file = configure(Path.cwd(), verbose=False)
 
     # Perform some basic logging
     logging.debug('Some system information')
@@ -39,3 +39,6 @@ def test_configure():
     testable_content = ['User:', 'System:', 'Python Executable Path:', 'Conda Environment:', 'DEBUG:', 'INFO:', 'WARNING:', 'CRITICAL:']
     for item in testable_content:
         assert item in data
+
+    # Remove the log file
+    Path.unlink(log_file)

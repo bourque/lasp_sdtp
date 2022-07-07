@@ -33,10 +33,8 @@ from werkzeug import exceptions
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.utils import logging as lasp_sdtp_logging
 
 app = Flask(__name__)
-lasp_sdtp_logging.configure()
 
 
 def _parse_request_tags(request: object) -> dict:
@@ -72,23 +70,6 @@ def _parse_request_tags(request: object) -> dict:
         tags[item[0].lower()] = request.args.get(item[0], default=item[1], type=item[2])
 
     return tags
-
-
-def _register_admin():
-    """Resiters an ``admin`` account if it doesn't already exist"""
-
-    # Check if an admin account already exists
-    account = db.query_for_account('lasp_admin')
-
-    # If it doesn't, create one
-    if not account:
-        data = [{
-            'username': 'lasp_admin',
-            'certuid': 'admin_cert',
-            'role': 'admin',
-            'registration_date': datetime.datetime.utcnow().date()}]
-        db.insert_data('accounts', data)
-        logging.info('Registered admin account')
 
 
 def _validate_fileid(fileid: str) -> bool:
@@ -455,10 +436,18 @@ def register() -> Response:
     return response
 
 
-if __name__ == '__main__':
+def register_admin():
+    """Resiters an ``admin`` account if it doesn't already exist"""
 
-    # Register an admin account if necessary
-    _register_admin()
+    # Check if an admin account already exists
+    account = db.query_for_account('lasp_admin')
 
-    # Run the server
-    app.run(host=admin_config['endpoint'], port='8000')
+    # If it doesn't, create one
+    if not account:
+        data = [{
+            'username': 'lasp_admin',
+            'certuid': 'admin_cert',
+            'role': 'admin',
+            'registration_date': datetime.datetime.utcnow().date()}]
+        db.insert_data('accounts', data)
+        logging.info('Registered admin account')

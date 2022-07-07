@@ -164,7 +164,10 @@ class DatabaseController():
         """
 
         results = self.session.query(self.Accounts).filter(self.Accounts.username == username).all()
-        account = results[0].__dict__
+        if results:
+            account = results[0].__dict__
+        else:
+            account = None
 
         return account
 

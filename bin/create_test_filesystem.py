@@ -15,7 +15,7 @@ Use
 """
 
 import datetime
-import os
+from pathlib import Path
 
 from lasp_sdtp.config import admin_config
 

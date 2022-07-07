@@ -15,7 +15,6 @@ Use
 """
 
 import datetime
-import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -91,7 +90,7 @@ def get_report_queries() -> list:
 
     # Active accounts
     queries.append((
-        'Active Subscribers', 
+        'Active Subscribers',
         db.session.query(
             db.Accounts.username, db.Accounts.registration_date, db.Accounts.registration_expires
         ).filter(
@@ -184,6 +183,6 @@ def send_email(content: str):
     server = smtplib.SMTP(admin_config['email_server'], admin_config['email_port'])
     server.starttls()
     #server.login(admin_config['email_address'], admin_config['email_password'])
-    text = msg.as_string()
+    #text = msg.as_string()
     #server.sendmail(admin_config['email_address'], 'matthew,bourque@lasp.colorado.edu', text)
     server.quit()

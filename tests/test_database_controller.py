@@ -39,6 +39,7 @@ def test_delete_file_from_queue():
     results = db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).all()
     assert len(results) == 0
 
+
 def test_insert_data():
     """Tests the ``insert_data`` method"""
 
@@ -57,6 +58,7 @@ def test_insert_data():
 
     results = db.session.query(db.FileMetadata).filter(db.FileMetadata.fileid == 98765).all()
     assert len(results) == 1  # There should only be one entry
+
 
 def test_fileid_boundary():
     """Tests that the ``fileid`` cannot exceed 15 digits"""
