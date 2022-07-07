@@ -16,13 +16,13 @@ from pathlib import Path
 from lasp_sdtp.server.api import app
 from lasp_sdtp.server.api import register_admin
 from lasp_sdtp.config import admin_config
-from lasp_sdtp.utils import logging as lasp_sdtp_logging
+from lasp_sdtp.utils.utils import configure_logging
 
 if __name__ == '__main__':
 
     # Configure logging
     log_file_loc = Path.home() / 'logs'
-    lasp_sdtp_logging.configure(log_file_loc)
+    configure_logging(log_file_loc)
 
     # Register an admin account if necessary
     register_admin()

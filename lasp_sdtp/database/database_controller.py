@@ -47,6 +47,8 @@ from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database import database_interface
 
+logger = logging.getLogger(__name__)
+
 
 class DatabaseController():
     """A class for interacting with the ``lasp_sdtp`` database.
@@ -95,7 +97,7 @@ class DatabaseController():
         session = Session()
         meta = MetaData(engine)
 
-        logging.info(f'Connected to database {admin_config["db_connection_string"]}')
+        logger.info('Connected to database %s' % admin_config["db_connection_string"])
 
         return session, base, engine, meta
 
@@ -110,7 +112,7 @@ class DatabaseController():
 
         self.session.query(self.FileQueue).filter(self.FileQueue.fileid == fileid).delete()
         self.session.commit()
-        logging.info(f'Deleted {fileid} from file queue')
+        logger.info('Deleted %s from file queue' % fileid)
 
     def insert_data(self, table_name: str, data: list[dict]):
         """Inserts the given data into the given table
@@ -147,7 +149,7 @@ class DatabaseController():
         ).update(
             {'end_time': end_time})
         self.session.commit()
-        logging.info(f'Transaction for {fileid} for {subscriber_config["username"]} account marked complete')
+        logger.info('Transaction for %s for %s account marked complete' % (fileid, subscriber_config['username']))
 
     def query_for_account(self, username: str) -> list:
         """Return account information for the given ``username``
@@ -318,7 +320,7 @@ class DatabaseController():
         transactionid = data_to_insert.transactionid
         self.session.commit()
 
-        logging.info(f'Recorded transaction {transactionid} for request {request}')
+        logger.info('Recorded transaction %s for request %s' % (transactionid, request))
 
         return transactionid
 

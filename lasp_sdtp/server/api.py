@@ -34,6 +34,7 @@ from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
 
+logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 
@@ -216,11 +217,11 @@ def delete_file(fileid: int) -> Response:
     if not file_needed:
         if filepath.exists:
             filepath.unlink(missing_ok=True)
-            logging.info(f'Removed {filepath} from queue')
+            logger.info('Removed %s from queue' % filepath)
 
         # Remove entry from database
         db.delete_file_from_queue(fileid)
-        logging.info(f'Removed fileid {fileid} from queue')
+        logger.info('Removed fileid %s from queue' % fileid)
 
     # Construct the response
     content = {'message': 'Success but no other response necessary'}
@@ -315,7 +316,7 @@ def get_file(fileid: int) -> Response:
 
     try:
         shutil.copyfile(filepath, dst)
-        logging.info(f'Copied {filepath} to queue: {dst}')
+        logger.info('Copied %s to queue: %s' % (filepath, dst))
 
         # Add a file queue database record
         entry_date = datetime.datetime.utcnow().date()
@@ -325,9 +326,9 @@ def get_file(fileid: int) -> Response:
                  'entry_date': entry_date,
                  'expires': expiration_date}]
         db.insert_data('file_queue', data)
-        logging.info(f'Added fileid {fileid} to queue')
+        logger.info('Added fileid %s to queue' % fileid)
     except IntegrityError:
-        logging.warning(f'{fileid} is already in the queue')
+        logger.warning('%s is already in the queue' % fileid)
 
     # Get the file contents
     with open(dst, 'r') as f:
@@ -415,7 +416,7 @@ def register() -> Response:
         'registration_date': registration_date,
         'registration_expires': registration_expires}]
     db.insert_data('accounts', data)
-    logging.info(f'Registered account for {subscriber_config["username"]}')
+    logger.info('Registered account for %s' % subscriber_config['username'])
 
     # Add a transactions database record
     transactionid = db.update_transactions_table(request)
@@ -424,7 +425,7 @@ def register() -> Response:
     queue_path = Path(admin_config['data_cache_loc']) / subscriber_config['username']
     if not queue_path.exists:
         queue_path.mkdir()
-        logging.info(f'Created queue: {queue_path}')
+        logger.info('Created queue: %s' % queue_path)
 
     # Construct the response
     content = {'message': 'Success but no other response necessary'}
@@ -450,4 +451,4 @@ def register_admin():
             'role': 'admin',
             'registration_date': datetime.datetime.utcnow().date()}]
         db.insert_data('accounts', data)
-        logging.info('Registered admin account')
+        logger.info('Registered admin account')
