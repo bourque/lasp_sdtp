@@ -35,6 +35,15 @@ def _add_accounts_entries():
         'registration_date': datetime.datetime.utcnow().date(),
         'registration_expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1)}]
 
+    # Add an account for the subscriber (used for test_database_interface)
+    data_to_insert.append({
+        'username': subscriber_config['username'],
+        'certuid': 'test_cert',
+        'role': 'subscriber',
+        'registration_date': datetime.datetime.utcnow().date(),
+        'registration_expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1)}
+    )
+
     # Add an account that has expired (used for test_cleanup_database)
     data_to_insert.append({
         'username': 'expired_account',

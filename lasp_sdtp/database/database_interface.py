@@ -1,5 +1,5 @@
-"""This module is used to define the LASP SDTP application database ORMs. Each
-class within corresponds to a database table.
+"""This module is used to define the ``lasp_sdtp`` database ORMs. Each class
+within corresponds to a database table.
 
 Authors
 -------
@@ -8,8 +8,8 @@ Authors
 Use
 ---
 
-    The classes within are intended to be imported by the ``database_controller``
-    module, e.g.:
+    The classes within are intended to be imported by the
+    ``database_controller`` module, e.g.:
     ::
 
         from lasp_sdtp.database import database_interface

@@ -1,4 +1,4 @@
-"""Tests for the ``run_server.py`` module
+"""Tests for the ``api_gateway.py`` module
 
 Authors
 -------
@@ -8,7 +8,7 @@ Use
 ---
     To run these tests use:
     ::
-        pytest -s test_run_server.py
+        pytest -s test_api_gateway.py
 """
 
 import glob
@@ -20,7 +20,7 @@ import pytest
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.server.api import get_app
+from lasp_sdtp.server.sdtp_api import get_app
 
 
 TEST_URLS = [
@@ -44,13 +44,11 @@ INVALID_TEST_URLS = [
     '/files/1234567890123456']  # fileid is not an integer 15 digits or less
 
 
-def _check_transaction(request_url, headers):
+def _check_transaction(headers):
     """Checks that a transaction record was added to the ``transactions`` table
 
     Parameters
     ----------
-    request_url : str
-        The request URL (e.g. ``'/files?stream=prod&ShortName=TSIS2_L1'``)
     headers : ``werkzeug.datastructures.Headers`` obj
         The response header object
     """
@@ -61,7 +59,6 @@ def _check_transaction(request_url, headers):
     # Check that there is a record in the transactions table
     results = db.session.query(db.Transactions).filter(db.Transactions.transactionid == headers['SDTP-TransactionID']).all()
     assert len(results) == 1  # There should only be one entry
-    assert request_url in results[0].__dict__['action']
 
 
 @pytest.fixture()
@@ -116,7 +113,7 @@ def test_register(client):
     assert len(results) == 1  # There should only be one entry
     assert results[0].__dict__['username'] == subscriber_config['username']
 
-    _check_transaction(request_url, response.headers)
+    _check_transaction(response.headers)
 
 
 def test_authorize(client):
@@ -174,7 +171,7 @@ def test_get_filelist(client, request_url):
         if filename.name not in ignore_files:
             assert str(filename) in test_files
 
-    _check_transaction(request_url, response.headers)
+    _check_transaction(response.headers)
 
 
 def test_get_file(client):
@@ -208,7 +205,7 @@ def test_get_file(client):
     assert len(results) == 1  # There should only be one entry
     assert results[0].__dict__['fileid'] == int(fileid)
 
-    _check_transaction(request_url, response.headers)
+    _check_transaction(response.headers)
 
 
 def test_delete_file(client):
@@ -236,7 +233,7 @@ def test_delete_file(client):
     results = db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).all()
     assert len(results) == 0
 
-    _check_transaction(request_url, response.headers)
+    _check_transaction(response.headers)
 
 
 def test_delete_files(client):
@@ -274,7 +271,7 @@ def test_delete_files(client):
 
 @pytest.mark.parametrize('request_url', INVALID_TEST_URLS)
 def test_incorrect_requests(client, request_url):
-    """Tests that incorrect ``GET /files`` requests return the expected reponse
+    """Tests that incorrect ``GET /files`` requests return the expected response
     of 400
 
     Parameters
@@ -311,8 +308,8 @@ def test_file_does_not_exist(client):
     for method in ['get', 'delete']:
         response = getattr(client, method)(request_url, headers=headers)
 
-    data = json.loads(response.get_data().decode("utf-8"))
+        data = json.loads(response.get_data().decode("utf-8"))
 
-    # Make sure the response is correct
-    assert response.status_code == 404
-    assert data['message'] == 'The requested resource does not exist'
+        # Make sure the response is correct
+        assert response.status_code == 404
+        assert data['message'] == 'The requested resource does not exist'

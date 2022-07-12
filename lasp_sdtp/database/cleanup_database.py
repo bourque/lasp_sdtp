@@ -1,5 +1,5 @@
 """This module contains functions to remove expired accounts and files from the
-database and file queue
+database and file queue.
 
 Authors
 -------
@@ -43,8 +43,8 @@ def cleanup_accounts():
 
 
 def cleanup_file_queue():
-    """Remove expired files from the ``file_queue`` database table and queue
-    storage"""
+    """Remove expired files from the ``file_queue`` database table and data
+    cache"""
 
     # Identify any expired files
     today = datetime.datetime.utcnow().date()

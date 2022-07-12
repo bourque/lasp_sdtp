@@ -1,6 +1,6 @@
-"""Inserts the same testing data used in ``conftest.py``, only the user can
-trigger it manually via the command line.  This is handy if users wish to test
-the application with ``curl`` commands in the terminal
+"""Inserts the same testing data used in ``conftest.py``.  This is handy if
+developers wish to test the application with ``curl`` commands in the terminal
+and need a basic set of data available in the database.
 
 Authors
 -------
@@ -8,14 +8,14 @@ Authors
 
 Use
 ---
-    This modules is intended to be run via the command line as such:
+    This module is intended to be run via the command line as such:
     ::
-        python insert_test_eata.py
+        python insert_test_data.py
 """
 
 from lasp_sdtp.database.database_controller import db
 
-import conftest
+from tests import conftest
 
 if __name__ == '__main__':
 

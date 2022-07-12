@@ -24,7 +24,12 @@ import sys
 import time
 from pathlib import Path
 
+from flask import abort
+
 from lasp_sdtp.config import subscriber_config
+from lasp_sdtp.database.database_controller import db
+
+logger = logging.getLogger(__name__)
 
 
 def configure_logging(log_file_loc: str, verbose=True) -> str:
@@ -153,3 +158,110 @@ def get_shortname(filename: str) -> str:
                 shortname += '_NC'
 
     return shortname
+
+
+def parse_request_tags(request: object) -> dict:
+    """Parse the tags in the request and store them in a dictionary.  If any
+    unsupported tags are encountered, a 404 error is raised.
+
+    Parameters
+    ----------
+    request : obj
+        The request to parse
+
+    Returns
+    -------
+    tags : dict
+        A dictionary of key/value pairs for the request tags
+    """
+
+    logger.warning('in utils')
+
+    # Check for unsupported tags
+    supported_tags = [
+        ('stream', 'prod', str),
+        ('ShortName', 'all', str),
+        ('version', 'v01', str),
+        ('date', None, str),
+        ('start_date', None, str),
+        ('end_date', None, str)]
+    for item in request.args.keys():
+        if item not in [item[0] for item in supported_tags]:
+            logger.warning('hit 400')
+            abort(400)
+
+    # Store supplied tags in a dictionary
+    tags = {}
+    for item in supported_tags:
+        tags[item[0].lower()] = request.args.get(item[0], default=item[1], type=item[2])
+
+    return tags
+
+
+def register_admin():
+    """Registers an ``admin`` account if it doesn't already exist"""
+
+    # Check if an admin account already exists
+    account = db.query_for_account('lasp_admin')
+
+    # If it doesn't, create one
+    if not account:
+        data = [{
+            'username': 'lasp_admin',
+            'certuid': 'admin_cert',
+            'role': 'admin',
+            'registration_date': datetime.datetime.utcnow().date()}]
+        db.insert_data('accounts', data)
+        logger.info('Registered admin account')
+
+
+def validate_fileid(fileid: str) -> bool:
+    """Make sure that the provided ``fileid`` is a positive integer that is 15
+    digits or less.  If it is not, a 400 error is raised.
+
+    Parameters
+    ----------
+    fileid : str
+        The ``fileid`` given in the request
+    Returns
+    -------
+    bool
+        True or False for whether or not the ``fileid`` is valid
+    """
+
+    # Make sure given fileid is an integer
+    try:
+        int(fileid)
+    except ValueError:
+        return False
+
+    # Make sure the given fileid is a positive integer that is 15 digits or less
+    if int(fileid) <= 0 or int(fileid) > 999999999999999:
+        return False
+    else:
+        return True
+
+
+def validate_tags(tags: dict) -> bool:
+    """Make sure that all of the provided tags are of valid type and value.  If
+    any of them are not, a 404 error is raised.
+
+    Parameters
+    ----------
+    tags : dict
+        A dictionary of key/value pairs for the request tags
+
+    Returns
+    -------
+    bool
+        True or False for whether or not the tags are valid
+    """
+
+    # Make sure the date/start_date/end_date combination is valid
+    # e.g. if a date is provided, the start and end dates should be None
+    date_types = (type(tags['date']), type(tags['start_date']), type(tags['end_date']))
+    valid_date_type_combos = [(type(None), type(None), type(None)), (str, type(None), type(None)), (type(None), str, str)]
+    if date_types not in valid_date_type_combos:
+        return False
+    else:
+        return True

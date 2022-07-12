@@ -1,5 +1,5 @@
 """This script runs an operation to 'cleanup' the database, removing expired
-files and/or accounts
+files and/or accounts.
 
 Authors
 -------

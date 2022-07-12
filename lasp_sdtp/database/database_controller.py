@@ -1,5 +1,5 @@
-"""This module is used to connect to and interact with the LASP SDTP
-application database.
+"""This module is used to connect to and interact with the ``lasp_sdtp``
+database.
 
 The ``connect()`` method within this module allows the user to connect to the
 ``lasp_sdtp_db`` database via the ``session``, ``base``, and ``engine`` objects
@@ -13,7 +13,7 @@ communicate with the database.
 The ``base`` object serves as a base class for class definitions.  It produces
 ``Table`` objects and constructs ORMs.
 
-The ``session`` object manages operations on ORM-mapped objects, as construced
+The ``session`` object manages operations on ORM-mapped objects, as constructed
 by the base. These operations include querying, for example.
 
 Authors
@@ -24,7 +24,7 @@ Authors
 Use
 ---
 
-    To interact with the database, simply import the instantiated
+    To interact with the database, import the instantiated
     ``DatabaseController`` class:
     ::
         from lasp_sdtp.database.database_controller import db
@@ -58,6 +58,7 @@ class DatabaseController():
 
     Methods
     -------
+
     """
 
     def __init__(self):
@@ -69,19 +70,19 @@ class DatabaseController():
         self.Transactions = database_interface.Transactions
 
     def connect(self) -> (Session, DeclarativeMeta, Engine, MetaData):
-        """Return ``session``, ``base``, ``engine``, and ``metadata`` objects for
-        connecting to the ``last_sdtp_db`` database.
+        """Return ``session``, ``base``, ``engine``, and ``metadata`` objects
+        for connecting to the ``last_sdtp`` database.
 
-        Create an ``engine`` using an given ``connection_string``. Create a ``base``
-        class and ``session`` class from the ``engine``. Create an instance of the
-        ``session`` class. Return the ``session``, ``base``, and ``engine``
-        instances.
+        Create an ``engine`` using a given ``connection_string``. Create a
+        ``base`` class and ``session`` class from the ``engine``. Create an
+        instance of the ``session`` class. Return the ``session``, ``base``, and
+        ``engine`` instances.
 
         Returns
         -------
-        session : sesson object
-            Provides a holding zone for all objects loaded or associated with the
-            database.
+        session : session object
+            Provides a holding zone for all objects loaded or associated with
+            the database.
         base : base object
             Provides a base class for declarative class definitions.
         engine : engine object
@@ -130,8 +131,8 @@ class DatabaseController():
             self.engine.execute(table.insert().values(row))
 
     def mark_transaction_complete(self, fileid: int):
-        """Update the ``transactions`` table to mark the the GET request
-        transaction corresponding to the given ``fileid`` as complete by adding the
+        """Update the ``transactions`` table to mark the GET request transaction
+        corresponding to the given ``fileid`` as complete by adding the
         ``end_time``
 
         Parameters
@@ -154,7 +155,7 @@ class DatabaseController():
     def query_for_account(self, username: str) -> list:
         """Return account information for the given ``username``
 
-        Paramaters
+        Parameters
         ----------
         username : str
             The username of interest
@@ -178,12 +179,12 @@ class DatabaseController():
         tags.
 
         For the ``date`` tag, the user may provide a specific date to filter on
-        (e.g. ``date=2022-01-01``) or the user may provide a speicific date range
+        (e.g. ``date=2022-01-01``) or the user may provide a specific date range
         to filter on via the ``start_date`` and ``end_date`` tags (e.g.
-        ``start_date=2022-01-01&end_date=2022-02-01``).  If a ``date`` is provided,
-        then ``start_date`` and ``end_date`` must remain as ``None``.  Alternativly,
-        if both a ``start_date`` and ``end_date`` are provided, the ``date`` tag
-        must remain as ``None``.
+        ``start_date=2022-01-01&end_date=2022-02-01``).  If a ``date`` is
+        provided, then ``start_date`` and ``end_date`` must remain as ``None``.
+        Alternatively, if both a ``start_date`` and ``end_date`` are provided,
+        the ``date`` tag must remain as ``None``.
 
         Parameters
         ----------
@@ -193,7 +194,7 @@ class DatabaseController():
         Returns
         -------
         results : list
-            A list of database entries freturned by the query
+            A list of database entries returned by the query
         """
 
         query = self.session.query(self.FileMetadata)  # base query
@@ -263,7 +264,8 @@ class DatabaseController():
         return queue_entries
 
     def update_transactions_table(self, request: object, fileid: Optional[int] = None) -> int:
-        """Insert information for a new transaction in the ``transactions`` table
+        """Insert information for a new transaction in the ``transactions``
+        table
 
         Parameters
         ----------

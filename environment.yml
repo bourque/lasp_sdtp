@@ -29,6 +29,7 @@ dependencies:
   - pip
   - pytest
   - python
+  - requests
   - sqlalchemy
   - werkzeug
 
