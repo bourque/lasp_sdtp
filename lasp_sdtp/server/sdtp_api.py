@@ -1,5 +1,9 @@
 """The main module for running the ``last_sdtp`` flask application.
 
+The ``flask`` server defined within serves as the main API for interacting
+with the SDTP interface, and serves as an API gateway for the ``queue_api``
+and ``request_api``.
+
 Authors
 -------
     Matthew Bourque
@@ -19,17 +23,22 @@ Use
 
 import json
 import logging
-import requests
 
-from flask import abort
 from flask import Flask
+from flask import abort
 from flask import make_response
 from flask import request
 from flask.wrappers import Response
+import requests
 from werkzeug import exceptions
+
+from lasp_sdtp.config import admin_config
 
 logger = logging.getLogger(__name__)
 api_app = Flask(__name__)
+
+REQUEST_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["request_api_port"]}'
+QUEUE_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["queue_api_port"]}'
 
 
 @api_app.before_request
@@ -91,11 +100,11 @@ def delete_file(fileid: int) -> Response:
     Returns
     -------
     response : dict
-        The response object containing approriate headers and content.
+        The response object containing appropriate headers and content.
     """
 
     # Send request to request API
-    request_api_response = requests.delete(f'http://127.0.0.1:8002/delete_file/{fileid}')
+    request_api_response = requests.delete(f'{REQUEST_API_URI}/delete_file/{fileid}')
 
     # If the request failed, abort
     if request_api_response.status_code == 400:
@@ -107,7 +116,7 @@ def delete_file(fileid: int) -> Response:
     transactionid = int(request_api_response['transactionid'])
 
     # Send request to queue API
-    queue_api_response = requests.delete(f'http://127.0.0.1:8001/delete_file/{fileid}')
+    queue_api_response = requests.delete(f'{QUEUE_API_URI}/delete_file/{fileid}')
 
     # If the request failed, abort
     if queue_api_response.status_code == 404:
@@ -137,7 +146,7 @@ def delete_files(fileid_start: int, fileid_end: int) -> Response:
     Returns
     -------
     response : dict
-        The response object containing approriate headers and content.
+        The response object containing appropriate headers and content.
     """
 
     # Iterate through the files and delete them individually
@@ -185,7 +194,7 @@ def get_file(fileid: int) -> Response:
     """
 
     # Send request to request API
-    request_api_response = requests.get(f'http://127.0.0.1:8002/get_file/{fileid}')\
+    request_api_response = requests.get(f'{REQUEST_API_URI}/get_file/{fileid}')\
 
     # If the request failed, abort
     if request_api_response.status_code in [400, 404]:
@@ -197,7 +206,7 @@ def get_file(fileid: int) -> Response:
     transactionid = int(request_api_response['transactionid'])
 
     # Send request to queue API
-    queue_api_response = requests.get(f'http://127.0.0.1:8001/get_file/{fileid}').content.decode('utf-8')
+    queue_api_response = requests.get(f'{QUEUE_API_URI}/get_file/{fileid}').content.decode('utf-8')
     queue_api_response = json.loads(queue_api_response)
     filename = queue_api_response['filename']
     contents = queue_api_response['contents']
@@ -216,8 +225,6 @@ def get_file(fileid: int) -> Response:
 def get_filelist() -> Response:
     """Return a list of files available in the filesystem.
 
-    See the relevant docs in the ``request_api`` module for further details
-
     Returns
     -------
     response : dict
@@ -226,7 +233,7 @@ def get_filelist() -> Response:
 
     # Parse the URL parameters
     params = request.query_string.decode('utf-8')
-    request_api_url = 'http://127.0.0.1:8002/get_filelist'
+    request_api_url = f'{REQUEST_API_URI}/get_filelist'
     if params:
         request_api_url = f'{request_api_url}?{params}'
 
@@ -265,8 +272,6 @@ def home():
 def register() -> Response:
     """Register a subscriber and send the appropriate response back to the user
 
-    See the relevant docs in the ``request_api`` module for further details
-
     Returns
     -------
     response : flask.wrappers.Response obj
@@ -274,7 +279,7 @@ def register() -> Response:
     """
 
     # Send request to request API
-    req_api_resp = requests.put('http://127.0.0.1:8002/register_subscriber').content.decode('utf-8')
+    req_api_resp = requests.put(f'{REQUEST_API_URI}/register_subscriber').content.decode('utf-8')
     req_api_resp = json.loads(req_api_resp)
     transactionid = req_api_resp['transactionid']
 

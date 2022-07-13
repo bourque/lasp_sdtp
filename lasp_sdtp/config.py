@@ -7,11 +7,11 @@ Authors
 
 Use
 ---
-    The config variables within this module are inteneded to be imported and
+    The config variables within this module are intended to be imported and
     used from other modules, i.e.:
     ::
         from lasp_sdtp.config import admin_config
-        from lasp_sdtp.config import susbsriber_config
+        from lasp_sdtp.config import subscriber_config
 """
 
 import json

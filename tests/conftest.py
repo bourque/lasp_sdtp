@@ -1,4 +1,4 @@
-"""This module contains code to perform the setup and teardown neccessary to
+"""This module contains code to perform the setup and teardown necessary to
 run the test suite contained within the ``tests`` directory.
 
 Authors

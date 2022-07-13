@@ -1,4 +1,4 @@
-"""Tests for the ``api_gateway.py`` module
+"""Tests for the ``sdtp_api`` module
 
 Authors
 -------

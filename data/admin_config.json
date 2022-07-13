@@ -1,4 +1,5 @@
 {
+	"api_endpoint": "",
 	"certificate_authority": "",
 	"data_cache_loc": "",
 	"db_connection_string": "",
@@ -6,6 +7,9 @@
 	"email_password": "",
 	"email_port" : 123,
 	"email_server": "",
-	"endpoint": "0.0.0.0",
-	"filesystem_loc": ""
+	"endpoint": "",
+	"filesystem_loc": "",
+	"queue_api_port": 123,
+	"request_api_port": 123,
+	"sdtp_api_port": 123
 }

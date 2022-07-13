@@ -104,7 +104,7 @@ def configure_logging(log_file_loc: str, verbose=True) -> str:
 
 
 def get_checksum() -> str:
-    """Return a randomly generated checksum.  Currently only supports the
+    """Return a randomly generated checksum.  Currently, only supports the
     ``sha256`` checksum type.
 
     Returns
@@ -123,7 +123,7 @@ def get_checksum() -> str:
 
 def get_shortname(filename: str) -> str:
     """Return the appropriate value for the ``ShortName`` tag for the given
-    filename.  Currently this is hard-coded to only support TSIS-2.
+    filename.  Currently, this is hard-coded to only support TSIS-2.
 
     Parameters
     ----------
@@ -133,7 +133,8 @@ def get_shortname(filename: str) -> str:
     Returns
     -------
     shortname : str
-        The ``ShortName`` that matches the given filename (e.g. ``TSIS2_TIM_L2``)
+        The ``ShortName`` that matches the given filename (e.g.
+        ``TSIS2_TIM_L2``)
     """
 
     shortname_mapping = {
@@ -217,7 +218,7 @@ def register_admin():
 
 def validate_fileid(fileid: str) -> bool:
     """Make sure that the provided ``fileid`` is a positive integer that is 15
-    digits or less.  If it is not, a 400 error is raised.
+    digits or fewer.  If it is not, a 400 error is raised.
 
     Parameters
     ----------
@@ -243,7 +244,7 @@ def validate_fileid(fileid: str) -> bool:
 
 
 def validate_tags(tags: dict) -> bool:
-    """Make sure that all of the provided tags are of valid type and value.  If
+    """Make sure that all the provided tags are of valid type and value.  If
     any of them are not, a 404 error is raised.
 
     Parameters
