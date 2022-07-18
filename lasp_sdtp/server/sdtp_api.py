@@ -33,9 +33,11 @@ import requests
 from werkzeug import exceptions
 
 from lasp_sdtp.config import admin_config
+from lasp_sdtp.utils.utils import CustomJSONEncoder
 
 logger = logging.getLogger(__name__)
 api_app = Flask(__name__)
+api_app.json_encoder = CustomJSONEncoder
 
 REQUEST_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["request_api_port"]}'
 QUEUE_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["queue_api_port"]}'

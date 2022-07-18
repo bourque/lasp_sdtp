@@ -73,7 +73,7 @@ def _add_file_metadata_entries():
             'stream': 'prod',
             'shortname': utils.get_shortname(Path(test_file).name),
             'version': 'v01',
-            'date': datetime.datetime(2022, 1, 1) + datetime.timedelta(days=i - 1)
+            'date': datetime.datetime(2022, 1, 1).date() + datetime.timedelta(days=i - 1)
         }
         data_to_insert.append(data)
     db.insert_data('file_metadata', data_to_insert)
@@ -88,7 +88,7 @@ def _add_file_metadata_entries():
         'stream': 'prod',
         'shortname': 'TEST_FILE',
         'version': 'v01',
-        'date': datetime.datetime(2022, 1, 1)
+        'date': datetime.datetime(2022, 1, 1).date()
     }]
     data_to_insert.append({
         'fileid': 12346,
@@ -99,7 +99,7 @@ def _add_file_metadata_entries():
         'stream': 'prod',
         'shortname': 'TEST_FILE',
         'version': 'v01',
-        'date': datetime.datetime(2022, 1, 1)
+        'date': datetime.datetime(2022, 1, 1).date()
     })
 
     # Add entry to satisfy integrity constraint for test_reporting
@@ -112,7 +112,7 @@ def _add_file_metadata_entries():
         'stream': 'prod',
         'shortname': 'TEST_FILE',
         'version': 'v01',
-        'date': datetime.datetime(2022, 1, 1)
+        'date': datetime.datetime(2022, 1, 1).date()
     })
 
     # Add entry to satisfy integrity constraint for test_database_controller
@@ -125,7 +125,7 @@ def _add_file_metadata_entries():
         'stream': 'prod',
         'shortname': 'TEST_FILE',
         'version': 'v01',
-        'date': datetime.datetime(2022, 1, 1)
+        'date': datetime.datetime(2022, 1, 1).date()
     })
 
     # A seperate call to insert_data() is needed so that the correct fileids are inserted

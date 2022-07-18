@@ -28,8 +28,10 @@ from sqlalchemy.exc import IntegrityError
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.utils.utils import CustomJSONEncoder
 
 queue_app = Flask(__name__)
+queue_app.json_encoder = CustomJSONEncoder
 logger = logging.getLogger(__name__)
 
 

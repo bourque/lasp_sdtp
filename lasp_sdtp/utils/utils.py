@@ -25,12 +25,25 @@ import time
 from pathlib import Path
 
 from flask import abort
+from flask.json import JSONEncoder
 
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
 
 logger = logging.getLogger(__name__)
 
+
+class CustomJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        try:
+            if isinstance(obj, datetime.date):
+                return obj.isoformat().split('T')[0]
+            iterable = iter(obj)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+        return JSONEncoder.default(self, obj)
 
 def configure_logging(log_file_loc: str, verbose=True) -> str:
     """Create and configure a log file with a standard logging format.

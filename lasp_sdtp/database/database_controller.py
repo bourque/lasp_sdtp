@@ -207,12 +207,12 @@ class DatabaseController():
 
         # For non-default date values
         if tags['date'] is not None:
-            query = query.filter(self.FileMetadata.date == datetime.datetime.strptime(tags['date'], '%Y-%M-%d'))
+            query = query.filter(self.FileMetadata.date == datetime.datetime.strptime(tags['date'], '%Y-%m-%d').date())
 
         # For non-default start_date and end_date values
         if tags['start_date'] and tags['end_date'] is not None:
-            query = query.filter(self.FileMetadata.date >= datetime.datetime.strptime(tags['start_date'], '%Y-%M-%d'))
-            query = query.filter(self.FileMetadata.date <= datetime.datetime.strptime(tags['end_date'], '%Y-%M-%d'))
+            query = query.filter(self.FileMetadata.date >= datetime.datetime.strptime(tags['start_date'], '%Y-%m-%d').date())
+            query = query.filter(self.FileMetadata.date <= datetime.datetime.strptime(tags['end_date'], '%Y-%m-%d').date())
 
         results = query.all()
 

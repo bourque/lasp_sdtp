@@ -27,11 +27,13 @@ from sqlalchemy.exc import IntegrityError
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.utils.utils import CustomJSONEncoder
 from lasp_sdtp.utils.utils import parse_request_tags
 from lasp_sdtp.utils.utils import validate_fileid
 from lasp_sdtp.utils.utils import validate_tags
 
 request_app = Flask(__name__)
+request_app.json_encoder = CustomJSONEncoder
 logger = logging.getLogger(__name__)
 
 
