@@ -55,7 +55,7 @@ def create_test_filesystem():
 
             filename = Path(admin_config['filesystem_loc']) / base_filename
             with open(filename, 'w') as f:
-                f.write(f'File contents for {filename}')
+                f.write(f'File contents for {filename.name}')
             print(f'Created test file: {filename}')
 
 
