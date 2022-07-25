@@ -16,11 +16,14 @@ Use
 """
 
 import datetime
+import logging
 from pathlib import Path
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
+
+logger = logging.getLogger(__name__)
 
 
 def cleanup_accounts():
@@ -36,10 +39,12 @@ def cleanup_accounts():
         # Remove any files in the queue related to the account
         db.session.query(db.FileQueue).filter(db.FileQueue.username == expired_account).delete()
         db.session.commit()
+        logger.info(f'Removed queue files for {expired_account} account')
 
         # Remove the expired account
         db.session.query(db.Accounts).filter(db.Accounts.username == expired_account).delete()
         db.session.commit()
+        logger.info(f'Removed {expired_account} account')
 
 
 def cleanup_file_queue():
@@ -56,9 +61,11 @@ def cleanup_file_queue():
         # Remove file from the file queue table
         db.session.query(db.FileQueue).filter(db.FileQueue.fileid == expired_file).delete()
         db.session.commit()
+        logger.info(f'Removed file queue database entry for {expired_file}')
 
         # Remove file from the file queue storage
         filename = db.session.query(db.FileMetadata.name).filter(db.FileMetadata.fileid == expired_file).all()
         filename = filename[0][0]
         file_path = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / filename
         file_path.unlink(missing_ok=True)
+        logger.info(f'Removed {expired_file} from queue storage')

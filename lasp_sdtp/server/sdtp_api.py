@@ -64,7 +64,6 @@ def authorize():
 @api_app.errorhandler(400)
 def custom400(error: exceptions.BadRequest) -> Response:
     """Returns custom 400 response"""
-    logger.warning('custom 400')
     return make_response({'message': 'The request is incorrect'}, 400)
 
 

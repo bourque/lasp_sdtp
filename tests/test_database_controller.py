@@ -107,12 +107,6 @@ def test_update_transactions_table():
         assert len(results) == 1  # There should only be one entry
         assert request.url in results[0].__dict__['action']
 
-        # Remove account entry so that it doesn't break future tests
-        if request.method == 'DELETE':
-            db.session.query(db.Transactions).filter(db.Transactions.username == subscriber_config['username']).delete()
-            db.session.query(db.Accounts).filter(db.Accounts.username == subscriber_config['username']).delete()
-            db.session.commit()
-
 
 def test_query_for_account():
     """Tests the ``query_for_account`` method"""

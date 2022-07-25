@@ -129,6 +129,7 @@ class DatabaseController():
         table = sa.Table(table_name, self.base.metadata, autoload=True)
         for row in data:
             self.engine.execute(table.insert().values(row))
+            logger.info('Inserted the following into the database: %s' % row)
 
     def mark_transaction_complete(self, fileid: int):
         """Update the ``transactions`` table to mark the GET request transaction
@@ -166,6 +167,8 @@ class DatabaseController():
             The account information
         """
 
+        logger.info('Querying accounts database table for %s account' % username)
+
         results = self.session.query(self.Accounts).filter(self.Accounts.username == username).all()
         if results:
             account = results[0].__dict__
@@ -196,6 +199,8 @@ class DatabaseController():
         results : list
             A list of database entries returned by the query
         """
+
+        logger.info('Querying file_metadata database table for files with parameters %s' % str(tags))
 
         query = self.session.query(self.FileMetadata)  # base query
         query = query.filter(self.FileMetadata.stream == tags['stream'])  # stream is always supplied via default value
@@ -237,6 +242,8 @@ class DatabaseController():
             The name of the file for the given ``fileid``
         """
 
+        logger.info('Querying file_metadata database table for file %s' % str(fileid))
+
         file_metadata = self.session.query(self.FileMetadata.name).filter(self.FileMetadata.fileid == fileid).all()
         filename = file_metadata[0][0]
 
@@ -257,6 +264,8 @@ class DatabaseController():
             A list of database entries that exist in the queue for the given
             ``fileid``
         """
+
+        logger.info('Querying file_queue database table for file %s' % str(fileid))
 
         queue_entries = self.session.query(self.FileQueue).filter(self.FileQueue.fileid == fileid).all()
         queue_entries = [item.__dict__ for item in queue_entries]
@@ -322,7 +331,7 @@ class DatabaseController():
         transactionid = data_to_insert.transactionid
         self.session.commit()
 
-        logger.info('Recorded transaction %s for request %s' % (transactionid, request))
+        logger.info('Recorded transaction %s for request %s' % (str(transactionid), request))
 
         return transactionid
 

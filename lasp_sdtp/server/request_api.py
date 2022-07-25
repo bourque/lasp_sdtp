@@ -167,26 +167,41 @@ def register_subscriber() -> Response:
         The response object containing the appropriate content.
     """
 
-    # Add a accounts database record
+    # Define metadata for the entry
+    certuid = f'{subscriber_config["username"]}_cert'
     registration_date = datetime.datetime.utcnow().date()
     registration_expires = registration_date + datetime.timedelta(days=subscriber_config['account_expiration_period'])
-    data = [{
-        'username': subscriber_config['username'],
-        'role': 'subscriber',
-        'certuid': f'{subscriber_config["username"]}_cert',
-        'registration_date': registration_date,
-        'registration_expires': registration_expires}]
-    db.insert_data('accounts', data)
-    logger.info('Registered account for %s' % subscriber_config['username'])
+
+    # Check to see if the account is open for registration
+    account = db.query_for_account(subscriber_config['username'])
+    registration_open = account['registration_open']
+
+    if registration_open:
+
+        # Update the entry with registration information
+        db.session.query(
+            db.Accounts
+        ).filter(
+            db.Accounts.username == subscriber_config['username']
+        ).update(
+            {'registration_open': False,
+             'certuid': certuid,
+             'registration_date': registration_date,
+             'registration_expires': registration_expires})
+        db.session.commit()
+        logger.info('Registered account for %s' % subscriber_config['username'])
+
+        # Create a queue space in cache
+        queue_path = Path(admin_config['data_cache_loc']) / subscriber_config['username']
+        if not queue_path.exists:
+            queue_path.mkdir()
+            logger.info('Created queue: %s' % queue_path)
+
+    else:
+        logger.warning('Attempt to register account %s was made, but registration window is not open' % subscriber_config['username'] )
 
     # Add a transactions database record
     transactionid = db.update_transactions_table(request)
-
-    # Create a queue space in cache
-    queue_path = Path(admin_config['data_cache_loc']) / subscriber_config['username']
-    if not queue_path.exists:
-        queue_path.mkdir()
-        logger.info('Created queue: %s' % queue_path)
 
     response = {'transactionid': transactionid}
 

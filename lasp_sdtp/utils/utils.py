@@ -189,8 +189,6 @@ def parse_request_tags(request: object) -> dict:
         A dictionary of key/value pairs for the request tags
     """
 
-    logger.warning('in utils')
-
     # Check for unsupported tags
     supported_tags = [
         ('stream', 'prod', str),
@@ -201,7 +199,6 @@ def parse_request_tags(request: object) -> dict:
         ('end_date', None, str)]
     for item in request.args.keys():
         if item not in [item[0] for item in supported_tags]:
-            logger.warning('hit 400')
             abort(400)
 
     # Store supplied tags in a dictionary

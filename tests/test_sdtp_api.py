@@ -11,6 +11,7 @@ Use
         pytest -s test_api_gateway.py
 """
 
+import datetime
 import glob
 import json
 from pathlib import Path
@@ -108,10 +109,12 @@ def test_register(client):
     # Make sure the response is correct
     assert response.status_code == 204
 
-    # Check that a database entry was made for the Accounts table
+    # Check that a database entry was made for the Accounts table and that it has registered
     results = db.session.query(db.Accounts).filter(db.Accounts.username == subscriber_config['username']).all()
     assert len(results) == 1  # There should only be one entry
     assert results[0].__dict__['username'] == subscriber_config['username']
+    assert results[0].__dict__['registration_open'] == 0
+    assert results[0].__dict__['registration_date'].date() == datetime.datetime.utcnow().date()
 
     _check_transaction(response.headers)
 

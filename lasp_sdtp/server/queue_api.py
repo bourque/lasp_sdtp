@@ -50,6 +50,8 @@ def delete_file(fileid: int) -> Response:
         The ``fileid`` of interest.
     """
 
+    logger.info(f'Deleting file {fileid}')
+
     # Get the metadata for the file of interest
     try:
         filename = db.query_for_filename(fileid)
@@ -65,6 +67,7 @@ def delete_file(fileid: int) -> Response:
     for entry in queue_entries:
         if entry['username'] != subscriber_config['username']:
             file_needed = True
+            logger.info(f'File %s is needed for another subscriber and will not be deleted' % fileid)
 
     # If not, delete the file from the queue if it is still there
     if not file_needed:
@@ -104,6 +107,8 @@ def get_file(fileid: int) -> Response:
     response : dict
         The response object containing appropriate headers and content.
     """
+
+    logger.info('Retrieving file contents for file %s' % fileid)
 
     # Determine where the file exists in the filesystem
     filename = db.query_for_filename(fileid)

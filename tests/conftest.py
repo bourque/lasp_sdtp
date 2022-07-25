@@ -30,27 +30,34 @@ def _add_accounts_entries():
     # Add nominal test account used for general testing
     data_to_insert = [{
         'username': 'test_account',
-        'certuid': 'test_cert',
         'role': 'subscriber',
+        'registration_open': 0,
+        'certuid': 'test_cert',
         'registration_date': datetime.datetime.utcnow().date(),
         'registration_expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1)}]
 
-    # Add an account for the subscriber (used for test_database_interface)
+    # Add an account for the subscriber
     data_to_insert.append({
         'username': subscriber_config['username'],
-        'certuid': 'test_cert',
         'role': 'subscriber',
-        'registration_date': datetime.datetime.utcnow().date(),
-        'registration_expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1)}
+        'registration_open': 1}
     )
 
     # Add an account that has expired (used for test_cleanup_database)
     data_to_insert.append({
         'username': 'expired_account',
-        'certuid': 'test_cert',
         'role': 'subscriber',
+        'registration_open': 0,
+        'certuid': 'test_cert',
         'registration_date': datetime.datetime.utcnow().date(),
         'registration_expires': datetime.datetime.utcnow().date() - datetime.timedelta(days=1)}
+    )
+
+    # Add an account that has not yet registered but has registration window closed
+    data_to_insert.append({
+        'username': 'not_open_for_registration',
+        'role': 'subscriber',
+        'registration_open': 0}
     )
 
     db.insert_data('accounts', data_to_insert)

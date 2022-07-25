@@ -1,9 +1,11 @@
 CREATE TABLE accounts (
     username VARCHAR2(30) NOT NULL,
-    certuid VARCHAR2(20) NOT NULL,
     role VARCHAR2(10) NOT NULL,
-    registration_date DATE NOT NULL,
+    registration_open NUMBER(1) NOT NULL,
+    certuid VARCHAR2(20),
+    registration_date DATE,
     registration_expires DATE,
+    CONSTRAINT registration_open_constraint CHECK (registration_open IN (0, 1)),
     CONSTRAINT role_constraint CHECK (role IN ('admin', 'subscriber')),
     CONSTRAINT accounts_uc UNIQUE(username, certuid),
     PRIMARY KEY(username)

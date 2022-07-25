@@ -28,9 +28,10 @@ class Accounts(Base):
     __table_args__ = (sa.UniqueConstraint('username', 'certuid', name='accounts_uc'),)
 
     username = sa.Column(sa.String(255), primary_key=True)
-    certuid = sa.Column(sa.String(20), unique=True, nullable=False)
     role = sa.Column(sa.Enum('admin', 'subscriber', name='role'), nullable=False)
-    registration_date = sa.Column(sa.DateTime, nullable=False)
+    registration_open = sa.Column(sa.Boolean, nullable=False)
+    certuid = sa.Column(sa.String(20), unique=True)
+    registration_date = sa.Column(sa.DateTime)
     registration_expires = sa.Column(sa.DateTime)
 
 
