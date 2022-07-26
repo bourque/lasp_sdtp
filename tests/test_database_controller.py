@@ -17,7 +17,6 @@ from collections import namedtuple
 import pytest
 import sqlalchemy as sa
 
-from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
 
 

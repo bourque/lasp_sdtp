@@ -70,18 +70,6 @@ def delete_file(fileid: int) -> Response:
     return response
 
 
-def get_app() -> Flask:
-    """Return an instance of the flask app (used for testing purposes)
-
-    Returns
-    -------
-    request_app : flask.app.Flask obj
-        An instance of the flask application
-    """
-
-    return request_app
-
-
 @request_app.route('/get_file/<fileid>', methods=['GET'])
 def get_file(fileid: int) -> Response:
     """Parse the user-supplied ``fileid`` and record the ``GET`` request.
@@ -198,7 +186,7 @@ def register_subscriber() -> Response:
             logger.info('Created queue: %s' % queue_path)
 
     else:
-        logger.warning('Attempt to register account %s was made, but registration window is not open' % subscriber_config['username'] )
+        logger.warning('Attempt to register account %s was made, but registration window is not open' % subscriber_config['username'])
 
     # Add a transactions database record
     transactionid = db.update_transactions_table(request)

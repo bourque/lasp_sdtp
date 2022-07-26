@@ -19,9 +19,14 @@ Use
     To run a local server for development or testing purposes, use:
     ::
         FLASK_APP=server.py FLASK_ENV=development flask run --port 8000
+
+References
+----------
+
+    If asynchronous requests need to be supported in the future, this article
+    provides some examples: https://testdriven.io/blog/flask-async/
 """
 
-import json
 import logging
 
 from flask import Flask
@@ -30,10 +35,10 @@ from flask import make_response
 from flask import request
 from flask.wrappers import Response
 import requests
-from werkzeug import exceptions
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.utils.utils import CustomJSONEncoder
+from lasp_sdtp.utils.utils import parse_api_response
 
 logger = logging.getLogger(__name__)
 api_app = Flask(__name__)
@@ -41,47 +46,6 @@ api_app.json_encoder = CustomJSONEncoder
 
 REQUEST_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["request_api_port"]}'
 QUEUE_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["queue_api_port"]}'
-
-
-@api_app.before_request
-def authorize():
-    """Authorize a request.  This is performed before every request is processed"""
-
-    # Assume user is not authorized until proven otherwise
-    valid_certificate = False
-
-    # Check for a valid certificate in the header
-    if 'Cert-UID' in request.headers:
-        certificate = request.headers['Cert-UID']
-        authorized_certificates = ['ges_disc_cert']  # Probably better to do a db lookup here?
-        if certificate in authorized_certificates:
-            valid_certificate = True
-
-    if not valid_certificate:
-        abort(401)
-
-
-@api_app.errorhandler(400)
-def custom400(error: exceptions.BadRequest) -> Response:
-    """Returns custom 400 response"""
-    return make_response({'message': 'The request is incorrect'}, 400)
-
-
-@api_app.errorhandler(401)
-def custom401(error: exceptions.Unauthorized) -> Response:
-    """Returns custom 401 response"""
-
-    # The message depends on the request method
-    if request.method == 'PUT':
-        return make_response({'message': 'Unauthorized'}, 401)
-    elif request.method == 'GET':
-        return make_response({'message': 'Request is not authenticated'}, 401)
-
-
-@api_app.errorhandler(404)
-def custom404(error: exceptions.NotFound) -> Response:
-    """Returns custom 400 response"""
-    return make_response({'message': 'The requested resource does not exist'}, 404)
 
 
 @api_app.route('/files/<fileid>', methods=['DELETE'])
@@ -112,8 +76,7 @@ def delete_file(fileid: int) -> Response:
         abort(400)
 
     # Parse the response contents
-    request_api_response = request_api_response.content.decode('utf-8')  # returns a str
-    request_api_response = json.loads(request_api_response)  # Convert the str to a dict
+    request_api_response = parse_api_response('request', request_api_response)
     transactionid = int(request_api_response['transactionid'])
 
     # Send request to queue API
@@ -164,18 +127,6 @@ def delete_files(fileid_start: int, fileid_end: int) -> Response:
     return response
 
 
-def get_app() -> Flask:
-    """Return an instance of the flask app (used for testing purposes)
-
-    Returns
-    -------
-    app : flask.app.Flask obj
-        An instance of the flask application
-    """
-
-    return api_app
-
-
 @api_app.route('/files/<fileid>', methods=['GET'])
 def get_file(fileid: int) -> Response:
     """Return the contents of a given file.
@@ -202,18 +153,17 @@ def get_file(fileid: int) -> Response:
         abort(request_api_response.status_code)
 
     # Parse the response contents
-    request_api_response = request_api_response.content.decode('utf-8')  # returns a str
-    request_api_response = json.loads(request_api_response)  # Convert the str to a dict
+    request_api_response = parse_api_response('request', request_api_response)
     transactionid = int(request_api_response['transactionid'])
 
     # Send request to queue API
-    queue_api_response = requests.get(f'{QUEUE_API_URI}/get_file/{fileid}').content.decode('utf-8')
-    queue_api_response = json.loads(queue_api_response)
-    filename = queue_api_response['filename']
-    contents = queue_api_response['contents']
+    queue_api_response = requests.get(f'{QUEUE_API_URI}/get_file/{fileid}')
+
+    # Parse the response contents
+    queue_api_response = parse_api_response('queue', queue_api_response)
 
     # Construct the response
-    content = {'filename': filename, 'contents': contents}
+    content = {'filename': queue_api_response['filename'], 'contents': queue_api_response['contents']}
     status = 200
     response = make_response(content, status)
     response.headers['Content-Type'] = 'application/json'
@@ -241,13 +191,12 @@ def get_filelist() -> Response:
     # Send request to request API
     request_api_response = requests.get(request_api_url)
 
-    # If the request failed, abort
+    # If the request failed with 400, abort
     if request_api_response.status_code == 400:
         abort(400)
 
     # Parse the response contents
-    request_api_response = request_api_response.content.decode('utf-8')  # returns a str
-    request_api_response = json.loads(request_api_response)  # Convert the str to a dict
+    request_api_response = parse_api_response('request', request_api_response)
     results = request_api_response['results']
     transactionid = int(request_api_response['transactionid'])
 
@@ -261,14 +210,6 @@ def get_filelist() -> Response:
     return response
 
 
-@api_app.route('/')
-def home():
-    """View for the homepage"""
-
-    # Return a HTML template that describes how to use the interface?
-    pass
-
-
 @api_app.route('/register', methods=['PUT'])
 def register() -> Response:
     """Register a subscriber and send the appropriate response back to the user
@@ -280,9 +221,11 @@ def register() -> Response:
     """
 
     # Send request to request API
-    req_api_resp = requests.put(f'{REQUEST_API_URI}/register_subscriber').content.decode('utf-8')
-    req_api_resp = json.loads(req_api_resp)
-    transactionid = req_api_resp['transactionid']
+    request_api_response = requests.put(f'{REQUEST_API_URI}/register_subscriber')
+
+    # Parse the response contents
+    request_api_response = parse_api_response('request', request_api_response)
+    transactionid = request_api_response['transactionid']
 
     # Construct the response
     content = {'message': 'Success but no other response necessary'}

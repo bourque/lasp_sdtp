@@ -67,7 +67,7 @@ def delete_file(fileid: int) -> Response:
     for entry in queue_entries:
         if entry['username'] != subscriber_config['username']:
             file_needed = True
-            logger.info(f'File %s is needed for another subscriber and will not be deleted' % fileid)
+            logger.info('File %s is needed for another subscriber and will not be deleted' % fileid)
 
     # If not, delete the file from the queue if it is still there
     if not file_needed:
@@ -78,18 +78,6 @@ def delete_file(fileid: int) -> Response:
         # Remove entry from database
         db.delete_file_from_queue(fileid)
         logger.info('Removed fileid %s from queue' % fileid)
-
-
-def get_app() -> Flask:
-    """Return an instance of the flask app (used for testing purposes)
-
-    Returns
-    -------
-    queue_app : flask.app.Flask obj
-        An instance of the flask application
-    """
-
-    return queue_app
 
 
 @queue_app.route('/get_file/<fileid>', methods=['GET'])

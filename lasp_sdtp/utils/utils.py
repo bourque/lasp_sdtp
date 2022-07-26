@@ -10,11 +10,15 @@ Use
     other modules, e.g.:
     ::
         from lasp_sdtp.utils.utils import get_checksum
+
+TODO: Figure out how information for subscriber-supplied tags/extras should be
+      stored/provided
 """
 
 import datetime
 import getpass
 import importlib
+import json
 import logging
 import random
 import socket
@@ -26,6 +30,7 @@ from pathlib import Path
 
 from flask import abort
 from flask.json import JSONEncoder
+from flask.wrappers import Response
 
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
@@ -44,6 +49,7 @@ class CustomJSONEncoder(JSONEncoder):
         else:
             return list(iterable)
         return JSONEncoder.default(self, obj)
+
 
 def configure_logging(log_file_loc: str, verbose=True) -> str:
     """Create and configure a log file with a standard logging format.
@@ -174,6 +180,19 @@ def get_shortname(filename: str) -> str:
     return shortname
 
 
+def parse_api_response(api: str, response: Response) -> dict:
+    """
+    """
+
+    try:
+        response = json.loads(response.content.decode('utf-8'))
+    except json.JSONDecodeError:
+        logger.critical('Problem with response from %s API' % api)
+        abort(500)
+
+    return response
+
+
 def parse_request_tags(request: object) -> dict:
     """Parse the tags in the request and store them in a dictionary.  If any
     unsupported tags are encountered, a 404 error is raised.
@@ -189,19 +208,30 @@ def parse_request_tags(request: object) -> dict:
         A dictionary of key/value pairs for the request tags
     """
 
-    # Check for unsupported tags
-    supported_tags = [
+    # Define the default supported tags
+    default_tag_list = [
         ('stream', 'prod', str),
         ('ShortName', 'all', str),
         ('version', 'v01', str),
         ('date', None, str),
         ('start_date', None, str),
         ('end_date', None, str)]
+
+    # Parse the subscriber-defined tags
+    subscriber_tags = subscriber_config['tags']
+    subscriber_tag_list = []
+    for tag in subscriber_tags:
+        subscriber_tag_list.append((tag, subscriber_tags[tag]['default'], eval(subscriber_tags[tag]['type'])))
+
+    # Supported tags is an aggregation of the default + subscriber-defined tags
+    supported_tags = default_tag_list + subscriber_tag_list
+
+    # Check to see if any of the provided tags in the request are not supported
     for item in request.args.keys():
         if item not in [item[0] for item in supported_tags]:
             abort(400)
 
-    # Store supplied tags in a dictionary
+    # Store tags from request in a dictionary
     tags = {}
     for item in supported_tags:
         tags[item[0].lower()] = request.args.get(item[0], default=item[1], type=item[2])

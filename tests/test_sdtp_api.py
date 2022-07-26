@@ -21,7 +21,7 @@ import pytest
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.server.sdtp_api import get_app
+from lasp_sdtp.server.ancillary import get_app
 
 
 TEST_URLS = [

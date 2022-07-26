@@ -31,7 +31,7 @@ def _add_accounts_entries():
     data_to_insert = [{
         'username': 'test_account',
         'role': 'subscriber',
-        'registration_open': 0,
+        'registration_open': False,
         'certuid': 'test_cert',
         'registration_date': datetime.datetime.utcnow().date(),
         'registration_expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1)}]
@@ -40,14 +40,14 @@ def _add_accounts_entries():
     data_to_insert.append({
         'username': subscriber_config['username'],
         'role': 'subscriber',
-        'registration_open': 1}
+        'registration_open': True}
     )
 
     # Add an account that has expired (used for test_cleanup_database)
     data_to_insert.append({
         'username': 'expired_account',
         'role': 'subscriber',
-        'registration_open': 0,
+        'registration_open': False,
         'certuid': 'test_cert',
         'registration_date': datetime.datetime.utcnow().date(),
         'registration_expires': datetime.datetime.utcnow().date() - datetime.timedelta(days=1)}
@@ -57,7 +57,7 @@ def _add_accounts_entries():
     data_to_insert.append({
         'username': 'not_open_for_registration',
         'role': 'subscriber',
-        'registration_open': 0}
+        'registration_open': False}
     )
 
     db.insert_data('accounts', data_to_insert)
