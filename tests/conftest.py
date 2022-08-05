@@ -67,7 +67,7 @@ def _add_file_metadata_entries():
     """Add necessary ``file_metadata`` table entries used for testing"""
 
     # Locate files in test filesystem
-    test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / '*'))
+    test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
 
     # Insert test file data (mostly used for test_run_server)
     data_to_insert = []

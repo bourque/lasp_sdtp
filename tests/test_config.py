@@ -46,11 +46,12 @@ def test_get_subscriber_config():
     required_keys = {
         'account_expiration_period': int,
         'checksum_type': str,
-        'distinguised_name': str,
+        'distinguished_name': str,
         'expiration_period': int,
         'max_num_files': int,
         'num_download_threads': int,
-        'username': str
+        'username': str,
+        'streams': dict
     }
 
     # Get the config data

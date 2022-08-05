@@ -54,12 +54,12 @@ def delete_file(fileid: int) -> Response:
 
     # Get the metadata for the file of interest
     try:
-        filename = db.query_for_filename(fileid)
+        metadata = db.query_for_file_metadata(fileid)
     except IndexError:  # No results, send a 404
         abort(404)
 
     # Determine where the file exists in the queue
-    filepath = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / filename
+    filepath = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / metadata.stream / metadata.name
 
     # Check to see if the file is in the queue for another subscriber
     queue_entries = db.query_for_queue_entries(fileid)
@@ -78,6 +78,8 @@ def delete_file(fileid: int) -> Response:
         # Remove entry from database
         db.delete_file_from_queue(fileid)
         logger.info('Removed fileid %s from queue' % fileid)
+
+    return {}  # No content needed for response, but Flask expects a response that is not None
 
 
 @queue_app.route('/get_file/<fileid>', methods=['GET'])
@@ -99,11 +101,15 @@ def get_file(fileid: int) -> Response:
     logger.info('Retrieving file contents for file %s' % fileid)
 
     # Determine where the file exists in the filesystem
-    filename = db.query_for_filename(fileid)
-    filepath = Path(admin_config['filesystem_loc']) / filename
+    metadata = db.query_for_file_metadata(fileid)
+    filepath = Path(admin_config['filesystem_loc']) / metadata.stream / metadata.name
+
+    # Create the parent directory where the file will be stored, if necessary
+    parent_directory = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / metadata.stream
+    parent_directory.mkdir(parents=False, exist_ok=True)
 
     # Copy the file to the queue if it doesn't already exist
-    dst = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / filename
+    dst = parent_directory / metadata.name
 
     try:
         shutil.copyfile(filepath, dst)

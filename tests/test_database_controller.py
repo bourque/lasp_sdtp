@@ -128,11 +128,11 @@ def test_query_for_filelist():
     assert len(filelist) == 5
 
 
-def test_query_for_filename():
-    """Tests the ``query_for_filename`` method"""
+def test_query_for_file_metadata():
+    """Tests the ``query_for_file_metadata`` method"""
 
-    filename = db.query_for_filename(98765)
-    assert filename == 'insert_data.txt'
+    metadata = db.query_for_file_metadata(98765)
+    assert metadata.name == 'insert_data.txt'
 
 
 def test_query_for_queue_entries():

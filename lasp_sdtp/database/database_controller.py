@@ -228,8 +228,8 @@ class DatabaseController():
 
         return results
 
-    def query_for_filename(self, fileid: int) -> str:
-        """Return the filename associated with the given ``fileid``
+    def query_for_file_metadata(self, fileid: int) -> str:
+        """Return the metadata associated with the given ``fileid``
 
         Parameters
         ----------
@@ -244,10 +244,10 @@ class DatabaseController():
 
         logger.info('Querying file_metadata database table for file %s' % str(fileid))
 
-        file_metadata = self.session.query(self.FileMetadata.name).filter(self.FileMetadata.fileid == fileid).all()
-        filename = file_metadata[0][0]
+        file_metadata = self.session.query(self.FileMetadata).filter(self.FileMetadata.fileid == fileid).all()
+        file_metadata = file_metadata[0]  # There should only be one entry
 
-        return filename
+        return file_metadata
 
     def query_for_queue_entries(self, fileid: int) -> list:
         """Return a list of queue database table entries that exist for the

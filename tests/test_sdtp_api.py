@@ -167,10 +167,10 @@ def test_get_filelist(client, request_url):
     assert response.status_code == 200
 
     # Check if the returned files are in the filesystem
-    test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / '*'))
+    test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
     ignore_files = ['test_cleanup_db.txt', 'test_cleanup_db2.txt', 'test_reporting.txt', 'test_db_controller.txt']  # ignore files used in other tests
     for entry in data['files']:
-        filename = Path(admin_config['filesystem_loc']) / entry['name']
+        filename = Path(admin_config['filesystem_loc']) / 'prod' / entry['name']
         if filename.name not in ignore_files:
             assert str(filename) in test_files
 
@@ -200,7 +200,7 @@ def test_get_file(client):
     assert response.status_code == 200
 
     # Check if the file is in the queue
-    filepath = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / data['filename']
+    filepath = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / 'prod' / data['filename']
     assert filepath.exists()
 
     # Check that there is a database entry for the file in the queue
@@ -270,6 +270,24 @@ def test_delete_files(client):
     for fileid in fileids:
         results = db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).all()
         assert len(results) == 0
+
+
+def test_unauthorized_request(client):
+    """Tests that an unauthorized request returns the expexted response of 401
+
+    Parameters
+    ----------
+    client : flask.testing.FlaskClient object
+        The client to test with
+    """
+
+    request_url = '/files'
+    headers = {'content-type': 'application/json', 'Cert-UID': f'bogus_cert'}
+    response = client.get(request_url, headers=headers)
+    data = json.loads(response.get_data().decode("utf-8"))
+
+    assert response.status_code == 401
+    assert data['message'] == 'Request is not authenticated'
 
 
 @pytest.mark.parametrize('request_url', INVALID_TEST_URLS)
