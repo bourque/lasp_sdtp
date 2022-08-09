@@ -39,6 +39,7 @@ import requests
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.utils.utils import CustomJSONEncoder
 from lasp_sdtp.utils.utils import parse_api_response
+from lasp_sdtp.utils.utils import validate_fileid_range
 
 logger = logging.getLogger(__name__)
 api_app = Flask(__name__)
@@ -112,6 +113,11 @@ def delete_files(fileid_start: int, fileid_end: int) -> Response:
     response : dict
         The response object containing appropriate headers and content.
     """
+
+    # Make sure range of fileids are valid
+    valid = validate_fileid_range(fileid_start, fileid_end)
+    if not valid:
+        abort(400)
 
     # Iterate through the files and delete them individually
     fileids = [fileid for fileid in range(int(fileid_start), int(fileid_end) + 1)]
@@ -222,6 +228,10 @@ def register() -> Response:
 
     # Send request to request API
     request_api_response = requests.put(f'{REQUEST_API_URI}/register_subscriber')
+
+    # If the request failed with 401, abort
+    if request_api_response.status_code == 401:
+        abort(401)
 
     # Parse the response contents
     request_api_response = parse_api_response('request', request_api_response)

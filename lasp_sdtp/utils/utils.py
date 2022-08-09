@@ -328,6 +328,43 @@ def validate_fileid(fileid: str) -> bool:
         return True
 
 
+def validate_fileid_range(fileid_start: int, fileid_end: int) -> bool:
+    """Make sure that the provided range of ``fileid``s are positive integers
+    that are increasing in value.
+
+    Parameters
+    ----------
+    fileid_start : int
+        The starting ``fileid`` of interest.
+    fileid_end : int
+        The ending ``fileid`` of interest.
+
+    Returns
+    -------
+    bool
+        True or False for whether or not the ``fileid`` is valid
+    """
+
+    # Make sure given fileids are integers
+    try:
+        int(fileid_start)
+        int(fileid_end)
+    except ValueError:
+        return False
+
+    # Make sure the given fileids are positive integers that is 15 digits or less
+    if int(fileid_start) <= 0 or int(fileid_start) > 999999999999999:
+        return False
+    elif int(fileid_end) <= 0 or int(fileid_end) > 999999999999999:
+        return False
+
+    # Make sure the given fileids are increasing in value over the range
+    if int(fileid_start) >= int(fileid_end):
+        return False
+
+    return True
+
+
 def validate_tags(tags: dict) -> bool:
     """Make sure that all the provided tags are of valid type and value.  If
     any of them are not, a 404 error is raised.

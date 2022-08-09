@@ -187,6 +187,7 @@ def register_subscriber() -> Response:
 
     else:
         logger.warning('Attempt to register account %s was made, but registration window is not open' % subscriber_config['username'])
+        abort(401)
 
     # Add a transactions database record
     transactionid = db.update_transactions_table(request)
