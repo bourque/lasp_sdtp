@@ -49,13 +49,11 @@ from flask.wrappers import Response
 import requests
 
 from lasp_sdtp.config import admin_config
-from lasp_sdtp.utils.utils import CustomJSONEncoder
 from lasp_sdtp.utils.utils import parse_api_response
 from lasp_sdtp.utils.utils import validate_fileid_range
 
 logger = logging.getLogger(__name__)
 sdtp_api_app = Flask(__name__)
-sdtp_api_app.json_encoder = CustomJSONEncoder
 
 REQUEST_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["request_api_port"]}'
 QUEUE_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["queue_api_port"]}'

@@ -9,44 +9,15 @@ Use
     To run these tests use:
     ::
         pytest -s test_utils.py
-
-TODO: utils.py has changed a lot.  Make sure the tests here still make sense.
 """
 
-import logging
-from pathlib import Path
+import pytest
 
 from lasp_sdtp.config import subscriber_config
-from lasp_sdtp.utils.utils import configure_logging
 from lasp_sdtp.utils.utils import get_checksum
 from lasp_sdtp.utils.utils import get_shortname
-
-
-def test_configure_logging():
-    """Tests the ``configure_logging`` function"""
-
-    # Configure a log file
-    log_file = configure_logging(Path.cwd(), verbose=False)
-
-    # Perform some basic logging
-    logging.debug('Some system information')
-    logging.info('Some information for users')
-    logging.warning('A warning')
-    logging.critical('A critical error')
-
-    # Check that the log file was created
-    assert Path(log_file).exists
-
-    # Open the log file and check the contents
-    with open(log_file, 'r') as f:
-        data = f.readlines()
-    data = str([line.strip() for line in data])
-    testable_content = ['User:', 'System:', 'Python Executable Path:', 'Conda Environment:', 'DEBUG', 'INFO', 'WARNING', 'CRITICAL']
-    for item in testable_content:
-        assert item in data
-
-    # Remove the log file
-    Path.unlink(log_file)
+from lasp_sdtp.utils.utils import validate_fileid
+from lasp_sdtp.utils.utils import validate_fileid_range
 
 
 def test_get_checksum():
@@ -57,7 +28,7 @@ def test_get_checksum():
     # Check that the checksum type is correct
     assert checksum.split(':')[0] == subscriber_config['checksum_type']
 
-    # Check that the checsum is of proper length
+    # Check that the checksum is of proper length
     assert len(checksum.split(':')[-1]) == 64
 
 
@@ -65,3 +36,17 @@ def test_get_shortname():
     """Tests the ``get_shortname`` function"""
 
     assert get_shortname('tsis2_L1') == 'TSIS2_L1'
+
+
+@pytest.mark.parametrize('fileid, expected_result', [(1, True), (-1, False), ('foo', False), (9999999999999999, False)])
+def test_validate_fileid(fileid, expected_result):
+    """Tests the ``parse_api_response`` function"""
+
+    assert validate_fileid(fileid) == expected_result
+
+
+@pytest.mark.parametrize('fileid_start, fileid_end, expected_result', [(1, 5, True), (5, 1, False), ('foo', 'bar', False), (-1, 5, False), (1, 9999999999999999, False)])
+def test_validate_fileid_range(fileid_start, fileid_end, expected_result):
+    """Tests the ``parse_api_response`` function"""
+
+    assert validate_fileid_range(fileid_start, fileid_end) == expected_result

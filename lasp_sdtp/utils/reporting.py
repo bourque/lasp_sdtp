@@ -31,7 +31,7 @@ from lasp_sdtp.config import admin_config
 from lasp_sdtp.database.database_controller import db
 
 
-def construct_content(header: str, query: Query) -> str:
+def _construct_content(header: str, query: Query) -> str:
     """Takes a query and turns it into an HTML table to render in the report
     email.
 
@@ -58,29 +58,7 @@ def construct_content(header: str, query: Query) -> str:
     return content
 
 
-def generate_daily_report() -> str:
-    """Creates a daily email report of system information
-
-    Returns
-    -------
-    content : str
-        The HTML content of the report email
-    """
-
-    queries = get_report_queries()
-
-    # Construct the email content for each of the queries
-    content = ''
-    for header, query in queries:
-        content += construct_content(header, query)
-
-    # Send the email
-    send_email(content)
-
-    return content
-
-
-def get_report_queries() -> list:
+def _get_report_queries() -> list:
     """Return a list of queries used to generate content for the report email
 
     Returns
@@ -158,7 +136,7 @@ def get_report_queries() -> list:
     return queries
 
 
-def send_email(content: str):
+def _send_email(content: str):
     """Construct the final report email and send it.
 
     Parameters
@@ -189,3 +167,25 @@ def send_email(content: str):
     # text = msg.as_string()
     # server.sendmail(admin_config['email_address'], 'matthew,bourque@lasp.colorado.edu', text)
     # server.quit()
+
+
+def generate_daily_report() -> str:
+    """Creates a daily email report of system information
+
+    Returns
+    -------
+    content : str
+        The HTML content of the report email
+    """
+
+    queries = _get_report_queries()
+
+    # Construct the email content for each of the queries
+    content = ''
+    for header, query in queries:
+        content += _construct_content(header, query)
+
+    # Send the email
+    _send_email(content)
+
+    return content

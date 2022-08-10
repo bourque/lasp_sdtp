@@ -20,9 +20,9 @@ Use
 
 from pathlib import Path
 
-from lasp_sdtp.server.sdtp_api import api_app
+from lasp_sdtp.server.sdtp_api import sdtp_api_app
 from lasp_sdtp.config import admin_config
-from lasp_sdtp.utils.utils import configure_logging
+from lasp_sdtp.utils.logging import configure_logging
 from lasp_sdtp.utils.utils import register_admin
 
 
@@ -36,4 +36,4 @@ if __name__ == '__main__':
     register_admin()
 
     # Run the server
-    api_app.run(host=admin_config['endpoint'], port=admin_config['sdtp_api_port'])
+    sdtp_api_app.run(host=admin_config['endpoint'], port=admin_config['sdtp_api_port'])

@@ -23,7 +23,7 @@ from lasp_sdtp.database.database_controller import db
 def test_connect():
     """Tests the ``load_connection`` method"""
 
-    _session, _base, _engine, _meta = db.connect()
+    _session, _base, _engine, _meta = db._connect()
     assert 'oracle://' in str(_session.bind.url)
 
 

@@ -19,7 +19,7 @@ import json
 from pathlib import Path
 
 
-def get_admin_config() -> dict:
+def _get_admin_config() -> dict:
     """Return admin configuration data.
 
     Returns
@@ -39,7 +39,7 @@ def get_admin_config() -> dict:
     return config
 
 
-def get_subscriber_config() -> dict:
+def _get_subscriber_config() -> dict:
     """Return subscriber configuration data.
 
     Returns
@@ -56,5 +56,5 @@ def get_subscriber_config() -> dict:
 
 
 # Make the config data global, so it can easily be imported
-admin_config = get_admin_config()
-subscriber_config = get_subscriber_config()
+admin_config = _get_admin_config()
+subscriber_config = _get_subscriber_config()

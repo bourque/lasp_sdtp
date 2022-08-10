@@ -107,13 +107,13 @@ class DatabaseController():
 
     def __init__(self):
 
-        self.session, self.base, self.engine, self.meta = self.connect()
+        self.session, self.base, self.engine, self.meta = self._connect()
         self.Accounts = database_interface.Accounts
         self.FileMetadata = database_interface.FileMetadata
         self.FileQueue = database_interface.FileQueue
         self.Transactions = database_interface.Transactions
 
-    def connect(self) -> (Session, DeclarativeMeta, Engine, MetaData):
+    def _connect(self) -> (Session, DeclarativeMeta, Engine, MetaData):
         """Return ``session``, ``base``, ``engine``, and ``metadata`` objects
         for connecting to the ``last_sdtp`` database.
 

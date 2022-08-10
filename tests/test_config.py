@@ -11,8 +11,8 @@ Use
         pytest -s test_config.py
 """
 
-from lasp_sdtp.config import get_admin_config
-from lasp_sdtp.config import get_subscriber_config
+from lasp_sdtp.config import _get_admin_config
+from lasp_sdtp.config import _get_subscriber_config
 
 
 def test_get_admin_config():
@@ -30,7 +30,7 @@ def test_get_admin_config():
     }
 
     # Get the config data
-    config = get_admin_config()
+    config = _get_admin_config()
     for key in required_keys:
 
         # Check that the file has the required key
@@ -55,7 +55,7 @@ def test_get_subscriber_config():
     }
 
     # Get the config data
-    config = get_subscriber_config()
+    config = _get_subscriber_config()
     for key in required_keys:
 
         # Check that the file has the required key
