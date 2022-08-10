@@ -1,4 +1,4 @@
-"""Tests for then ``cleanup_database.py`` module
+"""Tests for then ``cleanup_database.py`` module.
 
 Authors
 -------

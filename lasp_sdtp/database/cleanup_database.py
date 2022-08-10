@@ -1,6 +1,12 @@
 """This module contains functions to remove expired accounts and files from the
 database and file queue.
 
+Expired accounts are those for which the current date exceeds the value of the
+``accounts.registration_expires`` database entry.
+
+Expired files are those for which the current date exceeds the value of the
+``file_queue.expires`` database entry.
+
 Authors
 -------
     - Matthew Bourque
@@ -27,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 
 def cleanup_accounts():
-    """Remove expired accounts"""
+    """Remove expired accounts from the database"""
 
     # Identify any expired accounts
     today = datetime.datetime.utcnow().date()
@@ -48,8 +54,8 @@ def cleanup_accounts():
 
 
 def cleanup_file_queue():
-    """Remove expired files from the ``file_queue`` database table and data
-    cache"""
+    """Remove expired files from the ``file_queue`` database table and file
+    queue"""
 
     # Identify any expired files
     today = datetime.datetime.utcnow().date()

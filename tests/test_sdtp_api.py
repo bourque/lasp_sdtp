@@ -1,4 +1,4 @@
-"""Tests for the ``sdtp_api`` module
+"""Tests for the ``sdtp_api`` module.
 
 Authors
 -------
@@ -282,7 +282,7 @@ def test_unauthorized_request(client):
     """
 
     request_url = '/files'
-    headers = {'content-type': 'application/json', 'Cert-UID': f'bogus_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': 'bogus_cert'}
     response = client.get(request_url, headers=headers)
     data = json.loads(response.get_data().decode("utf-8"))
 

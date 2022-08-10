@@ -1,4 +1,4 @@
-"""Various utility functions to help support the ``lasp_sdtp`` application
+"""Various utility functions to help support the ``lasp_sdtp`` application.
 
 Authors
 -------
@@ -11,8 +11,18 @@ Use
     ::
         from lasp_sdtp.utils.utils import get_checksum
 
+References
+----------
+
+    Logging configuration was inspired by ``tsis_disc``:
+    (https://bitbucket.lasp.colorado.edu/users/brst3037/repos/tsis_disc/browse/scripts/process_to_lasp.py)
+
 TODO: Figure out how information for subscriber-supplied tags/extras should be
       stored/provided
+TODO: Move logging into separate module, split up into several functions.  The
+      current function for this is quite large.
+TODO: Make create_test_filesystem and get_shortname to be more generic, avoid
+      hard references to TSIS-2
 """
 
 import datetime
@@ -20,6 +30,7 @@ import getpass
 import importlib
 import json
 import logging
+import logging.config
 import random
 import socket
 import string
@@ -40,6 +51,9 @@ logger = logging.getLogger(__name__)
 
 
 class CustomJSONEncoder(JSONEncoder):
+    """
+
+    """
     def default(self, obj):
         try:
             if isinstance(obj, datetime.date):
@@ -53,7 +67,7 @@ class CustomJSONEncoder(JSONEncoder):
 
 
 def configure_logging(log_file_loc: str, verbose=True) -> str:
-    """Create and configure a log file with a standard logging format.
+    """Configure and create a log that records system information.
 
     Parameters
     ----------
@@ -68,7 +82,7 @@ def configure_logging(log_file_loc: str, verbose=True) -> str:
         The path to the file where the log is written to.
     """
 
-    # Build filename
+    # Define filename for log file
     timestamp = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
     filename = f'lasp_sdtp_{timestamp}.log'
     log_file = Path(log_file_loc) / filename
@@ -76,13 +90,51 @@ def configure_logging(log_file_loc: str, verbose=True) -> str:
     # Make sure parent directory exists
     log_file.parent.mkdir(exist_ok=True)
 
-    # Make sure no other root handlers exist before configuring the logger
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
+    # Define the log configuration
+    log_config = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'simple': {
+                'class': 'logging.Formatter',
+                'format': '[%(asctime)s] %(message)s',
+                'datefmt': '%Y-%m-%dT%H:%M:%S'
+            },
+            'detailed': {
+                'class': 'logging.Formatter',
+                'format': '[%(asctime)s %(name)s.%(funcName)s:%(lineno)i %(levelname)s] %(message)s',
+                'datefmt': '%Y-%m-%dT%H:%M:%S'
+            }
+        },
+        'handlers': {
+            'console': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+                'formatter': 'simple',
+                'stream': 'ext://sys.stdout'
+            },
+            'file': {
+                'class': 'logging.FileHandler',
+                'level': 'DEBUG',
+                'formatter': 'detailed',
+                'filename': str(log_file),
+                'mode': 'a'
+            }
+        },
+        'loggers': {
+            'lasp_sdtp': {
+                'level': 'DEBUG'
+            },
+        },
+        'root': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'file']
+        }
+    }
 
-    # Create the log file
+    # Configure the log
     logging.Formatter.converter = time.gmtime  # Timestamps are in UTC
-    logging.basicConfig(filename=log_file, format='%(asctime)s.%(msecs)03d %(levelname)s: %(message)s', datefmt='%Y-%m-%dT%H:%M:%S', level=logging.DEBUG)
+    logging.config.dictConfig(log_config)
     if verbose:
         print('Log file initialized to {}'.format(log_file))
 
@@ -124,8 +176,10 @@ def configure_logging(log_file_loc: str, verbose=True) -> str:
 
 
 def create_test_filesystem():
-    """The main function of the module.  See module docstrings for further
-    details.
+    """Create a small, local filesystem of files used for testing purposes.
+
+    The filesystem is stored in the directory defined by the ``filesystem_loc``
+    key in the ``admin_config.json`` file.
     """
 
     # Create parent directory for storing test files
@@ -225,7 +279,10 @@ def get_shortname(filename: str) -> str:
 
 
 def parse_api_response(api: str, response: Response) -> dict:
-    """
+    """Parse a response from the given API.
+
+    If the response cannot be parsed into a dictionary/JSON-like object,
+    then a 500 error is returned.
     """
 
     try:
@@ -237,9 +294,9 @@ def parse_api_response(api: str, response: Response) -> dict:
     return response
 
 
-def parse_request_tags(request: object) -> dict:
-    """Parse the tags in the request and store them in a dictionary.  If any
-    unsupported tags are encountered, a 404 error is raised.
+def parse_request_parameters(request: object) -> dict:
+    """Parse the parameters in the request and store them in a dictionary.  If
+    any unsupported parameters are encountered, a 400 error is raised.
 
     Parameters
     ----------
@@ -294,8 +351,9 @@ def register_admin():
     if not account:
         data = [{
             'username': 'lasp_admin',
-            'certuid': 'admin_cert',
             'role': 'admin',
+            'registration_open': False,
+            'certuid': 'admin_cert',
             'registration_date': datetime.datetime.utcnow().date()}]
         db.insert_data('accounts', data)
         logger.info('Registered admin account')

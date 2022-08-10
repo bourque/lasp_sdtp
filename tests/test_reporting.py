@@ -1,4 +1,4 @@
-"""Tests for the ``reporting.py`` module
+"""Tests for the ``reporting.py`` module.
 
 Authors
 -------

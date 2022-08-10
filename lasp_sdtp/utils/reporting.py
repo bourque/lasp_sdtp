@@ -9,9 +9,12 @@ Authors
 
 Use
 ---
-    This module is intended to be executed via the command line as such:
+    This module is intended to be run via the ``run_daily_report.py`` script:
     ::
-        python reporting.py
+        from lasp_sdtp.utils.reporting import generate_daily_report
+        generate_daily_report()
+
+TODO: Update email server to avoid using gmail
 """
 
 import datetime
@@ -30,13 +33,13 @@ from lasp_sdtp.database.database_controller import db
 
 def construct_content(header: str, query: Query) -> str:
     """Takes a query and turns it into an HTML table to render in the report
-    email
+    email.
 
     Parameters
     ----------
     header: str
         A ``<h2>`` header to use for the content in the email
-    query : sqlalchemy.orm.query.Query obj
+    query : ``sqlalchemy.orm.query.Query`` obj
         The query to use to generate the content
 
     Returns
@@ -179,10 +182,10 @@ def send_email(content: str):
     msg['To'] = 'matthew.bourque@lasp.colorado.edu'
     msg.attach(MIMEText(body, 'html'))
 
-    # Send the email
-    server = smtplib.SMTP(admin_config['email_server'], admin_config['email_port'])
-    server.starttls()
-    #server.login(admin_config['email_address'], admin_config['email_password'])
-    #text = msg.as_string()
-    #server.sendmail(admin_config['email_address'], 'matthew,bourque@lasp.colorado.edu', text)
-    server.quit()
+    # # Send the email
+    # server = smtplib.SMTP(admin_config['email_server'], admin_config['email_port'])
+    # server.starttls()
+    # server.login(admin_config['email_address'], admin_config['email_password'])
+    # text = msg.as_string()
+    # server.sendmail(admin_config['email_address'], 'matthew,bourque@lasp.colorado.edu', text)
+    # server.quit()

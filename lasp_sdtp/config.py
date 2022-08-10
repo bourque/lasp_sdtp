@@ -1,5 +1,6 @@
-"""Gathers configuration details from the ``admin_config`` and ``subscriber_config``
-JSON files and makes the data available via importable variables
+"""Gathers configuration details from the ``admin_config.json`` and
+``subscriber_config.json`` files and makes the data available via importable
+variables.
 
 Authors
 -------
@@ -19,7 +20,7 @@ from pathlib import Path
 
 
 def get_admin_config() -> dict:
-    """Return admin configuration data
+    """Return admin configuration data.
 
     Returns
     -------
@@ -39,7 +40,7 @@ def get_admin_config() -> dict:
 
 
 def get_subscriber_config() -> dict:
-    """Return subscriber configuration details
+    """Return subscriber configuration data.
 
     Returns
     -------
@@ -54,6 +55,6 @@ def get_subscriber_config() -> dict:
     return config
 
 
-# Make the config data global so it can easily be imported
+# Make the config data global, so it can easily be imported
 admin_config = get_admin_config()
 subscriber_config = get_subscriber_config()

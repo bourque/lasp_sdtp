@@ -1,10 +1,8 @@
-"""This module is used to connect to and interact with the ``lasp_sdtp``
-database.
+"""This module is used to connect to and interact with the database.
 
 The ``connect()`` method within this module allows the user to connect to the
-``lasp_sdtp_db`` database via the ``session``, ``base``, and ``engine`` objects
-(described below).  The classes within serve as ORMs that define the individual
-tables of the relational database.
+database via the ``session``, ``base``, and ``engine`` objects (described
+below).
 
 The ``engine`` object serves as the low-level database API and perhaps most
 importantly contains dialects which allows the ``sqlalchemy`` module to
@@ -25,9 +23,15 @@ Use
 ---
 
     To interact with the database, import the instantiated
-    ``DatabaseController`` class:
+    ``DatabaseController`` class, e.g.:
     ::
         from lasp_sdtp.database.database_controller import db
+        db.delete_file_from_queue(1)
+
+TODO: Possibly plit this module into two module: one that performs database
+      operations (database_controller.py) and one that specifically performs
+      queries (database_queries.py).  I fear that this module might grow too
+      large otherwise.
 """
 
 import datetime
@@ -51,14 +55,54 @@ logger = logging.getLogger(__name__)
 
 
 class DatabaseController():
-    """A class for interacting with the ``lasp_sdtp`` database.
+    """A class for interacting with the database.
 
     Attributes
     ----------
+    Accounts : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
+        The ORM for the ``accounts`` database table
+    base : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
+        Provides a base class for declarative class definitions.
+    engine : ``sqlalchemy.engine.base.Engine`` object
+        Provides a source of database connectivity and behavior.
+    FileMetadata : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
+        The ORM for the ``file_metadata`` database table
+    FileQueue : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
+        The ORM for the ``file_queue`` database table
+    meta : ``sqlalchemy.sql.schema.MetaData`` object
+        The connection metadata
+    session : ``sqlalchemy.orm.session.Session`` object
+        Provides a holding zone for all objects loaded or associated with
+        the database.
+    Transactions : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
+        The ORM for the ``transactions`` database table
 
     Methods
     -------
-
+    connect()
+        Return ``session``, ``base``, ``engine``, and ``metadata`` objects
+        for connecting to the database.
+    delete_file_from_queue(fileid)
+        Remove the ``file_queue`` database entry for the given ``fileid``
+    insert_data(table_name, data)
+        Inserts the given data into the given table
+    mark_transaction_complete(fileid)
+        Update the ``transactions`` table to mark the GET request transaction
+        corresponding to the given ``fileid`` as complete by adding the
+        ``end_time``
+    query_for_account(username)
+        Return account information for the given ``username``
+    query_for_filelist(tags)
+        Return a list of files (and their metadata) based on user-provided
+        tags.
+    query_for_file_metadata(fileid)
+        Return the metadata associated with the given ``fileid``
+    query_for_queue_entries(fileid)
+        Return a list of queue database table entries that exist for the
+        given ``fileid``
+    update_transactions_table(request, fileid=None)
+        Insert information for a new transaction in the ``transactions``
+        table
     """
 
     def __init__(self):
@@ -80,14 +124,14 @@ class DatabaseController():
 
         Returns
         -------
-        session : session object
+        session : ``sqlalchemy.orm.session.Session`` object
             Provides a holding zone for all objects loaded or associated with
             the database.
-        base : base object
+        base : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
             Provides a base class for declarative class definitions.
-        engine : engine object
+        engine : ``sqlalchemy.engine.base.Engine`` object
             Provides a source of database connectivity and behavior.
-        meta: metadata object
+        meta: ``sqlalchemy.sql.schema.MetaData`` object
             The connection metadata
         """
 
@@ -138,8 +182,8 @@ class DatabaseController():
 
         Parameters
         ----------
-        transactionid : int
-            The ``transactionid`` of interest
+        fileid : int
+            The ``fileid`` of interest
         """
 
         end_time = datetime.datetime.utcnow()

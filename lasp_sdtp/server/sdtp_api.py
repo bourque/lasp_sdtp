@@ -1,8 +1,12 @@
-"""The main module for running the ``last_sdtp`` flask application.
+"""This module serves as the main API for interacting with the ``lasp_sdtp``
+application.
 
-The ``flask`` server defined within serves as the main API for interacting
-with the SDTP interface, and serves as an API gateway for the ``queue_api``
-and ``request_api``.
+The ``flask`` server defined within contains views for each of the SDTP entry
+points (i.e. ``PUT /register``, ``GET /files``, ``GET /files/<fileid>``, and
+``DELETE /files/<fileid>``.  This API serves as a gateway for the ``queue_api``
+(which handles the transferring of files and necessary bookkeeping) and the
+``request_api`` (which records transactions, and parses, validates, and executes
+requests.
 
 Authors
 -------
@@ -11,20 +15,28 @@ Authors
 Use
 ---
 
-    If this module is executed via the command line, an ``admin`` account is
-    registered and the server is run from the ``endpoint`` defined in the
-    ``admin_config.json`` file.  A log file is also created, the path to which
-    will be printed to the terminal.
+    The ``flask`` server is intended to be run from the ``run_sdtp_service.py``
+    script.  Once the server is running, the ``flask`` app will respond to
+    requests to the ``endpoint`` and ``sdtp_api_port`` defined  in the
+    ``admin_config.json`` file.
 
     To run a local server for development or testing purposes, use:
     ::
-        FLASK_APP=server.py FLASK_ENV=development flask run --port 8000
+        FLASK_APP=sdtp_api.py FLASK_ENV=development flask run --port 8000
 
 References
 ----------
 
     If asynchronous requests need to be supported in the future, this article
-    provides some examples: https://testdriven.io/blog/flask-async/
+    provides some useful examples: https://testdriven.io/blog/flask-async/
+
+TODO: Implement 403 errors (Request is authenticated but user is forbidden from
+      accessing resource
+TODO: Implement parallelization for file transfers
+TODO: Implement 429 errors (Too many requests)
+TODO: Implement support for grouping files together
+TODO: Implement support for pagination of GET /files requests
+TODO: Possibly implement support for asynchronous requests via async/await?
 """
 
 import logging
@@ -42,21 +54,27 @@ from lasp_sdtp.utils.utils import parse_api_response
 from lasp_sdtp.utils.utils import validate_fileid_range
 
 logger = logging.getLogger(__name__)
-api_app = Flask(__name__)
-api_app.json_encoder = CustomJSONEncoder
+sdtp_api_app = Flask(__name__)
+sdtp_api_app.json_encoder = CustomJSONEncoder
 
 REQUEST_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["request_api_port"]}'
 QUEUE_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["queue_api_port"]}'
 
 
-@api_app.route('/files/<fileid>', methods=['DELETE'])
+@sdtp_api_app.route('/files/<fileid>', methods=['DELETE'])
 def delete_file(fileid: int) -> Response:
-    """Delete a given file from the queue, if applicable.
+    """Deletes the given file from the file queue, if applicable.
 
     A file is only deleted from the queue if it is not being used by any other
-    subscriber.
+    subscriber.  If the file is deleted, the file transfer transaction is marked
+    as 'complete' in the ``transactions`` database table, and the corresponding
+    entry in the ``file_queue`` database table will be removed.
 
-    If the file of interest doesn't exist, a 404 error is returned.
+    If the file of interest doesn't exist, a 404 error is returned.  If the
+    given ``fileid`` is invalid, a 400 error is returned.
+
+    A successful request will result in a response of 204 ('Success but no other
+    response necessary').
 
     Parameters
     ----------
@@ -65,7 +83,7 @@ def delete_file(fileid: int) -> Response:
 
     Returns
     -------
-    response : dict
+    response : ``flask.wrappers.Response`` obj
         The response object containing appropriate headers and content.
     """
 
@@ -97,9 +115,20 @@ def delete_file(fileid: int) -> Response:
     return response
 
 
-@api_app.route('/files/<fileid_start>-<fileid_end>', methods=['DELETE'])
+@sdtp_api_app.route('/files/<fileid_start>-<fileid_end>', methods=['DELETE'])
 def delete_files(fileid_start: int, fileid_end: int) -> Response:
-    """For a range of files, delete those that are no longer needed in the queue
+    """For a range of files, deletes those that are no longer needed from the
+    file queue.
+
+    This function essentially iterates through the range of ``fileid``s and
+    sends a ``DELETE`` request for each ``fileid``. The combination of the given
+    ``fileid_start`` and ``fileid_end`` must result in increasing positive
+    integers.
+
+    If the given range of ``fileid``s is invalid, a 400 error is returned.
+
+    A successful request will result in a response of 204 ('Success but no other
+    response necessary').
 
     Parameters
     ----------
@@ -110,7 +139,7 @@ def delete_files(fileid_start: int, fileid_end: int) -> Response:
 
     Returns
     -------
-    response : dict
+    response : ``flask.wrappers.Response`` obj
         The response object containing appropriate headers and content.
     """
 
@@ -133,12 +162,16 @@ def delete_files(fileid_start: int, fileid_end: int) -> Response:
     return response
 
 
-@api_app.route('/files/<fileid>', methods=['GET'])
+@sdtp_api_app.route('/files/<fileid>', methods=['GET'])
 def get_file(fileid: int) -> Response:
-    """Return the contents of a given file.
+    """Returns the contents of a given file.
 
-    If the supplied ``fileid`` is not a valid positive integer, a 404 error is
+    If the supplied ``fileid`` is not a valid positive integer, a 400 error is
     returned.  Also, if the file does not exist, a 404 error is returned.
+
+    A successful request will result in the file being copied to the file
+    queue, an entry being added the ``file_queue`` database table, and a
+    response of 200 along with the contents of the file.
 
     Parameters
     ----------
@@ -147,7 +180,7 @@ def get_file(fileid: int) -> Response:
 
     Returns
     -------
-    response : dict
+    response : ``flask.wrappers.Response`` obj
         The response object containing appropriate headers and content.
     """
 
@@ -178,13 +211,23 @@ def get_file(fileid: int) -> Response:
     return response
 
 
-@api_app.route('/files', methods=['GET'])
+@sdtp_api_app.route('/files', methods=['GET'])
 def get_filelist() -> Response:
-    """Return a list of files available in the filesystem.
+    """Returns a list of files available in the filesystem.
+
+    The user may supply parameters (i.e. 'tags') within the request
+    (e.g. ``date=2021-01-01``). If parameters are given, they are parsed and
+    applied to the query that determines the list of available files.  If no
+    parameters are supplied, all available files are returned.
+
+    If the request parameters are invalid, a 400 error is returned.
+
+    A successful request will result in a response of 200 along with a list
+    of available files and their metadata.
 
     Returns
     -------
-    response : dict
+    response : ``flask.wrappers.Response`` obj
         The response object containing appropriate headers and content.
     """
 
@@ -216,13 +259,29 @@ def get_filelist() -> Response:
     return response
 
 
-@api_app.route('/register', methods=['PUT'])
+@sdtp_api_app.route('/register', methods=['PUT'])
 def register() -> Response:
-    """Register a subscriber and send the appropriate response back to the user
+    """Registers a subscriber (if the subscriber's registration window is open).
+
+    To establish a subscriber's registration window, an administrator should
+    manually add an entry to the ``accounts`` database table for the subscriber
+    and set the ``registration_open`` field to ``True``.
+
+    Once the subscriber has registered the account via the ``PUT /register``
+    request, the ``registration_open`` is set to ``False`` and the
+    ``registration_expires`` field is set with the date of which the account
+    registration will expire.
+
+    If the subscriber attempts to register the account while the registration
+    window is closed, or if a subscriber attempts to register an account that
+    is not in the system, a 401 error is returned.
+
+    A successful registration request will result in a response of 204 ('Success
+    but no other response necessary').
 
     Returns
     -------
-    response : flask.wrappers.Response obj
+    response : ``flask.wrappers.Response`` obj
         The response object containing appropriate headers and content.
     """
 

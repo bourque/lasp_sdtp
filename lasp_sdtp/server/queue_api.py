@@ -1,6 +1,6 @@
 """This module serves as a ``flask`` server for an API for a 'queue service'
-that handles the operations and bookkeeping for copying files to and deleting
-files from the file queue.
+that handles the operations and bookkeeping for copying/deleting files to/from
+the file queue.
 
 Authors
 -------
@@ -9,10 +9,19 @@ Authors
 Use
 ---
 
-    This functions within this module are intended to be called from the
+    The ``flask`` server is intended to be run from the
+    ``run_queue_service.py`` script.  Once the server is running, the
+    ``flask`` app will respond to requests to the ``endpoint`` and
+    ``queue_api_port`` defined  in the ``admin_config.json`` file.
+
+    The functions within this module are intended to be called from the
     ``sdtp_api`` server, e.g.:
     ::
         requests.put('<endpoint>/delete_file/<fileid>')
+
+    To run a local server for development or testing purposes, use:
+    ::
+        FLASK_APP=queue_api.py FLASK_ENV=development flask run --port 8001
 """
 
 import datetime
@@ -39,15 +48,18 @@ logger = logging.getLogger(__name__)
 def delete_file(fileid: int) -> Response:
     """Delete a given file from the queue, if applicable.
 
-    A file is only deleted from the queue if it is not being used by any other
-    subscriber.
-
-    If the file of interest doesn't exist, a 404 error is returned.
+    See the corresponding docstrings in the ``sdtp_api.py`` module for further
+    details.
 
     Parameters
     ----------
     fileid : int
         The ``fileid`` of interest.
+
+    Returns
+    -------
+    response : dict
+        The response object containing appropriate headers and content.
     """
 
     logger.info(f'Deleting file {fileid}')
@@ -86,6 +98,9 @@ def delete_file(fileid: int) -> Response:
 def get_file(fileid: int) -> Response:
     """Copy a file into the data cache (if it isn't already there) and return
     its contents.
+
+    See the corresponding docstrings in the ``sdtp_api.py`` module for further
+    details.
 
     Parameters
     ----------

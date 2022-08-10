@@ -1,12 +1,13 @@
-"""Ancillary functions needed for ``lasp_sdtp`` server.
+"""Ancillary functions needed for the application servers.
+
+These functions are not necessarily tied to a specific API and thus they are
+grouped together in this module.  Most of the functions within serve as
+request handlers and thus are automatically invoked (depending on the request)
+and therefor do not need to be imported in the APIs.
 
 Authors
 -------
     Matthew Bourque
-
-Use
----
-
 """
 
 from flask import abort
@@ -16,12 +17,16 @@ from flask import request
 from flask.wrappers import Response
 from werkzeug import exceptions
 
-from lasp_sdtp.server.sdtp_api import api_app
+from lasp_sdtp.server.sdtp_api import sdtp_api_app
 
 
-@api_app.before_request
+@sdtp_api_app.before_request
 def authorize():
-    """Authorize a request.  This is performed before every request is processed"""
+    """Authorize a request.
+
+    This is performed before every request is processed.  If the request cannot
+    be authorized, the request is aborted with a 401 error.
+    """
 
     # Assume user is not authorized until proven otherwise
     valid_certificate = False
@@ -37,15 +42,15 @@ def authorize():
         abort(401)
 
 
-@api_app.errorhandler(400)
+@sdtp_api_app.errorhandler(400)
 def custom400(error: exceptions.BadRequest) -> Response:
-    """Returns custom 400 response"""
+    """Returns a custom 400 response"""
     return make_response({'message': 'The request is incorrect'}, 400)
 
 
-@api_app.errorhandler(401)
+@sdtp_api_app.errorhandler(401)
 def custom401(error: exceptions.Unauthorized) -> Response:
-    """Returns custom 401 response"""
+    """Returns a custom 401 response"""
 
     # The message depends on the request method
     if request.method == 'PUT':
@@ -54,15 +59,15 @@ def custom401(error: exceptions.Unauthorized) -> Response:
         return make_response({'message': 'Request is not authenticated'}, 401)
 
 
-@api_app.errorhandler(404)
+@sdtp_api_app.errorhandler(404)
 def custom404(error: exceptions.NotFound) -> Response:
-    """Returns custom 400 response"""
+    """Returns a custom 400 response"""
     return make_response({'message': 'The requested resource does not exist'}, 404)
 
 
-@api_app.errorhandler(500)
+@sdtp_api_app.errorhandler(500)
 def custom500(error: exceptions.InternalServerError) -> Response:
-    """Returns custom 500 response"""
+    """Returns a custom 500 response"""
     return make_response({'message': 'Internal Server Error'}, 500)
 
 
@@ -71,8 +76,8 @@ def get_app() -> Flask:
 
     Returns
     -------
-    app : flask.app.Flask obj
-        An instance of the flask application
+    api_app : ``flask.app.Flask`` object
+        An instance of the ``sdtp_api`` ``flask`` application
     """
 
-    return api_app
+    return sdtp_api_app

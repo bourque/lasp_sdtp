@@ -1,5 +1,5 @@
 """This module serves as a ``flask`` server for an API for a 'request service'
-that handles user requests and records transactions.
+that records transactions, and parses, validates, and executes requests.
 
 Authors
 -------
@@ -8,10 +8,22 @@ Authors
 Use
 ---
 
-    This functions within this module are intended to be called from the
+    The ``flask`` server is intended to be run from the
+    ``run_request_service.py`` script.  Once the server is running, the
+    ``flask`` app will respond to requests to the ``endpoint`` and
+    ``request_api_port`` defined  in the ``admin_config.json`` file.
+
+    The functions within this module are intended to be called from the
     ``sdtp_api`` server, e.g.:
     ::
         requests.put('<endpoint>/delete_file/<fileid>')
+
+    To run a local server for development or testing purposes, use:
+    ::
+        FLASK_APP=request_api.py FLASK_ENV=development flask run --port 8002
+
+TODO: Update how max_num_files is used to determine the resulting filelist in
+      get_filelist, if necessary
 """
 
 import datetime
@@ -28,7 +40,7 @@ from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.utils.utils import CustomJSONEncoder
-from lasp_sdtp.utils.utils import parse_request_tags
+from lasp_sdtp.utils.utils import parse_request_parameters
 from lasp_sdtp.utils.utils import validate_fileid
 from lasp_sdtp.utils.utils import validate_tags
 
@@ -74,7 +86,8 @@ def delete_file(fileid: int) -> Response:
 def get_file(fileid: int) -> Response:
     """Parse the user-supplied ``fileid`` and record the ``GET`` request.
 
-    If the ``fileid`` is not valid, a 404 error is returned.
+    If the ``fileid`` is not valid, a 400 error is returned.  If the file does
+    not exist in the filesystem, a 404  error is returned.
 
     Parameters
     ----------
@@ -107,10 +120,11 @@ def get_file(fileid: int) -> Response:
 
 @request_app.route('/get_filelist', methods=['GET'])
 def get_filelist() -> Response:
-    """Return a list of files available in the filesystem.
+    """Parse the request parameters and return a list of files available in the
+    filesystem.
 
-    If any supplied tags in the request are not valid or doesn't exist, a 400
-    error is returned.
+    If any supplied parameters in the request are not valid, a 400 error is
+    returned.
 
     Returns
     -------
@@ -121,7 +135,7 @@ def get_filelist() -> Response:
     transactionid = db.update_transactions_table(request)
 
     # Parse parameters from the request
-    tags = parse_request_tags(request)
+    tags = parse_request_parameters(request)
 
     # Make sure the tags are valid
     valid = validate_tags(tags)
@@ -130,6 +144,10 @@ def get_filelist() -> Response:
 
     # Run the query based on the tags
     results = db.query_for_filelist(tags)
+
+    # Limit the number of results to the max number of files
+    if len(results) > subscriber_config['max_num_files']:
+        results = results[:subscriber_config['max_num_files']]
 
     response = {'transactionid': str(transactionid),
                 'results': results}
@@ -141,10 +159,8 @@ def get_filelist() -> Response:
 def register_subscriber() -> Response:
     """Register a subscriber.
 
-    When a new subscriber is registered, an account is added to the ``accounts``
-    database table and a new queue space is created in the data cache.
-    Subscribers are only registered if their authentication certificate is
-    valid.
+    See the corresponding docstrings in the ``sdtp_api.py`` module for further
+    details.
 
     Currently, a simple string value for the certificate is used and is checked
     against a hard-coded list of acceptable certificates.

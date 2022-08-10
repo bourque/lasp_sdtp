@@ -1,4 +1,11 @@
-"""Configures logging and starts the ``sdtp_api`` ``flask`` server.
+"""This script configures logging and starts the ``sdtp_api`` ``flask`` server.
+
+Also, when executed, an ``lasp_admin`` account is registered, if it doesn't
+already exist.
+
+The server is run from the ``endpoint`` defined in the ``admin_config.json``
+file.  A log file is also created, the path to which will be printed to the
+terminal.
 
 Authors
 -------
@@ -29,4 +36,4 @@ if __name__ == '__main__':
     register_admin()
 
     # Run the server
-    api_app.run(host=admin_config['endpoint'], port='8000')
+    api_app.run(host=admin_config['endpoint'], port=admin_config['sdtp_api_port'])

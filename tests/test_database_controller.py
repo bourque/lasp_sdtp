@@ -1,4 +1,4 @@
-"""Tests for ``database_interface.py``
+"""Tests for the ``database_controller.py`` module.
 
 Authors
 -------

@@ -1,4 +1,4 @@
-"""Starts the ``queue_api`` ``flask`` server.
+"""This script starts the ``queue_api`` ``flask`` server.
 
 Authors
 -------
@@ -18,4 +18,4 @@ from lasp_sdtp.config import admin_config
 if __name__ == '__main__':
 
     # Run the server
-    queue_app.run(host=admin_config['endpoint'], port='8001')
+    queue_app.run(host=admin_config['endpoint'], port=admin_config['queue_api_port'])

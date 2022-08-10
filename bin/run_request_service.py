@@ -1,4 +1,4 @@
-"""Starts the ``request_api`` ``flask`` server
+"""This script starts the ``request_api`` ``flask`` server
 
 Authors
 -------
@@ -18,4 +18,4 @@ from lasp_sdtp.config import admin_config
 if __name__ == '__main__':
 
     # Run the servers
-    request_app.run(host=admin_config['endpoint'], port='8002')
+    request_app.run(host=admin_config['endpoint'], port=admin_config['request_api_port'])

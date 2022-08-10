@@ -1,4 +1,5 @@
-# This file describes a conda environment that can be used to install lasp_sdtp
+# This file defines a conda environment that can be used to install dependencies
+# for the lasp_sdtp application.  The environment is named 'lasp-sdtp'
 #
 # Run the following command to set up this environment:
 # $ conda env create -f environment.yml

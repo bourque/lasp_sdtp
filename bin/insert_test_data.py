@@ -1,6 +1,7 @@
-"""Inserts the same testing data used in ``conftest.py``.  This is handy if
-developers wish to test the application with ``curl`` commands in the terminal
-and need a basic set of data available in the database.
+"""This script inserts the same testing data that is defined in ``conftest.py``
+into the database.  This is handy if developers wish to test the application
+with ``curl`` commands in the terminal and need a basic set of test data
+available in the database.
 
 Authors
 -------

@@ -1,6 +1,10 @@
 """This module contains code to perform the setup and teardown necessary to
 run the test suite contained within the ``tests`` directory.
 
+A number of entries are inserted into to the database tables in order to support
+the unit tests via the ``setup`` function.  Upon completion of running
+``pytest``, the database is cleared out via the ``teardown`` function.
+
 Authors
 -------
     Matthew Bourque

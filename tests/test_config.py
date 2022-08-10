@@ -1,4 +1,4 @@
-"""Tests for the ``config.py`` module
+"""Tests for the ``config.py`` module.
 
 Authors
 -------

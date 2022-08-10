@@ -6,6 +6,8 @@ Authors
 
 Use
 ---
+
+TODO: Complete this module.
 """
 
 import datetime
@@ -34,7 +36,7 @@ def build_certificate():
     # Set subject and issuer names
     builder = builder.subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, admin_config['certificate_authority'])]))
     builder = builder.issuer_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'LASP')]))
-    
+
     # Set validation range
     builder = builder.not_valid_before(datetime.datetime.utcnow().date() - one_day)
     builder = builder.not_valid_after(datetime.datetime.utcnow().date() + (one_day * 30))
@@ -57,7 +59,7 @@ def build_certificate():
             encoding=serialization.Encoding.PEM,
         ))
 
+
 if __name__ == '__main__':
 
     build_certificate()
-    

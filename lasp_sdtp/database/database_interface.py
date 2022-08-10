@@ -1,5 +1,8 @@
-"""This module is used to define the ``lasp_sdtp`` database ORMs. Each class
-within corresponds to a database table.
+"""This module is used to define the database ORMs. Each class within maps to a
+table in the database.
+
+The definitions within this module should have direct correspondence with the
+Oracle-specific table definitions provided in ``sql/create.sql`` file.
 
 Authors
 -------
