@@ -39,14 +39,14 @@ def test_get_shortname():
 
 
 @pytest.mark.parametrize('fileid, expected_result', [(1, True), (-1, False), ('foo', False), (9999999999999999, False)])
-def test_validate_fileid(fileid, expected_result):
+def test_validate_fileid(fileid: int, expected_result: bool):
     """Tests the ``parse_api_response`` function"""
 
     assert validate_fileid(fileid) == expected_result
 
 
 @pytest.mark.parametrize('fileid_start, fileid_end, expected_result', [(1, 5, True), (5, 1, False), ('foo', 'bar', False), (-1, 5, False), (1, 9999999999999999, False)])
-def test_validate_fileid_range(fileid_start, fileid_end, expected_result):
+def test_validate_fileid_range(fileid_start: int, fileid_end: int, expected_result: bool):
     """Tests the ``parse_api_response`` function"""
 
     assert validate_fileid_range(fileid_start, fileid_end) == expected_result

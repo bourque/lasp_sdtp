@@ -33,7 +33,6 @@ from pathlib import Path
 from flask import abort
 from flask import Flask
 from flask import request
-from flask.wrappers import Response
 from sqlalchemy.exc import IntegrityError
 
 from lasp_sdtp.config import admin_config
@@ -50,7 +49,7 @@ logger = logging.getLogger(__name__)
 
 
 @request_app.route('/delete_file/<fileid>', methods=['DELETE'])
-def delete_file(fileid: int) -> Response:
+def delete_file(fileid: int) -> dict:
     """Parse the user-supplied ``fileid`` and record the ``DELETE`` request.
 
     If the ``fileid`` is not valid, a 404 error is returned.
@@ -83,7 +82,7 @@ def delete_file(fileid: int) -> Response:
 
 
 @request_app.route('/get_file/<fileid>', methods=['GET'])
-def get_file(fileid: int) -> Response:
+def get_file(fileid: int) -> dict:
     """Parse the user-supplied ``fileid`` and record the ``GET`` request.
 
     If the ``fileid`` is not valid, a 400 error is returned.  If the file does
@@ -119,7 +118,7 @@ def get_file(fileid: int) -> Response:
 
 
 @request_app.route('/get_filelist', methods=['GET'])
-def get_filelist() -> Response:
+def get_filelist() -> dict:
     """Parse the request parameters and return a list of files available in the
     filesystem.
 
@@ -156,7 +155,7 @@ def get_filelist() -> Response:
 
 
 @request_app.route('/register_subscriber', methods=['PUT'])
-def register_subscriber() -> Response:
+def register_subscriber() -> dict:
     """Register a subscriber.
 
     See the corresponding docstrings in the ``sdtp_api.py`` module for further

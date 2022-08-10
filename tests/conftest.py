@@ -208,7 +208,7 @@ def _add_transactions_entries():
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup(request):
+def setup(request: object):
     """Setup function"""
 
     # Remove any data that may already exist in the database

@@ -28,6 +28,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Optional
 
 
 def _get_log_config(log_file: str) -> dict:
@@ -148,7 +149,7 @@ def _log_system_environment():
         logging.debug(f'\t{line}')
 
 
-def configure_logging(log_file_loc: str, verbose=True) -> str:
+def configure_logging(log_file_loc: str, verbose: Optional[bool] = True) -> str:
     """Configure and create a log that records system information.
 
     Parameters

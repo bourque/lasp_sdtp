@@ -197,7 +197,7 @@ class DatabaseController():
         self.session.commit()
         logger.info('Transaction for %s for %s account marked complete' % (fileid, subscriber_config['username']))
 
-    def query_for_account(self, username: str) -> list:
+    def query_for_account(self, username: str) -> dict:
         """Return account information for the given ``username``
 
         Parameters

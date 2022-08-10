@@ -41,12 +41,12 @@ TODO: Possibly implement support for asynchronous requests via async/await?
 
 import logging
 
+import requests
 from flask import Flask
 from flask import abort
 from flask import make_response
 from flask import request
 from flask.wrappers import Response
-import requests
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.utils.utils import parse_api_response

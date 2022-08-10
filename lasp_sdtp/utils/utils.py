@@ -160,6 +160,19 @@ def parse_api_response(api: str, response: Response) -> dict:
 
     If the response cannot be parsed into a dictionary/JSON-like object,
     then a 500 error is returned.
+
+    Parameters
+    ----------
+    api : str
+        The API that the response came from (can be either ``request`` or
+        ``queue``)
+    response : ``flask.wrappers.Response`` obj
+        The response object to parse
+
+    Returns
+    -------
+    response : dict
+        The parsed response, now a decoded dict
     """
 
     try:

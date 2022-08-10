@@ -17,6 +17,9 @@ import json
 from pathlib import Path
 
 import pytest
+from flask.app import Flask
+from flask.testing import FlaskClient
+from werkzeug.datastructures import Headers
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
@@ -45,7 +48,7 @@ INVALID_TEST_URLS = [
     '/files/1234567890123456']  # fileid is not an integer 15 digits or less
 
 
-def _check_transaction(headers):
+def _check_transaction(headers: Headers):
     """Checks that a transaction record was added to the ``transactions`` table
 
     Parameters
@@ -63,10 +66,10 @@ def _check_transaction(headers):
 
 
 @pytest.fixture()
-def app():
+def app() -> Flask:
     """Create an instance of the flask application to test with.
 
-    Yeilds
+    Yields
     ------
     app : flask.app.Flask object
         The ``flask`` object for the application
@@ -79,9 +82,14 @@ def app():
 
 
 @pytest.fixture()
-def client(app):
+def client(app: Flask) -> FlaskClient:
     """Create a test client from the ``flask`` app.  The ``client`` object is
     used to send requests to the server.
+
+    Parameters
+    ----------
+    app : ``flask.app.Flask`` object
+        The app from which to create a client
 
     Returns
     -------
@@ -93,7 +101,7 @@ def client(app):
     return client
 
 
-def test_register(client):
+def test_register(client: FlaskClient):
     """Tests that the ``PUT /register`` request works as expected
 
     Parameters
@@ -119,7 +127,7 @@ def test_register(client):
     _check_transaction(response.headers)
 
 
-def test_authorize(client):
+def test_authorize(client: FlaskClient):
     """Tests the ``authorize`` function
 
     Parameters
@@ -147,7 +155,7 @@ def test_authorize(client):
 
 
 @pytest.mark.parametrize('request_url', TEST_URLS)
-def test_get_filelist(client, request_url):
+def test_get_filelist(client: FlaskClient, request_url: str):
     """Tests that the ``GET /files`` request works as expected
 
     Parameters
@@ -177,7 +185,7 @@ def test_get_filelist(client, request_url):
     _check_transaction(response.headers)
 
 
-def test_get_file(client):
+def test_get_file(client: FlaskClient):
     """Tests that the ``GET /files/<fileid>`` request works as expected
 
     Parameters
@@ -211,7 +219,7 @@ def test_get_file(client):
     _check_transaction(response.headers)
 
 
-def test_delete_file(client):
+def test_delete_file(client: FlaskClient):
     """Tests that the ``DELETE /files/<fileid>`` request works as expected
 
     Parameters
@@ -239,7 +247,7 @@ def test_delete_file(client):
     _check_transaction(response.headers)
 
 
-def test_delete_files(client):
+def test_delete_files(client: FlaskClient):
     """Tests that the ``DELETE /files/<fileid_start>-<fileid_end>`` request
     works as expected
 
@@ -272,8 +280,8 @@ def test_delete_files(client):
         assert len(results) == 0
 
 
-def test_unauthorized_request(client):
-    """Tests that an unauthorized request returns the expexted response of 401
+def test_unauthorized_request(client: FlaskClient):
+    """Tests that an unauthorized request returns the expected response of 401
 
     Parameters
     ----------
@@ -291,7 +299,7 @@ def test_unauthorized_request(client):
 
 
 @pytest.mark.parametrize('request_url', INVALID_TEST_URLS)
-def test_incorrect_requests(client, request_url):
+def test_incorrect_requests(client: FlaskClient, request_url: str):
     """Tests that incorrect ``GET /files`` requests return the expected response
     of 400
 
@@ -313,7 +321,7 @@ def test_incorrect_requests(client, request_url):
     assert data['message'] == 'The request is incorrect'
 
 
-def test_file_does_not_exist(client):
+def test_file_does_not_exist(client: FlaskClient):
     """Tests that a ``GET /files/{fileid}`` and a ``DELETE /files/{fileid}``
     request for a file that doesn't exist returns the expected response of 404
 

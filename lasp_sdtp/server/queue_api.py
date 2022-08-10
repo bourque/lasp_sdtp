@@ -26,12 +26,11 @@ Use
 
 import datetime
 import logging
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 from flask import abort
 from flask import Flask
-from flask.wrappers import Response
 from sqlalchemy.exc import IntegrityError
 
 from lasp_sdtp.config import admin_config
@@ -43,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 
 @queue_app.route('/delete_file/<fileid>', methods=['DELETE'])
-def delete_file(fileid: int) -> Response:
+def delete_file(fileid: int) -> dict:
     """Delete a given file from the queue, if applicable.
 
     See the corresponding docstrings in the ``sdtp_api.py`` module for further
@@ -93,7 +92,7 @@ def delete_file(fileid: int) -> Response:
 
 
 @queue_app.route('/get_file/<fileid>', methods=['GET'])
-def get_file(fileid: int) -> Response:
+def get_file(fileid: int) -> dict:
     """Copy a file into the data cache (if it isn't already there) and return
     its contents.
 
