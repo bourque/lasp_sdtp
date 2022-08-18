@@ -24,6 +24,8 @@ Use
 
 TODO: Update how max_num_files is used to determine the resulting filelist in
       get_filelist, if necessary
+TODO: Add check to make sure username is of valid type (e.g. avoid float, bool,
+      etc.)
 """
 
 import datetime
@@ -38,6 +40,8 @@ from sqlalchemy.exc import IntegrityError
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.database_queries import query_for_filelist
+from lasp_sdtp.database.database_queries import query_for_account
 from lasp_sdtp.utils.utils import CustomJSONEncoder
 from lasp_sdtp.utils.utils import parse_request_parameters
 from lasp_sdtp.utils.utils import validate_fileid
@@ -142,7 +146,7 @@ def get_filelist() -> dict:
         abort(400)
 
     # Run the query based on the tags
-    results = db.query_for_filelist(tags)
+    results = query_for_filelist(tags)
 
     # Limit the number of results to the max number of files
     if len(results) > subscriber_config['max_num_files']:
@@ -176,7 +180,7 @@ def register_subscriber() -> dict:
     registration_expires = registration_date + datetime.timedelta(days=subscriber_config['account_expiration_period'])
 
     # Check to see if the account is open for registration
-    account = db.query_for_account(subscriber_config['username'])
+    account = query_for_account(subscriber_config['username'])
     registration_open = account['registration_open']
 
     if registration_open:

@@ -11,8 +11,13 @@ Use
         pytest -s test_config.py
 """
 
+import pytest
+
+from lasp_sdtp.config import SubscriberConfig
 from lasp_sdtp.config import _get_admin_config
 from lasp_sdtp.config import _get_subscriber_config
+
+config = SubscriberConfig()
 
 
 def test_get_admin_config():
@@ -66,3 +71,29 @@ def test_get_subscriber_config():
 
     # Check that the checksum type is supported
     assert config['checksum_type'] in ['sha256']
+
+
+def test_validate_valid_config():
+    """Test the ``validate`` method with a valid config"""
+
+    # Create a valid config instance to test with
+    valid_config = SubscriberConfig()
+    valid_config.username = 'admin'
+    valid_config.distinguished_name = 'some_string'
+    valid_config.streams = {}
+
+    # Try to validate the config
+    config.validate(valid_config.__dict__)
+
+
+def test_validate_invalid_configs():
+    """Test the ``validate`` method with an invalid config"""
+
+    # Create an invalid config instances to test with
+    invalid_config = SubscriberConfig()
+    invalid_config.username = 'a'  # invalid username
+
+    # Try to validate the config
+    with pytest.raises(Exception) as error:
+        config.validate(invalid_config.__dict__)
+    assert 'ValidationError' in str(error)

@@ -36,6 +36,9 @@ from sqlalchemy.exc import IntegrityError
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.database_queries import query_for_file_metadata
+from lasp_sdtp.database.database_queries import query_for_queue_entries
+
 
 queue_app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -63,7 +66,7 @@ def delete_file(fileid: int) -> dict:
 
     # Get the metadata for the file of interest
     try:
-        metadata = db.query_for_file_metadata(fileid)
+        metadata = query_for_file_metadata(fileid)
     except IndexError:  # No results, send a 404
         abort(404)
 
@@ -71,7 +74,7 @@ def delete_file(fileid: int) -> dict:
     filepath = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / metadata.stream / metadata.name
 
     # Check to see if the file is in the queue for another subscriber
-    queue_entries = db.query_for_queue_entries(fileid)
+    queue_entries = query_for_queue_entries(fileid)
     file_needed = False
     for entry in queue_entries:
         if entry['username'] != subscriber_config['username']:
@@ -113,7 +116,7 @@ def get_file(fileid: int) -> dict:
     logger.info('Retrieving file contents for file %s' % fileid)
 
     # Determine where the file exists in the filesystem
-    metadata = db.query_for_file_metadata(fileid)
+    metadata = query_for_file_metadata(fileid)
     filepath = Path(admin_config['filesystem_loc']) / metadata.stream / metadata.name
 
     # Create the parent directory where the file will be stored, if necessary

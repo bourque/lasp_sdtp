@@ -105,38 +105,3 @@ def test_update_transactions_table():
         results = db.session.query(db.Transactions).filter(db.Transactions.transactionid == transactionid).all()
         assert len(results) == 1  # There should only be one entry
         assert request.url in results[0].__dict__['action']
-
-
-def test_query_for_account():
-    """Tests the ``query_for_account`` method"""
-
-    account = db.query_for_account('test_account')
-    assert account['username'] == 'test_account'
-
-
-def test_query_for_filelist():
-    """Tests the ``query_for_filelist`` method"""
-
-    tags = {
-        'stream': 'prod',
-        'version': 'v01',
-        'shortname': 'TSIS2_L1',
-        'date': None,
-        'start_date': None,
-        'end_date': None}
-    filelist = db.query_for_filelist(tags=tags)
-    assert len(filelist) == 5
-
-
-def test_query_for_file_metadata():
-    """Tests the ``query_for_file_metadata`` method"""
-
-    metadata = db.query_for_file_metadata(98765)
-    assert metadata.name == 'insert_data.txt'
-
-
-def test_query_for_queue_entries():
-    """Tests the ``query_for_queue_entries`` method"""
-
-    queue_entries = db.query_for_queue_entries(67890)
-    assert len(queue_entries) > 0
