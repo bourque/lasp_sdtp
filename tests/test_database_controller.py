@@ -53,16 +53,16 @@ def test_insert_data():
         'version': '001',
         'date': datetime.datetime.utcnow().date()
     }
-    db.insert_data('file_metadata', [data])
+    db.insert_data('available_files', [data])
 
-    results = db.session.query(db.FileMetadata).filter(db.FileMetadata.fileid == 98765).all()
+    results = db.session.query(db.AvailableFiles).filter(db.AvailableFiles.fileid == 98765).all()
     assert len(results) == 1  # There should only be one entry
 
 
 def test_fileid_boundary():
     """Tests that the ``fileid`` cannot exceed 15 digits"""
 
-    table = sa.Table('file_metadata', db.base.metadata)
+    table = sa.Table('available_files', db.base.metadata)
 
     data = {
         'fileid': 9999999999999999,  # 16 digits
@@ -86,8 +86,8 @@ def test_update_transactions_table():
     """Tests the ``update_transactions_table`` method"""
 
     # Get the lowest fileid that exists
-    file_metadata = db.session.query(db.FileMetadata).filter().order_by(db.FileMetadata.fileid).all()
-    test_fileid = str(file_metadata[0].__dict__['fileid'])
+    available_files = db.session.query(db.AvailableFiles).filter().order_by(db.AvailableFiles.fileid).all()
+    test_fileid = str(available_files[0].__dict__['fileid'])
 
     # Create dummy requests
     Request = namedtuple('request', ['method', 'url'])

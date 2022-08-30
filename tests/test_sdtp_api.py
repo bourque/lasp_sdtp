@@ -176,7 +176,8 @@ def test_get_filelist(client: FlaskClient, request_url: str):
 
     # Check if the returned files are in the filesystem
     test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
-    ignore_files = ['test_cleanup_db.txt', 'test_cleanup_db2.txt', 'test_reporting.txt', 'test_db_controller.txt']  # ignore files used in other tests
+    ignore_files = ['test_cleanup_db.txt', 'test_cleanup_db2.txt', 'test_reporting.txt', 'test_db_controller.txt',
+                    'tsis2_L1_test.txt', 'tsis2_sim_cal_test.txt', 'tsis2_sc_L2_test.txt']  # ignore files used in other tests
     for entry in data['files']:
         filename = Path(admin_config['filesystem_loc']) / 'prod' / entry['name']
         if filename.name not in ignore_files:
@@ -195,8 +196,8 @@ def test_get_file(client: FlaskClient):
     """
 
     # Get the lowest fileid that exists
-    file_metadata = db.session.query(db.FileMetadata).filter().order_by(db.FileMetadata.fileid).all()
-    fileid = str(file_metadata[0].__dict__['fileid'])
+    available_files = db.session.query(db.AvailableFiles).filter().order_by(db.AvailableFiles.fileid).all()
+    fileid = str(available_files[0].__dict__['fileid'])
 
     # Send a request and get the response
     request_url = f'/files/{fileid}'
@@ -229,8 +230,8 @@ def test_delete_file(client: FlaskClient):
     """
 
     # Get the lowest fileid that exists
-    file_metadata = db.session.query(db.FileMetadata).filter().order_by(db.FileMetadata.fileid).all()
-    fileid = str(file_metadata[0].__dict__['fileid'])
+    available_files = db.session.query(db.AvailableFiles).filter().order_by(db.AvailableFiles.fileid).all()
+    fileid = str(available_files[0].__dict__['fileid'])
 
     # Delete the file
     request_url = f'files/{fileid}'
@@ -260,8 +261,8 @@ def test_delete_files(client: FlaskClient):
     headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
 
     # Get a handful of files to test
-    file_metadata = db.session.query(db.FileMetadata).filter().order_by(db.FileMetadata.fileid).all()
-    fileid_start = file_metadata[0].__dict__['fileid']
+    available_files = db.session.query(db.AvailableFiles).filter().order_by(db.AvailableFiles.fileid).all()
+    fileid_start = available_files[0].__dict__['fileid']
     fileid_end = fileid_start + 5
     fileids = [fileid for fileid in range(fileid_start, fileid_end)]
     for fileid in fileids:

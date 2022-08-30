@@ -20,6 +20,8 @@ Use
         from lasp_sdtp.config import subscriber_config
 """
 
+# TODO: Implement more complex jsonschema for checking nested objects
+
 import json
 import jsonschema
 from pathlib import Path
@@ -143,8 +145,18 @@ class SubscriberConfig():
             "required": ["account_expiration_period"]
         }
 
-        # Validate the config
+        # Validate the (high-level) config
         jsonschema.validate(instance=config, schema=schema)
+
+        stream_schema = {
+            "type": "object",
+            "patternProperties": {
+                ".*": {"type": "object"}  # Any string
+            }
+        }
+
+        # Validate the streams config
+        jsonschema.validate(instance=config['streams'], schema=stream_schema)
 
         # If no exception occurred, schema is valid
         print('Configuration is valid.')

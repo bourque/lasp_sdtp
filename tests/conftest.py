@@ -67,8 +67,8 @@ def _add_accounts_entries():
     db.insert_data('accounts', data_to_insert)
 
 
-def _add_file_metadata_entries():
-    """Add necessary ``file_metadata`` table entries used for testing"""
+def _add_available_files_entries():
+    """Add necessary ``available_files`` table entries used for testing"""
 
     # Locate files in test filesystem
     test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
@@ -87,7 +87,7 @@ def _add_file_metadata_entries():
             'date': datetime.datetime(2022, 1, 1).date() + datetime.timedelta(days=i - 1)
         }
         data_to_insert.append(data)
-    db.insert_data('file_metadata', data_to_insert)
+    db.insert_data('available_files', data_to_insert)
 
     # Add entries to satisfy integrity constraint for test_cleanup_database
     data_to_insert = [{
@@ -140,7 +140,7 @@ def _add_file_metadata_entries():
     })
 
     # A seperate call to insert_data() is needed so that the correct fileids are inserted
-    db.insert_data('file_metadata', data_to_insert)
+    db.insert_data('available_files', data_to_insert)
 
 
 def _add_file_queue_entries():
@@ -215,12 +215,13 @@ def setup(request: object):
     db.session.query(db.FileQueue).delete()
     db.session.query(db.Transactions).delete()
     db.session.query(db.Accounts).delete()
-    db.session.query(db.FileMetadata).delete()
+    db.session.query(db.Metadata).delete()
+    db.session.query(db.AvailableFiles).delete()
     db.session.commit()
 
     # Add entries to database tables to support tests
     _add_accounts_entries()
-    _add_file_metadata_entries()
+    _add_available_files_entries()
     _add_file_queue_entries()
     _add_transactions_entries()
 
@@ -235,5 +236,6 @@ def teardown():
     db.session.query(db.FileQueue).delete()
     db.session.query(db.Transactions).delete()
     db.session.query(db.Accounts).delete()
-    db.session.query(db.FileMetadata).delete()
+    db.session.query(db.Metadata).delete()
+    db.session.query(db.AvailableFiles).delete()
     db.session.commit()

@@ -30,7 +30,7 @@ class Accounts(Base):
     __tablename__ = 'accounts'
     __table_args__ = (sa.UniqueConstraint('username', 'certuid', name='accounts_uc'),)
 
-    username = sa.Column(sa.String(255), primary_key=True)
+    username = sa.Column(sa.String(30), primary_key=True)
     role = sa.Column(sa.Enum('admin', 'subscriber', name='role'), nullable=False)
     registration_open = sa.Column(sa.Boolean, nullable=False)
     certuid = sa.Column(sa.String(20), unique=True)
@@ -38,10 +38,10 @@ class Accounts(Base):
     registration_expires = sa.Column(sa.DateTime)
 
 
-class FileMetadata(Base):
-    """ORM for the ``file_metadata`` table"""
+class AvailableFiles(Base):
+    """ORM for the ``available_files`` table"""
 
-    __tablename__ = 'file_metadata'
+    __tablename__ = 'available_files'
     __table_args__ = (sa.UniqueConstraint('fileid', 'name', 'checksum', name='file_metadata_uc'),)
 
     fileid = sa.Column(sa.Integer, primary_key=True)
@@ -66,6 +66,17 @@ class FileQueue(Base):
     fileid = sa.Column(sa.Integer, nullable=False)
     entry_date = sa.Column(sa.DateTime, nullable=False)
     expires = sa.Column(sa.DateTime, nullable=False)
+
+
+class Metadata(Base):
+    """ORM for the ``metadata`` table"""
+
+    __tablename__ = 'metadata'
+
+    fileid = sa.Column(sa.Integer, primary_key=True)
+    field_name = sa.Column(sa.String(255), primary_key=True)
+    field_type = sa.Column(sa.Enum('tag', 'extra', name='field_type'), primary_key=True)
+    value = sa.Column(sa.String(255))
 
 
 class Transactions(Base):

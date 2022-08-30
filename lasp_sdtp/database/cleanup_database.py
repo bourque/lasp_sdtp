@@ -70,7 +70,7 @@ def cleanup_file_queue():
         logger.info(f'Removed file queue database entry for {expired_file}')
 
         # Remove file from the file queue storage
-        filename = db.session.query(db.FileMetadata.name).filter(db.FileMetadata.fileid == expired_file).all()
+        filename = db.session.query(db.AvailableFiles.name).filter(db.AvailableFiles.fileid == expired_file).all()
         filename = filename[0][0]
         file_path = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / filename
         file_path.unlink(missing_ok=True)

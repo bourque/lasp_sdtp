@@ -22,8 +22,6 @@ Use
     ::
         FLASK_APP=request_api.py FLASK_ENV=development flask run --port 8002
 
-TODO: Update how max_num_files is used to determine the resulting filelist in
-      get_filelist, if necessary
 TODO: Add check to make sure username is of valid type (e.g. avoid float, bool,
       etc.)
 """
@@ -185,7 +183,8 @@ def register_subscriber() -> dict:
 
     if registration_open:
 
-        # Update the entry with registration information
+        # Update the account with registration information
+        db.update_registration()
         db.session.query(
             db.Accounts
         ).filter(

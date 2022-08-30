@@ -13,7 +13,7 @@ Use
 
 from lasp_sdtp.database.database_queries import query_for_account
 from lasp_sdtp.database.database_queries import query_for_filelist
-from lasp_sdtp.database.database_queries import query_for_file_metadata
+from lasp_sdtp.database.database_queries import query_for_available_files
 from lasp_sdtp.database.database_queries import query_for_queue_entries
 
 
@@ -22,6 +22,13 @@ def test_query_for_account():
 
     account = query_for_account('test_account')
     assert account['username'] == 'test_account'
+
+
+def test_query_for_available_files():
+    """Tests the ``query_for_available_files`` method"""
+
+    metadata = query_for_available_files(98765)
+    assert metadata.name == 'insert_data.txt'
 
 
 def test_query_for_filelist():
@@ -36,13 +43,6 @@ def test_query_for_filelist():
         'end_date': None}
     filelist = query_for_filelist(tags=tags)
     assert len(filelist) == 5
-
-
-def test_query_for_file_metadata():
-    """Tests the ``query_for_file_metadata`` method"""
-
-    metadata = query_for_file_metadata(98765)
-    assert metadata.name == 'insert_data.txt'
 
 
 def test_query_for_queue_entries():

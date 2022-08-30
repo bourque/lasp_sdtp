@@ -11,8 +11,8 @@ Use
     The functions within are intended to be imported and used by other modules,
     e.g.:
     ::
-        from lasp_sdtp.database.database_queries import query_for_file_metadata
-        data = query_for_file_metadata(fileid)
+        from lasp_sdtp.database.database_queries import query_for_available_files
+        data = query_for_available_files(fileid)
 """
 
 import datetime
@@ -48,6 +48,28 @@ def query_for_account(username: str) -> dict:
     return account
 
 
+def query_for_available_files(fileid: int) -> str:
+    """Return the metadata associated with the given ``fileid``
+
+    Parameters
+    ----------
+    fileid : int
+        The ``fileid`` of interest
+
+    Returns
+    -------
+    filename : str
+        The name of the file for the given ``fileid``
+    """
+
+    logger.info('Querying available_files database table for file %s' % str(fileid))
+
+    available_files = db.session.query(db.AvailableFiles).filter(db.AvailableFiles.fileid == fileid).all()
+    available_files = available_files[0]  # There should only be one entry
+
+    return available_files
+
+
 def query_for_filelist(tags: dict) -> list:
     """Return a list of files (and their metadata) based on user-provided
     tags.
@@ -71,24 +93,24 @@ def query_for_filelist(tags: dict) -> list:
         A list of database entries returned by the query
     """
 
-    logger.info('Querying file_metadata database table for files with parameters %s' % str(tags))
+    logger.info('Querying available_files database table for files with parameters %s' % str(tags))
 
-    query = db.session.query(db.FileMetadata)  # base query
-    query = query.filter(db.FileMetadata.stream == tags['stream'])  # stream is always supplied via default value
-    query = query.filter(db.FileMetadata.version == tags['version'])  # version is always supplied via default value
+    query = db.session.query(db.AvailableFiles)  # base query
+    query = query.filter(db.AvailableFiles.stream == tags['stream'])  # stream is always supplied via default value
+    query = query.filter(db.AvailableFiles.version == tags['version'])  # version is always supplied via default value
 
     # For non-default shortname values
     if tags['shortname'] != 'all':
-        query = query.filter(db.FileMetadata.shortname == tags['shortname'])
+        query = query.filter(db.AvailableFiles.shortname == tags['shortname'])
 
     # For non-default date values
     if tags['date'] is not None:
-        query = query.filter(db.FileMetadata.date == datetime.datetime.strptime(tags['date'], '%Y-%m-%d').date())
+        query = query.filter(db.AvailableFiles.date == datetime.datetime.strptime(tags['date'], '%Y-%m-%d').date())
 
     # For non-default start_date and end_date values
     if tags['start_date'] and tags['end_date'] is not None:
-        query = query.filter(db.FileMetadata.date >= datetime.datetime.strptime(tags['start_date'], '%Y-%m-%d').date())
-        query = query.filter(db.FileMetadata.date <= datetime.datetime.strptime(tags['end_date'], '%Y-%m-%d').date())
+        query = query.filter(db.AvailableFiles.date >= datetime.datetime.strptime(tags['start_date'], '%Y-%m-%d').date())
+        query = query.filter(db.AvailableFiles.date <= datetime.datetime.strptime(tags['end_date'], '%Y-%m-%d').date())
 
     results = query.all()
 
@@ -98,28 +120,6 @@ def query_for_filelist(tags: dict) -> list:
         del item['_sa_instance_state']
 
     return results
-
-
-def query_for_file_metadata(fileid: int) -> str:
-    """Return the metadata associated with the given ``fileid``
-
-    Parameters
-    ----------
-    fileid : int
-        The ``fileid`` of interest
-
-    Returns
-    -------
-    filename : str
-        The name of the file for the given ``fileid``
-    """
-
-    logger.info('Querying file_metadata database table for file %s' % str(fileid))
-
-    file_metadata = db.session.query(db.FileMetadata).filter(db.FileMetadata.fileid == fileid).all()
-    file_metadata = file_metadata[0]  # There should only be one entry
-
-    return file_metadata
 
 
 def query_for_queue_entries(fileid: int) -> list:

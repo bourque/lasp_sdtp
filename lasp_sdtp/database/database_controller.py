@@ -56,12 +56,12 @@ class DatabaseController():
     ----------
     Accounts : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
         The ORM for the ``accounts`` database table
+    AvailableFiles : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
+        The ORM for the ``file_metadata`` database table
     base : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
         Provides a base class for declarative class definitions.
     engine : ``sqlalchemy.engine.base.Engine`` object
         Provides a source of database connectivity and behavior.
-    FileMetadata : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
-        The ORM for the ``file_metadata`` database table
     FileQueue : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
         The ORM for the ``file_queue`` database table
     meta : ``sqlalchemy.sql.schema.MetaData`` object
@@ -104,8 +104,9 @@ class DatabaseController():
 
         self.session, self.base, self.engine, self.meta = self._connect()
         self.Accounts = database_interface.Accounts
-        self.FileMetadata = database_interface.FileMetadata
+        self.AvailableFiles = database_interface.AvailableFiles
         self.FileQueue = database_interface.FileQueue
+        self.Metadata = database_interface.Metadata
         self.Transactions = database_interface.Transactions
 
     def _connect(self) -> (Session, DeclarativeMeta, Engine, MetaData):
@@ -191,6 +192,32 @@ class DatabaseController():
             {'end_time': end_time})
         self.session.commit()
         logger.info('Transaction for %s for %s account marked complete' % (fileid, subscriber_config['username']))
+
+    def update_registration(self):
+        """"""
+
+        # Define metadata for the entry
+        certuid = f'{subscriber_config["username"]}_cert'
+        registration_date = datetime.datetime.utcnow().date()
+        registration_expires = registration_date + datetime.timedelta(days=subscriber_config['account_expiration_period'])
+
+        # Update ``accounts`` table
+        self.session.query(
+            db.Accounts
+        ).filter(
+            db.Accounts.username == subscriber_config['username']
+        ).update(
+            {'registration_open': False,
+             'certuid': certuid,
+             'registration_date': registration_date,
+             'registration_expires': registration_expires})
+
+        # Update ``tags`` and ``extras`` table
+
+
+
+        db.session.commit()
+        logger.info('Registered account for %s' % subscriber_config['username'])
 
     def update_transactions_table(self, request: object, fileid: Optional[int] = None) -> int:
         """Insert information for a new transaction in the ``transactions``
