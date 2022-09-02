@@ -32,6 +32,7 @@ class Accounts(Base):
 
     username = sa.Column(sa.String(30), primary_key=True)
     role = sa.Column(sa.Enum('admin', 'subscriber', name='role'), nullable=False)
+    allowed_data_products = sa.Column(sa.String(255))
     registration_open = sa.Column(sa.Boolean, nullable=False)
     certuid = sa.Column(sa.String(20), unique=True)
     registration_date = sa.Column(sa.DateTime)
@@ -47,6 +48,7 @@ class AvailableFiles(Base):
     fileid = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String(255), unique=True, nullable=False)
     checksum = sa.Column(sa.String(71), unique=True, nullable=False)
+    data_product_id = sa.Column(sa.String(30), nullable=False)
     size = sa.Column(sa.Float, nullable=False)
     expires = sa.Column(sa.DateTime, nullable=False)
     stream = sa.Column(sa.String(255), nullable=False)

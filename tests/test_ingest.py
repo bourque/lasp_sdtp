@@ -26,13 +26,12 @@ def test_ingest():
         Path(test_file).touch(exist_ok=True)
 
     # Ingest the files
-    test_ingest = Ingest(test_filelist, 'prod', 'v01')
+    test_ingest = Ingest(test_filelist, 'prod', 'v01', 'tsis2')
     test_ingest.ingest()
 
     # Query the available_files table to see if the files are there
     available_files = db.session.query(db.AvailableFiles.name).all()
     available_files = [item[0] for item in available_files]
-    print(available_files)
     for test_file in test_filelist:
 
         assert test_file in available_files

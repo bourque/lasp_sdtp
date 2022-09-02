@@ -42,6 +42,7 @@ from lasp_sdtp.database.database_queries import query_for_filelist
 from lasp_sdtp.database.database_queries import query_for_account
 from lasp_sdtp.utils.utils import CustomJSONEncoder
 from lasp_sdtp.utils.utils import parse_request_parameters
+from lasp_sdtp.utils.utils import validate_access
 from lasp_sdtp.utils.utils import validate_fileid
 from lasp_sdtp.utils.utils import validate_tags
 
@@ -106,13 +107,16 @@ def get_file(fileid: int) -> dict:
     if not valid:
         abort(400)
 
-    # Add a transactions database record
-    # If the record can't be added, it means the file doesn't exist in file_metadata
+    # Make sure the subscriber has access to the file
     try:
-        transactionid = db.update_transactions_table(request, fileid=fileid)
-    except IntegrityError:
-        db.session.close()  # Needed to avoid rollback during flush
+        access = validate_access(fileid)
+    except IndexError:  # If an IndexError is raised, it means the file doesn't exist in available_files
         abort(404)
+    if not access:
+        abort(403)
+
+    # Add a transactions database record
+    transactionid = db.update_transactions_table(request, fileid=fileid)
 
     response = {'transactionid': str(transactionid)}
 

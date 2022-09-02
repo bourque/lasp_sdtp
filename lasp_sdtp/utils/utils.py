@@ -31,6 +31,8 @@ from flask.wrappers import Response
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.database_queries import query_for_available_files
+from lasp_sdtp.database.database_queries import query_for_account
 
 logger = logging.getLogger(__name__)
 
@@ -249,6 +251,36 @@ def register_admin():
         logger.info('Registered admin account')
 
 
+def validate_access(fileid: str) -> bool:
+    """Check that the subscriber has access to the provided file (indicated by
+    the ``fileid``).
+
+    Parameters
+    ----------
+    fileid : str
+        The ``fileid`` given in the request
+
+    Returns
+    -------
+    bool
+        True or False for whether or not the subscriber has access to the file
+    """
+
+    # Get the data_product_id for the file
+    file_metadata = query_for_available_files(fileid)
+    data_product_id = file_metadata.data_product_id
+
+    # Check to see the subscriber has access to the data_product_id
+    username = subscriber_config['username']
+    account = query_for_account(username)
+    allowed_data_products = account['allowed_data_products']
+
+    if data_product_id in allowed_data_products:
+        return True
+    else:
+        return False
+
+
 def validate_fileid(fileid: str) -> bool:
     """Check that the provided ``fileid`` is a positive integer that is 15
     digits or fewer.
@@ -327,6 +359,14 @@ def validate_tags(tags: dict) -> bool:
     bool
         True or False for whether or not the tags are valid
     """
+
+    # Make sure dates are of proper format (i.e. YYYY-MM-DD)
+    for date_tag in [tags['date'], tags['start_date'], tags['end_date']]:
+        if date_tag is not None:
+            try:
+                datetime.datetime.strptime(date_tag, '%Y-%m-%d')
+            except ValueError:
+                return False
 
     # Make sure the date/start_date/end_date combination is valid
     # e.g. if a date is provided, the start and end dates should be None

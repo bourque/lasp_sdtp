@@ -46,6 +46,7 @@ def test_insert_data():
         'fileid': 98765,
         'name': 'insert_data.txt',
         'checksum': 'hash',
+        'data_product_id': 'tsis2',
         'size': 1,
         'expires': datetime.datetime.utcnow().date(),
         'stream': 'prod',
@@ -68,6 +69,7 @@ def test_fileid_boundary():
         'fileid': 9999999999999999,  # 16 digits
         'name': 'foo',
         'checksum': 'foo',
+        'data_product_id': 'tsis2',
         'size': 1,
         'expires': datetime.datetime.utcnow().date(),
         'stream': 'prod',

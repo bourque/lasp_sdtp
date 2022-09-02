@@ -187,7 +187,7 @@ def get_file(fileid: int) -> Response:
     request_api_response = requests.get(f'{REQUEST_API_URI}/get_file/{fileid}')\
 
     # If the request failed, abort
-    if request_api_response.status_code in [400, 404]:
+    if request_api_response.status_code in [400, 403, 404]:
         abort(request_api_response.status_code)
 
     # Parse the response contents

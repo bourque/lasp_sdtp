@@ -24,9 +24,9 @@ if __name__ == '__main__':
     filelist = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
 
     # Ingest a 'production' version of the data
-    production = Ingest(filelist, 'prod', 'v01')
+    production = Ingest(filelist, 'prod', 'v01', 'tsis2_prod')
     production.ingest()
 
     # Ingest a 'development' version of the data
-    development = Ingest(filelist, 'dev', 'v01')
+    development = Ingest(filelist, 'dev', 'v01', 'tsis2_dev')
     development.ingest()

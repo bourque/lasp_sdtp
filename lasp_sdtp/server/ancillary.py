@@ -59,6 +59,11 @@ def custom401(error: exceptions.Unauthorized) -> Response:
         return make_response({'message': 'Request is not authenticated'}, 401)
 
 
+@sdtp_api_app.errorhandler(403)
+def custom403(error: exceptions.Forbidden) -> Response:
+    """Returns a custom 403 response"""
+    return make_response({'message': 'Request is authenticated but user is forbidden from accessing resource'}, 403)
+
 @sdtp_api_app.errorhandler(404)
 def custom404(error: exceptions.NotFound) -> Response:
     """Returns a custom 400 response"""

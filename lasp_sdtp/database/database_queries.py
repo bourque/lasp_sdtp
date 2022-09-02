@@ -48,7 +48,7 @@ def query_for_account(username: str) -> dict:
     return account
 
 
-def query_for_available_files(fileid: int) -> str:
+def query_for_available_files(fileid: int) -> object:
     """Return the metadata associated with the given ``fileid``
 
     Parameters
@@ -58,16 +58,16 @@ def query_for_available_files(fileid: int) -> str:
 
     Returns
     -------
-    filename : str
-        The name of the file for the given ``fileid``
+    file_metadata : object
+        The file metadata associated with the given ``fileid``
     """
 
     logger.info('Querying available_files database table for file %s' % str(fileid))
 
     available_files = db.session.query(db.AvailableFiles).filter(db.AvailableFiles.fileid == fileid).all()
-    available_files = available_files[0]  # There should only be one entry
+    file_metadata = available_files[0]  # There should only be one entry
 
-    return available_files
+    return file_metadata
 
 
 def query_for_filelist(tags: dict) -> list:

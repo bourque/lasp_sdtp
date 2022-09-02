@@ -42,6 +42,8 @@ class Ingest():
         The stream associated with the files and ingestion (e.g. ``prod``).
     version : str
         The version associated with the files and ingestion (e.g. ``v01``).
+    data_product_id : str
+        The data product ID associated with the files (e.g. ``tsis2``).
 
     Methods
     -------
@@ -49,15 +51,16 @@ class Ingest():
         Ingest the files into the database
     """
 
-    def __init__(self, filelist: list, stream: str, version: str):
+    def __init__(self, filelist: list, stream: str, version: str, data_product_id: str):
 
         self.filelist = filelist
         self.stream = stream
         self.version = version
+        self.data_product_id = data_product_id
 
     def ingest(self):
         """Perform the ingest operation.  See module docstrings for further
-        details
+        details.
         """
 
         for i, filename in enumerate(self.filelist):
@@ -68,6 +71,7 @@ class Ingest():
             data = db.AvailableFiles(
                 name=Path(filename).name,
                 checksum=utils.get_checksum(),
+                data_product_id=self.data_product_id,
                 size=os.path.getsize(filename),
                 expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period']),
                 stream=self.stream,

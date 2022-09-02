@@ -35,6 +35,7 @@ def _add_accounts_entries():
     data_to_insert = [{
         'username': 'test_account',
         'role': 'subscriber',
+        'allowed_data_products': 'all',
         'registration_open': False,
         'certuid': 'test_cert',
         'registration_date': datetime.datetime.utcnow().date(),
@@ -44,6 +45,7 @@ def _add_accounts_entries():
     data_to_insert.append({
         'username': subscriber_config['username'],
         'role': 'subscriber',
+        'allowed_data_products': 'tsis2',
         'registration_open': True}
     )
 
@@ -51,6 +53,7 @@ def _add_accounts_entries():
     data_to_insert.append({
         'username': 'expired_account',
         'role': 'subscriber',
+        'allowed_data_products': 'tsis2',
         'registration_open': False,
         'certuid': 'test_cert',
         'registration_date': datetime.datetime.utcnow().date(),
@@ -61,6 +64,7 @@ def _add_accounts_entries():
     data_to_insert.append({
         'username': 'not_open_for_registration',
         'role': 'subscriber',
+        'allowed_data_products': 'tsis2',
         'registration_open': False}
     )
 
@@ -79,6 +83,7 @@ def _add_available_files_entries():
         data = {
             'name': Path(test_file).name,
             'checksum': utils.get_checksum(),
+            'data_product_id': 'tsis2',
             'size': os.path.getsize(test_file),
             'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period']),
             'stream': 'prod',
@@ -94,6 +99,7 @@ def _add_available_files_entries():
         'fileid': 12345,
         'name': 'test_cleanup_db.txt',
         'checksum': 'foo',
+        'data_product_id': 'tsis2',
         'size': 1,
         'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
         'stream': 'prod',
@@ -105,6 +111,7 @@ def _add_available_files_entries():
         'fileid': 12346,
         'name': 'test_cleanup_db2.txt',
         'checksum': 'bar',
+        'data_product_id': 'tsis2',
         'size': 1,
         'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
         'stream': 'prod',
@@ -118,6 +125,7 @@ def _add_available_files_entries():
         'fileid': 67890,
         'name': 'test_reporting.txt',
         'checksum': 'bop',
+        'data_product_id': 'tsis2',
         'size': 1,
         'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
         'stream': 'prod',
@@ -131,6 +139,7 @@ def _add_available_files_entries():
         'fileid': 78901,
         'name': 'test_db_controller.txt',
         'checksum': 'bat',
+        'data_product_id': 'tsis2',
         'size': 1,
         'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
         'stream': 'prod',
