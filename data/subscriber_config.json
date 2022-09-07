@@ -5,5 +5,35 @@
 	"expiration_period": 180,
 	"max_num_files": 10000,
 	"num_download_threads": 5,
-	"username": "username"
+	"username": "ges_disc",
+	"streams" : {
+		"prod": {
+			"extras": {
+				"type": {
+					"type": "str",
+					"default": ""
+				}
+			},
+			"tags": {
+				"date": {
+					"type": "str",
+					"default": ""
+				}
+			}
+		},
+		"dev": {
+			"extras": {
+				"was_extrapolated": {
+					"type": "bool",
+					"default": ""
+				}
+			},
+			"tags": {
+				"irradiance": {
+					"type": "float",
+					"default": ""
+				}
+			}
+		}
+	}
 }

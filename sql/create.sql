@@ -29,9 +29,10 @@ CREATE TABLE available_files (
 
 CREATE TABLE metadata (
     fileid NUMBER(15) NOT NULL,
-    field_name VARCHAR(255) NOT NULL,
+    field_name VARCHAR2(255) NOT NULL,
     field_type VARCHAR2(5) NOT NULL,
     value VARCHAR2(255) NOT NULL,
+    CONSTRAINT field_type CHECK (role IN ('tag', 'extra')),
     FOREIGN KEY(fileid) REFERENCES available_files(fileid),
     PRIMARY KEY (fileid, field_name, field_type)
 );
