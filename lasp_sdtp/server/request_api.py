@@ -73,6 +73,14 @@ def delete_file(fileid: int) -> dict:
     if not valid:
         abort(400)
 
+    # Make sure the subscriber has access to the file
+    try:
+        access = validate_access(fileid)
+    except IndexError:  # If an IndexError is raised, it means the file doesn't exist in available_files
+        abort(404)
+    if not access:
+        abort(403)
+
     # Add a transactions database record
     transactionid = db.update_transactions_table(request, fileid=fileid)
 

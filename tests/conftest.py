@@ -148,7 +148,21 @@ def _add_available_files_entries():
         'date': datetime.datetime(2022, 1, 1).date()
     })
 
-    # A seperate call to insert_data() is needed so that the correct fileids are inserted
+    # Add entry containing restrictive data_product_id (used for test_database_queries.test_query_for_fileslist)
+    data_to_insert.append({
+        'fileid': 23456,
+        'name': 'test_data_product_id.txt',
+        'checksum': 'bap',
+        'data_product_id': 'restricted',
+        'size': 1,
+        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
+        'stream': 'prod',
+        'shortname': 'TSIS2_L1',
+        'version': 'v01',
+        'date': datetime.datetime(2022, 1, 1).date()
+    })
+
+    # A separate call to insert_data() is needed so that the correct fileids are inserted
     db.insert_data('available_files', data_to_insert)
 
 

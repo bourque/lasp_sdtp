@@ -19,6 +19,7 @@ import datetime
 import logging
 
 from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.config import subscriber_config
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +119,12 @@ def query_for_filelist(tags: dict) -> list:
     results = [item.__dict__ for item in results]
     for item in results:
         del item['_sa_instance_state']
+
+    # Only return files that the user has access to
+    allowed_data_products = query_for_account(subscriber_config['username'])['allowed_data_products']
+    allowed_data_products = allowed_data_products.split(',')
+    allowed_data_products = [item.strip() for item in allowed_data_products]
+    results = [result for result in results if result['data_product_id'] in allowed_data_products]
 
     return results
 

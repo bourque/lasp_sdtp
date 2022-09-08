@@ -38,6 +38,7 @@ TODO: Implement support for grouping files together
 TODO: Implement support for pagination of GET /files requests
 TODO: The JSON object returned in filelist request should have 'tags' as it's own key
 TODO: Make sure DELETE requests are idempotent
+TODO: Make sure user cannot delete file they don't have access to
 """
 
 import logging
@@ -90,8 +91,8 @@ def delete_file(fileid: int) -> Response:
     request_api_response = requests.delete(f'{REQUEST_API_URI}/delete_file/{fileid}')
 
     # If the request failed, abort
-    if request_api_response.status_code == 400:
-        abort(400)
+    if request_api_response.status_code in [400, 403, 404]:
+        abort(request_api_response.status_code)
 
     # Parse the response contents
     request_api_response = parse_api_response('request', request_api_response)

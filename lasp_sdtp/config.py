@@ -164,7 +164,7 @@ class SubscriberConfig():
     def save(self):
         """Save the configuration to the ``subscriber_config.json`` file"""
 
-        filename = 'subscriber_config.json'
+        filename = Path('data') / 'subscriber_config.json'
 
         # Convert the configuration to a dictionary
         config = self.__dict__
@@ -174,8 +174,8 @@ class SubscriberConfig():
 
         # Give user a chance to avoid overwrite
         save_file = False
-        if Path(filename).exists:
-            response = input('Are you sure you want to overwrite? (y/n)\n')
+        if filename.exists:
+            response = input(f'{str(filename)} already exists. Are you sure you want to overwrite? (y/n)\n')
             if response == 'y':
                 save_file = True
             elif response == 'n':
@@ -187,6 +187,6 @@ class SubscriberConfig():
 
         # Save the file
         if save_file:
-            with open(filename, 'w') as f:
+            with open(str(filename), 'w') as f:
                 json.dump(config, f, indent=4)
-            print('\nConfiguration file saved to filename')
+            print(f'\nConfiguration file saved to {str(filename)}')
