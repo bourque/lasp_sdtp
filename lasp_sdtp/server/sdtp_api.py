@@ -30,15 +30,10 @@ References
     If asynchronous requests need to be supported in the future, this article
     provides some useful examples: https://testdriven.io/blog/flask-async/
 
-TODO: Implement 403 errors (Request is authenticated but user is forbidden from
-      accessing resource)
 TODO: Implement parallelization for file transfers
 TODO: Implement 429 errors (Too many requests)
 TODO: Implement support for grouping files together
 TODO: Implement support for pagination of GET /files requests
-TODO: The JSON object returned in filelist request should have 'tags' as it's own key
-TODO: Make sure DELETE requests are idempotent
-TODO: Make sure user cannot delete file they don't have access to
 """
 
 import logging

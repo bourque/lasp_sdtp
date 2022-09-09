@@ -11,8 +11,6 @@ Use
     ::
         from lasp_sdtp.utils.utils import get_checksum
 
-TODO: Figure out how information for subscriber-supplied tags/extras should be
-      stored/provided
 TODO: Make create_test_filesystem and get_shortname to be more generic, avoid
       hard references to TSIS-2
 """
@@ -52,6 +50,68 @@ class CustomJSONEncoder(JSONEncoder):
         else:
             return list(iterable)
         return JSONEncoder.default(self, obj)
+
+
+def combine_metadata(filelist: list, tags_and_extras: list) -> list:
+    """Create a dictionary containing file metadata, tags, and extras, to comply
+    with the ICD, e.g.:
+
+    {
+        'fileid': 4542,
+        'data_product_id': 'tsis2',
+        'expires': datetime.datetime(2023, 3, 8, 0, 0),
+        'date': datetime.datetime(2022, 2, 1, 0, 0),
+        'size': 47.0,
+        'name': 'tsis2_tim_L2_v01_20220105.zip',
+        'checksum': 'sha256:dtjeijvhnlexw28irt24j9kc18wgn1rwdlmm2sf505wczoopnld7zllhw1loqs3t',
+        'tags': {'shortname': 'TSIS2_TIM_L2', 'stream': 'prod', 'version': 'v01'},
+        'extras': {'irradiance', '1234.5'}
+    }
+
+    Parameters
+    ----------
+    filelist : list
+        A list of dictionaries containing file metadata.
+    tags_and_extras : list
+        A list of dictionaries containing tag and/or extra values.
+
+    Returns
+    -------
+    restructured_results : list
+        A list of dictionaries containing file metadata, tags, and extras.
+    """
+
+    default_tag_keys = ['stream', 'shortname', 'version']
+    restructured_results = []
+
+    for file_data, tag_and_extra_data in zip(filelist, tags_and_extras):
+
+        # Initialize dictionaries to store the separated data
+        file_dict, tag_dict, extra_dict = {}, {}, {}
+
+        # Filter out the default tags from the nominal file data
+        for key in file_data:
+            if key in default_tag_keys:  # Put the default tag keys into the tag_dict
+                tag_dict[key] = file_data[key]
+            else:  # Otherwise, it just goes in the file_dict
+                file_dict[key] = file_data[key]
+
+        # Put the subscriber supplied tags and extras into the tag/extra dict
+        if tag_and_extra_data:
+            for item in tag_and_extra_data:
+                if item['field_type'] == 'tag':
+                    tag_dict[item['field_name']] = item['value']
+                elif item['field_type'] == 'extra':
+                    extra_dict[item['field_name']] = item['value']
+
+        # Bring all of these data together into one dictionary
+        file_dict['tags'] = tag_dict
+        if extra_dict:
+            file_dict['extras'] = extra_dict
+
+        restructured_results.append(file_dict)
+
+    return restructured_results
 
 
 def create_test_filesystem():
@@ -110,7 +170,13 @@ def get_checksum() -> str:
         the system configuration
     """
 
+    # Check that the checksum type is supported
+    supported_checksum_types = ['sha256']
     checksum_type = subscriber_config['checksum_type']
+    if checksum_type not in supported_checksum_types:
+        raise NotImplementedError(f'Checksum type {checksum_type} is currently not supported')
+
+    # Create checksum
     checksum_string = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(64))
     checksum = f'{checksum_type}:{checksum_string}'
 

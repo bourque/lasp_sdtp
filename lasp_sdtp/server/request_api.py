@@ -22,8 +22,7 @@ Use
     ::
         FLASK_APP=request_api.py FLASK_ENV=development flask run --port 8002
 
-TODO: Add check to make sure username is of valid type (e.g. avoid float, bool,
-      etc.)
+TODO: Return subscriber-supplied tag values in GET /files/ requests
 """
 
 import datetime
@@ -33,13 +32,14 @@ from pathlib import Path
 from flask import abort
 from flask import Flask
 from flask import request
-from sqlalchemy.exc import IntegrityError
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_filelist
 from lasp_sdtp.database.database_queries import query_for_account
+from lasp_sdtp.database.database_queries import query_for_filelist
+from lasp_sdtp.database.database_queries import query_for_metadata
+from lasp_sdtp.utils.utils import combine_metadata
 from lasp_sdtp.utils.utils import CustomJSONEncoder
 from lasp_sdtp.utils.utils import parse_request_parameters
 from lasp_sdtp.utils.utils import validate_access
@@ -156,14 +156,22 @@ def get_filelist() -> dict:
         abort(400)
 
     # Run the query based on the tags
-    results = query_for_filelist(tags)
+    filelist = query_for_filelist(tags)
+
+    # Get the tags & extras for the files
+    fileids = [item['fileid'] for item in filelist]
+    tags_and_extras = query_for_metadata(fileids)
+
+    # Structure the file metadata, tags, and extras together into one dictionary
+    # to comply with the ICD
+    data = combine_metadata(filelist, tags_and_extras)
 
     # Limit the number of results to the max number of files
-    if len(results) > subscriber_config['max_num_files']:
-        results = results[:subscriber_config['max_num_files']]
+    if len(data) > subscriber_config['max_num_files']:
+        data = data[:subscriber_config['max_num_files']]
 
     response = {'transactionid': str(transactionid),
-                'results': results}
+                'results': data}
 
     return response
 

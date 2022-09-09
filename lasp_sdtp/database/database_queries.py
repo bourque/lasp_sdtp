@@ -129,6 +129,34 @@ def query_for_filelist(tags: dict) -> list:
     return results
 
 
+def query_for_metadata(fileids: list) -> list:
+    """Return a list of tag and extra values from the ``metadata`` table for
+    the given list of files.
+
+    Parameters
+    ----------
+    fileids: list
+        A list of files to gather tags/extras for.
+
+    Returns
+    -------
+    tags_and_extras: list
+        A list of tag/extra values for the given ``fileids``.
+    """
+
+    tags_and_extras = []
+
+    for fileid in fileids:
+
+        result = db.session.query(db.Metadata).filter(db.Metadata.fileid == fileid).all()
+        result = [item.__dict__ for item in result]
+        for item in result:
+            del item['_sa_instance_state']
+        tags_and_extras.append(result)
+
+    return tags_and_extras
+
+
 def query_for_queue_entries(fileid: int) -> list:
     """Return a list of queue database table entries that exist for the
     given ``fileid``

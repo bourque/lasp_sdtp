@@ -212,10 +212,6 @@ class DatabaseController():
              'registration_date': registration_date,
              'registration_expires': registration_expires})
 
-        # Update ``tags`` and ``extras`` table
-
-
-
         db.session.commit()
         logger.info('Registered account for %s' % subscriber_config['username'])
 

@@ -64,8 +64,8 @@ class FileQueue(Base):
     __table_args__ = (sa.UniqueConstraint('queueid', 'username', 'fileid', name='file_queue_uc'),)
 
     queueid = sa.Column(sa.Integer, primary_key=True)
-    username = sa.Column(sa.String(30), nullable=False)
-    fileid = sa.Column(sa.Integer, nullable=False)
+    username = sa.Column(sa.String(30), sa.ForeignKey('accounts.username'), nullable=False)
+    fileid = sa.Column(sa.Integer, sa.ForeignKey('available_files.fileid'), nullable=False)
     entry_date = sa.Column(sa.DateTime, nullable=False)
     expires = sa.Column(sa.DateTime, nullable=False)
 
@@ -75,7 +75,7 @@ class Metadata(Base):
 
     __tablename__ = 'metadata'
 
-    fileid = sa.Column(sa.Integer, primary_key=True)
+    fileid = sa.Column(sa.Integer, sa.ForeignKey('available_files.fileid'), primary_key=True)
     field_name = sa.Column(sa.String(255), primary_key=True)
     field_type = sa.Column(sa.Enum('tag', 'extra', name='field_type'), primary_key=True)
     value = sa.Column(sa.String(255))
@@ -88,9 +88,9 @@ class Transactions(Base):
 
     transactionid = sa.Column(sa.Integer, primary_key=True)
     action = sa.Column(sa.String(255), nullable=False)
-    username = sa.Column(sa.String(30), nullable=False)
+    username = sa.Column(sa.String(30), sa.ForeignKey('accounts.username'), nullable=False)
     start_time = sa.Column(sa.DateTime, nullable=False)
-    fileid = sa.Column(sa.Integer)
+    fileid = sa.Column(sa.Integer, sa.ForeignKey('available_files.fileid'))
     source = sa.Column(sa.String(255))
     destination = sa.Column(sa.String(255))
     end_time = sa.Column(sa.DateTime)
