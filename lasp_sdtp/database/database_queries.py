@@ -96,6 +96,7 @@ def query_for_filelist(tags: dict) -> list:
 
     logger.info('Querying available_files database table for files with parameters %s' % str(tags))
 
+    # Build the query
     query = db.session.query(db.AvailableFiles)  # base query
     query = query.filter(db.AvailableFiles.stream == tags['stream'])  # stream is always supplied via default value
     query = query.filter(db.AvailableFiles.version == tags['version'])  # version is always supplied via default value
@@ -113,6 +114,10 @@ def query_for_filelist(tags: dict) -> list:
         query = query.filter(db.AvailableFiles.date >= datetime.datetime.strptime(tags['start_date'], '%Y-%m-%d').date())
         query = query.filter(db.AvailableFiles.date <= datetime.datetime.strptime(tags['end_date'], '%Y-%m-%d').date())
 
+    # Order the results by fileid
+    query = query.order_by(db.AvailableFiles.fileid)
+
+    # Run the query
     results = query.all()
 
     # Parse the query results

@@ -11,6 +11,8 @@ Use
         pytest -s test_api_gateway.py
 """
 
+# TODO: Break up GET /files/ tests
+
 import datetime
 import glob
 import json
@@ -33,7 +35,10 @@ TEST_URLS = [
     '/files?stream=prod&ShortName=TSIS2_L1',
     '/files?date=2022-01-01',
     '/files?start_date=2022-01-01&end_date=2022-02-01',
-    '/files?date=2050-01-01']  # No files, but should still return 200
+    '/files?date=2050-01-01',  # No files, but should still return 200
+    '/files?maxfile=10',
+    '/files?startfileid=10000',
+    '/files?startfileid=10000&maxfile=3']
 
 INVALID_TEST_URLS = [
     '/files?date=2022-01-01&start_date=2022-01-01&end_date=2022-02-01',  # Invalid date options
@@ -143,14 +148,14 @@ def test_authorize(client: FlaskClient):
 
     # For unauthorized GET request
     unauthorized_headers = {'content-type': 'application/json', 'Cert-UID': 'fake_certificate'}
-    unathorized_get_response = client.get('/files', headers=unauthorized_headers)
-    data = json.loads(unathorized_get_response.get_data().decode("utf-8"))
+    unauthorized_get_response = client.get('/files', headers=unauthorized_headers)
+    data = json.loads(unauthorized_get_response.get_data().decode("utf-8"))
     assert data['message'] == 'Request is not authenticated'
 
-    # For unathorized PUT request
-    unathorized_put_response = client.put('/register', headers=unauthorized_headers)
-    assert unathorized_put_response.status_code == 401
-    data = json.loads(unathorized_put_response.get_data().decode("utf-8"))
+    # For unauthorized PUT request
+    unauthorized_put_response = client.put('/register', headers=unauthorized_headers)
+    assert unauthorized_put_response.status_code == 401
+    data = json.loads(unauthorized_put_response.get_data().decode("utf-8"))
     assert data['message'] == 'Unauthorized'
 
 

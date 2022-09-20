@@ -21,8 +21,6 @@ Use
     To run a local server for development or testing purposes, use:
     ::
         FLASK_APP=request_api.py FLASK_ENV=development flask run --port 8002
-
-TODO: Return subscriber-supplied tag values in GET /files/ requests
 """
 
 import datetime
@@ -162,14 +160,18 @@ def get_filelist() -> dict:
     fileids = [item['fileid'] for item in filelist]
     tags_and_extras = query_for_metadata(fileids)
 
-    # Structure the file metadata, tags, and extras together into one dictionary
-    # to comply with the ICD
+    # Structure the file metadata, tags, and extras together into one dictionary to comply with the ICD
     data = combine_metadata(filelist, tags_and_extras)
 
-    # Limit the number of results to the max number of files
-    if len(data) > subscriber_config['max_num_files']:
-        data = data[:subscriber_config['max_num_files']]
+    # Apply startfileid
+    data = [item for item in data if item['fileid'] >= tags['startfileid']]
 
+    # Determine number of files to return
+    max_num_files = min(tags['maxfile'], subscriber_config['max_num_files'])
+    if len(data) > max_num_files:
+        data = data[:max_num_files]
+
+    # Construct the response
     response = {'transactionid': str(transactionid),
                 'results': data}
 

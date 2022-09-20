@@ -11,8 +11,9 @@ Use
     ::
         from lasp_sdtp.utils.utils import get_checksum
 
-TODO: Make create_test_filesystem and get_shortname to be more generic, avoid
+#TODO: Make create_test_filesystem and get_shortname to be more generic, avoid
       hard references to TSIS-2
+#TODO: Parse subscriber provided tags
 """
 
 import datetime
@@ -272,6 +273,8 @@ def parse_request_parameters(request: object) -> dict:
         ('stream', 'prod', str),
         ('ShortName', 'all', str),
         ('version', 'v01', str),
+        ('maxfile', subscriber_config['max_num_files'], int),
+        ('startfileid', 1, int),
         ('date', None, str),
         ('start_date', None, str),
         ('end_date', None, str)]
@@ -440,5 +443,14 @@ def validate_tags(tags: dict) -> bool:
     valid_date_type_combos = [(type(None), type(None), type(None)), (str, type(None), type(None)), (type(None), str, str)]
     if date_types not in valid_date_type_combos:
         return False
-    else:
-        return True
+
+    # Make sure the maxfile tag does not exceed the max number of files agreement
+    if tags['maxfile'] > subscriber_config['max_num_files']:
+        return False
+
+    # Make sure the startfileid is a valid fileid
+    if not validate_fileid(tags['startfileid']):
+        return False
+
+    # If all the checks passed, the tags are valid
+    return True
