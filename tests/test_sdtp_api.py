@@ -11,8 +11,6 @@ Use
         pytest -s test_api_gateway.py
 """
 
-# TODO: Break up GET /files/ tests
-
 import datetime
 import glob
 import json
@@ -33,12 +31,7 @@ TEST_URLS = [
     '/files',
     '/files?stream=prod',
     '/files?stream=prod&ShortName=TSIS2_L1',
-    '/files?date=2022-01-01',
-    '/files?start_date=2022-01-01&end_date=2022-02-01',
-    '/files?date=2050-01-01',  # No files, but should still return 200
-    '/files?maxfile=10',
-    '/files?startfileid=10000',
-    '/files?startfileid=10000&maxfile=3']
+    '/files?date=2050-01-01']  # No files, but should still return 200
 
 INVALID_TEST_URLS = [
     '/files?date=2022-01-01&start_date=2022-01-01&end_date=2022-02-01',  # Invalid date options
@@ -47,10 +40,10 @@ INVALID_TEST_URLS = [
     '/files?start_date=2022-01-01',  # Invalid date options
     '/files?end_date=2022-02-01',  # Invalid date options
     '/files?bogus_tag=foo',  # Invalid tag
-    '/files/foo',  # fileid is not an integer 15 digits or less
-    '/files/123.4',  # fileid is not an integer 15 digits or less
-    '/files/-1',  # fileid is not an integer 15 digits or less
-    '/files/1234567890123456']  # fileid is not an integer 15 digits or less
+    '/files/foo',  # fileid is not an integer 15 digits or fewer
+    '/files/123.4',  # fileid is not an integer 15 digits or fewer
+    '/files/-1',  # fileid is not an integer 15 digits or fewer
+    '/files/1234567890123456']  # fileid is not an integer 15 digits or fewer
 
 
 def _check_transaction(headers: Headers):
@@ -189,6 +182,69 @@ def test_get_filelist(client: FlaskClient, request_url: str):
             assert str(filename) in test_files
 
     _check_transaction(response.headers)
+
+
+def test_get_filelist_with_date_params(client: FlaskClient):
+    """Tests that the ``GET /files`` request works as expected with various date
+    parameters"""
+
+    # Test the date parameter
+    date = '2022-01-01'
+    request_url = f'/files?date={date}'
+
+    # Send a test request and get the response
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
+    response = client.get(request_url, headers=headers)
+    data = json.loads(response.get_data().decode("utf-8"))
+
+    # Make sure the response status is 200
+    assert response.status_code == 200
+
+    # Make sure the results are as expected
+    assert len(data['files']) == 6
+    assert set([item['date'] for item in data['files']]) == set([date])
+
+    # Test the start_date and end_date parameters
+    start_date = '2022-01-01'
+    end_date = '2022-02-01'
+    request_url = f'/files?start_date={start_date}&end_date={end_date}'
+
+    # Send a test request and get the response
+    response = client.get(request_url, headers=headers)
+    data = json.loads(response.get_data().decode("utf-8"))
+
+    # Make sure the response status is 200
+    assert response.status_code == 200
+
+    # make sure the GET /files/start_date=,end_date= results are as expected
+    start_dt = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+    end_dt = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+    expected_date_range = [start_dt + datetime.timedelta(days=x) for x in range(((end_dt - start_dt).days) + 1)]
+    expected_date_range = [datetime.datetime.strftime(item, '%Y-%m-%d') for item in expected_date_range]
+    assert len(data['files']) == 38
+    for item in data['files']:
+        assert item['date'] in expected_date_range
+
+
+def test_get_filelist_with_pagination(client: FlaskClient):
+    """Tests that the ``GET /files`` request works as expected with pagination
+    parameters"""
+
+    startfileid = 10000
+    maxfile = 3
+    request_url = f'/files?startfileid={startfileid}&maxfile={maxfile}'
+
+    # Send a test request and get the response
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
+    response = client.get(request_url, headers=headers)
+    data = json.loads(response.get_data().decode("utf-8"))
+
+    # Make sure the response status is 200
+    assert response.status_code == 200
+
+    # Make sure the results are as expected
+    assert len(data['files']) == maxfile
+    assert min([item['fileid'] for item in data['files']]) >= startfileid
 
 
 def test_get_file(client: FlaskClient):

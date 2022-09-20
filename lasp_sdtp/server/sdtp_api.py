@@ -33,7 +33,6 @@ References
 TODO: Implement parallelization for file transfers
 TODO: Implement 429 errors (Too many requests)
 TODO: Implement support for grouping files together
-TODO: Implement support for pagination of GET /files requests
 """
 
 import logging

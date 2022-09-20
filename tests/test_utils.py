@@ -22,6 +22,18 @@ from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.utils import utils
 
 
+TEST_TAGS = [
+    ({'date': '19840404', 'start_date': None, 'end_date': None, 'maxfile': 10000, 'startfileid': 1}, False),
+    ({'date': '1984-04-04', 'start_date': '1984-04-05', 'end_date': None, 'maxfile': 10000, 'startfileid': 1}, False),
+    ({'date': '1984-04-04', 'start_date': None, 'end_date': '1984-04-05', 'maxfile': 10000, 'startfileid': 1}, False),
+    ({'date': None, 'start_date': None, 'end_date': None, 'maxfile': 9999999999, 'startfileid': 1}, False),
+    ({'date': '19840404', 'start_date': None, 'end_date': None, 'maxfile': 10000, 'startfileid': 'foo'}, False),
+    ({'date': None, 'start_date': None, 'end_date': None, 'maxfile': 10000, 'startfileid': 1}, True),
+    ({'date': '1984-04-04', 'start_date': None, 'end_date': None, 'maxfile': 10000, 'startfileid': 1}, True),
+    ({'date': None, 'start_date': '1984-04-04', 'end_date': '1984-04-05', 'maxfile': 10000, 'startfileid': 1}, True)
+]
+
+
 def test_combine_metadata():
     """Tests the ``combine_metadata`` function"""
 
@@ -38,10 +50,10 @@ def test_combine_metadata():
          'version': 'v01'},
     ]
 
-    tags_and_extras = [
-        [{'fileid': 1, 'field_name': 'irradiance', 'field_type': 'tag', 'value': 'some_value'},
-        {'fileid': 1, 'field_name': 'type', 'field_type': 'extra', 'value': 'some_value'}]
-    ]
+    tags_and_extras = [[
+        {'fileid': 1, 'field_name': 'irradiance', 'field_type': 'tag', 'value': 'some_value'},
+        {'fileid': 1, 'field_name': 'type', 'field_type': 'extra', 'value': 'some_value'}
+    ]]
 
     expected_result = [{
         'fileid': 1,
@@ -88,8 +100,8 @@ def test_get_shortname():
 def test_validate_access():
     """Tests the ``validate_access`` function"""
 
-    assert utils.validate_access(12345) == True  # This is a tsis2 data product which the 'ges_disc' user has access to
-    assert utils.validate_access(23456) == False # This is a 'restricted' data product
+    assert utils.validate_access(12345) is True  # This is a tsis2 data product which the 'ges_disc' user has access to
+    assert utils.validate_access(23456) is False  # This is a 'restricted' data product
 
 
 @pytest.mark.parametrize('fileid, expected_result', [(1, True), (-1, False), ('foo', False), (9999999999999999, False)])
@@ -106,16 +118,6 @@ def test_validate_fileid_range(fileid_start: int, fileid_end: int, expected_resu
     assert utils.validate_fileid_range(fileid_start, fileid_end) == expected_result
 
 
-TEST_TAGS = [
-    ({'date': '19840404', 'start_date': None, 'end_date': None, 'maxfile': 10000, 'startfileid': 1}, False),
-    ({'date': '1984-04-04', 'start_date': '1984-04-05', 'end_date': None, 'maxfile': 10000, 'startfileid': 1}, False),
-    ({'date': '1984-04-04', 'start_date': None, 'end_date': '1984-04-05', 'maxfile': 10000, 'startfileid': 1}, False),
-    ({'date': None, 'start_date': None, 'end_date': None, 'maxfile': 9999999999, 'startfileid': 1}, False),
-    ({'date': '19840404', 'start_date': None, 'end_date': None, 'maxfile': 10000, 'startfileid': 'foo'}, False),
-    ({'date': None, 'start_date': None, 'end_date': None, 'maxfile': 10000, 'startfileid': 1}, True),
-    ({'date': '1984-04-04', 'start_date': None, 'end_date': None, 'maxfile': 10000, 'startfileid': 1}, True),
-    ({'date': None, 'start_date': '1984-04-04', 'end_date': '1984-04-05', 'maxfile': 10000, 'startfileid': 1}, True)
-]
 @pytest.mark.parametrize('tags, expected_result', TEST_TAGS)
 def test_validate_tags(tags, expected_result):
     """Tests the ``validate_tags`` function"""
