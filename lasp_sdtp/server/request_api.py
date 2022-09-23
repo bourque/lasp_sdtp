@@ -39,6 +39,7 @@ from lasp_sdtp.database.database_queries import query_for_filelist
 from lasp_sdtp.database.database_queries import query_for_metadata
 from lasp_sdtp.utils.utils import combine_metadata
 from lasp_sdtp.utils.utils import CustomJSONEncoder
+from lasp_sdtp.utils.utils import filter_for_subscriber_tags
 from lasp_sdtp.utils.utils import parse_request_parameters
 from lasp_sdtp.utils.utils import validate_access
 from lasp_sdtp.utils.utils import validate_fileid
@@ -163,10 +164,13 @@ def get_filelist() -> dict:
     # Structure the file metadata, tags, and extras together into one dictionary to comply with the ICD
     data = combine_metadata(filelist, tags_and_extras)
 
-    # Apply startfileid
+    # Apply filter for subscriber-provided tags
+    data = filter_for_subscriber_tags(data, tags, request)
+
+    # Apply startfileid filter
     data = [item for item in data if item['fileid'] >= tags['startfileid']]
 
-    # Determine number of files to return
+    # Limit the number of returned files to max_num_files
     max_num_files = min(tags['maxfile'], subscriber_config['max_num_files'])
     if len(data) > max_num_files:
         data = data[:max_num_files]

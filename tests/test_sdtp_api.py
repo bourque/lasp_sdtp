@@ -30,7 +30,7 @@ from lasp_sdtp.server.ancillary import get_app
 TEST_URLS = [
     '/files',
     '/files?stream=prod',
-    '/files?stream=prod&ShortName=TSIS2_L1',
+    '/files?stream=prod&shortname=TSIS2_L1',
     '/files?date=2050-01-01']  # No files, but should still return 200
 
 INVALID_TEST_URLS = [
@@ -182,6 +182,26 @@ def test_get_filelist(client: FlaskClient, request_url: str):
             assert str(filename) in test_files
 
     _check_transaction(response.headers)
+
+
+def test_get_filelist_filter_by_tag(client: FlaskClient):
+    """Tests that the ``GET /files`` request works as expected when filtering
+    results with subscriber-provided tags"""
+
+    request_url = f'/files?aperture=some_value'
+
+    # Send a test request and get the response
+    headers = {'content-type': 'application/json', 'Cert-UID': f'{subscriber_config["username"]}_cert'}
+    response = client.get(request_url, headers=headers)
+    data = json.loads(response.get_data().decode("utf-8"))
+
+    # Make sure the response status is 200
+    assert response.status_code == 200
+
+    # Make sure the results are as expected
+    assert len(data['files']) == 3
+    for file in data['files']:
+        assert 'aperture' in file['tags']
 
 
 def test_get_filelist_with_date_params(client: FlaskClient):

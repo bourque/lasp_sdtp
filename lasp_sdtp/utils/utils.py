@@ -14,6 +14,8 @@ Use
 #TODO: Make create_test_filesystem and get_shortname to be more generic, avoid
       hard references to TSIS-2
 #TODO: Parse subscriber provided tags
+#TODO: Move functions closer to their parent, where it makes sense
+#TODO: Update docstrings
 """
 
 import datetime
@@ -160,6 +162,21 @@ def create_test_filesystem():
             print(f'Created test file: {filename}')
 
 
+def filter_for_subscriber_tags(data, tags, request):
+    """Filters the given filelist for subscriber tag values"""
+
+    subscriber_tags, _ = get_subscriber_tags_and_extras(tags['stream'])
+    subscriber_tags = [tag[0] for tag in subscriber_tags]  # Only care about the tag name here
+    filter_criteria = []
+    for arg in request.args.keys():
+        if arg in subscriber_tags:
+            filter_criteria.append((arg, request.args[arg]))
+    for filter in filter_criteria:
+        filter_name, filter_value = filter
+        data = [item for item in data if filter_name in item['tags'] and item['tags'][filter_name] == filter_value]
+
+    return data
+
 def get_checksum() -> str:
     """Return a randomly generated checksum.  Currently, only supports the
     ``sha256`` checksum type.
@@ -185,7 +202,7 @@ def get_checksum() -> str:
 
 
 def get_shortname(filename: str) -> str:
-    """Return the appropriate value for the ``ShortName`` tag for the given
+    """Return the appropriate value for the ``shortname`` tag for the given
     filename.  Currently, this is hard-coded to only support TSIS-2.
 
     Parameters
@@ -196,7 +213,7 @@ def get_shortname(filename: str) -> str:
     Returns
     -------
     shortname : str
-        The ``ShortName`` that matches the given filename (e.g.
+        The ``shortname`` that matches the given filename (e.g.
         ``TSIS2_TIM_L2``)
     """
 
@@ -222,6 +239,37 @@ def get_shortname(filename: str) -> str:
                 shortname += '_NC'
 
     return shortname
+
+
+def get_subscriber_tags_and_extras(stream):
+    """
+
+    Returns
+    -------
+
+    """
+
+    # Store the tags and extras in a list
+    # Values are stored as tuples, e.g. ('tag_name', 'default_value', 'type')
+    subscriber_tags, subscriber_extras = [], []
+
+    # Get the tags
+    for tag in subscriber_config['streams'][stream]['tags']:
+        subscriber_tags.append((
+            tag,
+            subscriber_config['streams'][stream]['tags'][tag]['default'],
+            eval(subscriber_config['streams'][stream]['tags'][tag]['type'])
+        ))
+
+    # Get the extras
+    for extra in subscriber_config['streams'][stream]['extras']:
+        subscriber_extras.append((
+            extra,
+            subscriber_config['streams'][stream]['extras'][extra]['default'],
+            eval(subscriber_config['streams'][stream]['extras'][extra]['type'])
+    ))
+
+    return subscriber_tags, subscriber_extras
 
 
 def parse_api_response(api: str, response: Response) -> dict:
@@ -271,7 +319,7 @@ def parse_request_parameters(request: object) -> dict:
     # Define the default supported tags
     default_tag_list = [
         ('stream', 'prod', str),
-        ('ShortName', 'all', str),
+        ('shortname', 'all', str),
         ('version', 'v01', str),
         ('maxfile', subscriber_config['max_num_files'], int),
         ('startfileid', 1, int),
@@ -279,24 +327,26 @@ def parse_request_parameters(request: object) -> dict:
         ('start_date', None, str),
         ('end_date', None, str)]
 
-    # # Parse the subscriber-defined tags
-    # subscriber_tags = subscriber_config['tags']
-    # subscriber_tag_list = []
-    # for tag in subscriber_tags:
-    #     subscriber_tag_list.append((tag, subscriber_tags[tag]['default'], eval(subscriber_tags[tag]['type'])))
-    subscriber_tag_list = []  # TODO: Add support for user-defined tags
+    # Determine the stream of the request
+    if 'stream' in request.args.keys():
+        stream = request.args['stream']
+    else:
+        stream = 'prod'  # If no stream is given, assume prod
+
+    # Get the subscriber tags and extras for the stream
+    subscriber_tags, subscriber_extras = get_subscriber_tags_and_extras(stream)
 
     # Supported tags is an aggregation of the default + subscriber-defined tags
-    supported_tags = default_tag_list + subscriber_tag_list
+    supported_tags_and_extras = default_tag_list + subscriber_tags + subscriber_extras
 
     # Check to see if any of the provided tags in the request are not supported
     for item in request.args.keys():
-        if item not in [item[0] for item in supported_tags]:
+        if item not in [item[0] for item in supported_tags_and_extras]:
             abort(400)
 
     # Store tags from request in a dictionary
     tags = {}
-    for item in supported_tags:
+    for item in supported_tags_and_extras:
         tags[item[0].lower()] = request.args.get(item[0], default=item[1], type=item[2])
 
     return tags
