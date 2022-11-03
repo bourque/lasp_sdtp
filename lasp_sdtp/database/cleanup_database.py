@@ -2,10 +2,10 @@
 database and file queue.
 
 Expired accounts are those for which the current date exceeds the value of the
-``accounts.registration_expires`` database entry.
+``accounts.registrationExpires`` database entry.
 
 Expired files are those for which the current date exceeds the value of the
-``file_queue.expires`` database entry.
+``fileQueue.expires`` database entry.
 
 Authors
 -------
@@ -70,7 +70,7 @@ def cleanup_file_queue():
         logger.info(f'Removed file queue database entry for {expired_file}')
 
         # Remove file from the file queue storage
-        filename = db.session.query(db.AvailableFiles.name).filter(db.AvailableFiles.fileid == expired_file).all()
+        filename = db.session.query(db.Files.name).filter(db.Files.fileid == expired_file).all()
         filename = filename[0][0]
         file_path = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / filename
         file_path.unlink(missing_ok=True)

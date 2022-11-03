@@ -36,7 +36,7 @@ from sqlalchemy.exc import IntegrityError
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_available_files
+from lasp_sdtp.database.database_queries import query_for_files
 from lasp_sdtp.database.database_queries import query_for_queue_entries
 
 
@@ -66,7 +66,7 @@ def delete_file(fileid: int) -> dict:
 
     # Get the metadata for the file of interest
     try:
-        metadata = query_for_available_files(fileid)
+        metadata = query_for_files(fileid)
     except IndexError:  # No results, send a 404
         abort(404)
 

@@ -29,161 +29,63 @@ from lasp_sdtp.utils import utils
 
 
 def _add_accounts_entries():
-    """Add necessary ``accounts`` table entries used for testing"""
+    """Add necessary ``Accounts`` table entries used for testing"""
 
     # Add nominal test account used for general testing
-    data_to_insert = [{
-        'username': 'test_account',
-        'role': 'subscriber',
-        'allowed_data_products': 'all',
-        'registration_open': False,
-        'certuid': 'test_cert',
-        'registration_date': datetime.datetime.utcnow().date(),
-        'registration_expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1)}]
+    data_to_insert = [db.Accounts(
+        username='test_account',
+        role='subscriber',
+        registration_open=False,
+        certuid='test_cert',
+        registration_date=datetime.datetime.utcnow().date(),
+        registration_expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
+    )]
 
     # Add an account for the subscriber
-    data_to_insert.append({
-        'username': subscriber_config['username'],
-        'role': 'subscriber',
-        'allowed_data_products': 'tsis2',
-        'registration_open': True}
-    )
+    data_to_insert.append(db.Accounts(
+        username=subscriber_config['username'],
+        role='subscriber',
+        registration_open=True,
+        certuid='test_cert'
+    ))
 
     # Add an account that has expired (used for test_cleanup_database)
-    data_to_insert.append({
-        'username': 'expired_account',
-        'role': 'subscriber',
-        'allowed_data_products': 'tsis2',
-        'registration_open': False,
-        'certuid': 'test_cert',
-        'registration_date': datetime.datetime.utcnow().date(),
-        'registration_expires': datetime.datetime.utcnow().date() - datetime.timedelta(days=1)}
-    )
+    data_to_insert.append(db.Accounts(
+        username='expired_account',
+        role='subscriber',
+        registration_open=False,
+        certuid='test_cert',
+        registration_date=datetime.datetime.utcnow().date(),
+        registration_expires=datetime.datetime.utcnow().date() - datetime.timedelta(days=1)
+    ))
 
     # Add an account that has not yet registered but has registration window closed
-    data_to_insert.append({
-        'username': 'not_open_for_registration',
-        'role': 'subscriber',
-        'allowed_data_products': 'tsis2',
-        'registration_open': False}
-    )
+    data_to_insert.append(db.Accounts(
+        username='not_open_for_registration',
+        role='subscriber',
+        registration_open=False
+    ))
 
-    db.insert_data('accounts', data_to_insert)
-
-
-def _add_available_files_entries():
-    """Add necessary ``available_files`` table entries used for testing"""
-
-    # Locate files in test filesystem
-    test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
-
-    # Insert test file data (mostly used for test_run_server)
-    data_to_insert = []
-    for i, test_file in enumerate(test_files):
-        data = {
-            'name': Path(test_file).name,
-            'checksum': utils.get_checksum(),
-            'data_product_id': 'tsis2',
-            'size': os.path.getsize(test_file),
-            'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period']),
-            'stream': 'prod',
-            'shortname': utils.get_shortname(Path(test_file).name),
-            'version': 'v01',
-            'date': datetime.datetime(2022, 1, 1).date() + datetime.timedelta(days=i - 1)
-        }
-        data_to_insert.append(data)
-    db.insert_data('available_files', data_to_insert)
-
-    # Add entries to satisfy integrity constraint for test_cleanup_database
-    data_to_insert = [{
-        'fileid': 12345,
-        'name': 'test_cleanup_db.txt',
-        'checksum': 'foo',
-        'data_product_id': 'tsis2',
-        'size': 1,
-        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
-        'stream': 'prod',
-        'shortname': 'TEST_FILE',
-        'version': 'v01',
-        'date': datetime.datetime(2022, 1, 1).date()
-    }]
-    data_to_insert.append({
-        'fileid': 12346,
-        'name': 'test_cleanup_db2.txt',
-        'checksum': 'bar',
-        'data_product_id': 'tsis2',
-        'size': 1,
-        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
-        'stream': 'prod',
-        'shortname': 'TEST_FILE',
-        'version': 'v01',
-        'date': datetime.datetime(2022, 1, 1).date()
-    })
-
-    # Add entry to satisfy integrity constraint for test_reporting
-    data_to_insert.append({
-        'fileid': 67890,
-        'name': 'test_reporting.txt',
-        'checksum': 'bop',
-        'data_product_id': 'tsis2',
-        'size': 1,
-        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
-        'stream': 'prod',
-        'shortname': 'TEST_FILE',
-        'version': 'v01',
-        'date': datetime.datetime(2022, 1, 1).date()
-    })
-
-    # Add entry to satisfy integrity constraint for test_database_controller
-    data_to_insert.append({
-        'fileid': 78901,
-        'name': 'test_db_controller.txt',
-        'checksum': 'bat',
-        'data_product_id': 'tsis2',
-        'size': 1,
-        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
-        'stream': 'prod',
-        'shortname': 'TEST_FILE',
-        'version': 'v01',
-        'date': datetime.datetime(2022, 1, 1).date()
-    })
-
-    # Add entry containing restrictive data_product_id (used for test_database_queries.test_query_for_fileslist)
-    data_to_insert.append({
-        'fileid': 23456,
-        'name': 'test_data_product_id.txt',
-        'checksum': 'bap',
-        'data_product_id': 'restricted',
-        'size': 1,
-        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
-        'stream': 'prod',
-        'shortname': 'TSIS2_L1',
-        'version': 'v01',
-        'date': datetime.datetime(2022, 1, 1).date()
-    })
-
-    # A separate call to insert_data() is needed so that the correct fileids are inserted
-    db.insert_data('available_files', data_to_insert)
-
+    db.insert_data(data_to_insert)
 
 def _add_file_queue_entries():
-    """Add necessary ``file_queue`` table entries used for testing"""
+    """Add necessary ``FileQueue`` table entries used for testing"""
 
     # Add an entry associated with the expired account (for test_cleanup_database)
-    data_to_insert = [{
-        'username': 'expired_account',
-        'fileid': 12345,
-        'entry_date': datetime.datetime.utcnow().date(),
-        'expires': datetime.datetime.utcnow().date() - datetime.timedelta(days=10)
-    }]
+    data_to_insert = [db.FileQueue(
+        username='expired_account',
+        fileid=12345,
+        entry_date=datetime.datetime.utcnow().date(),
+        expires=datetime.datetime.utcnow().date() - datetime.timedelta(days=10)
+    )]
 
     # Add an entry not associated with the expired account (for test_cleanup_database)
-    data_to_insert.append({
-        'username': 'test_account',
-        'fileid': 12346,
-        'entry_date': datetime.datetime.utcnow().date(),
-        'expires': datetime.datetime.utcnow().date() - datetime.timedelta(days=10)
-    })
+    data_to_insert.append(db.FileQueue(
+        username='test_account',
+        fileid=12346,
+        entry_date=datetime.datetime.utcnow().date(),
+        expires=datetime.datetime.utcnow().date() - datetime.timedelta(days=10)
+    ))
 
     # Add an expired file to the file queue storage associated with expired account (for test_cleanup_database)
     with open(Path(admin_config['data_cache_loc']) / 'test_cleanup_db.txt', 'w') as f:
@@ -194,40 +96,144 @@ def _add_file_queue_entries():
         f.write('')
 
     # Add an entry used for test_reporting
-    data_to_insert.append({
-        'username': 'test_account',
-        'fileid': 67890,
-        'entry_date': datetime.datetime.utcnow().date(),
-        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
-    })
+    data_to_insert.append(db.FileQueue(
+        username='test_account',
+        fileid=67890,
+        entry_date=datetime.datetime.utcnow().date(),
+        expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
+    ))
 
     # Add an entry used for test_database_controller
-    data_to_insert.append({
-        'username': 'test_account',
-        'fileid': 78901,
-        'entry_date': datetime.datetime.utcnow().date(),
-        'expires': datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
-    })
+    data_to_insert.append(db.FileQueue(
+        username='test_account',
+        fileid=78901,
+        entry_date=datetime.datetime.utcnow().date(),
+        expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
+    ))
 
-    db.insert_data('file_queue', data_to_insert)
+    db.insert_data(data_to_insert)
 
+
+def _add_files_entries():
+    """Add necessary ``Files`` table entries used for testing"""
+
+    # Locate files in test filesystem
+    test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
+
+    # Insert test file data (mostly used for test_run_server)
+    data_to_insert = []
+    for i, test_file in enumerate(test_files):
+        data = db.Files(
+            name=Path(test_file).name,
+            checksum=utils.get_checksum(),
+            size=os.path.getsize(test_file),
+            expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period']),
+            stream='prod',
+            shortname=utils.get_shortname(Path(test_file).name),
+            version='01',
+            ingest_date=datetime.datetime(2022, 1, 1).date() + datetime.timedelta(days=i - 1),
+            available=True,
+        )
+        data_to_insert.append(data)
+    db.insert_data(data_to_insert)
+
+    # Add entries to satisfy integrity constraint for test_cleanup_database
+    data_to_insert = [db.Files(
+        fileid=12345,
+        name='test_cleanup_db.txt',
+        checksum='foo',
+        size=1,
+        expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
+        stream='prod',
+        shortname='TSIS2_L1',
+        version='01',
+        ingest_date=datetime.datetime(2022, 1, 1).date(),
+        available=True
+    )]
+    data_to_insert.append(db.Files(
+        fileid=12346,
+        name='test_cleanup_db2.txt',
+        checksum='bar',
+        size=1,
+        expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
+        stream='prod',
+        shortname='TSIS2_L1',
+        version='01',
+        ingest_date=datetime.datetime(2022, 1, 1).date(),
+        available=True
+    ))
+
+    # Add entry to satisfy integrity constraint for test_reporting
+    data_to_insert.append(db.Files(
+        fileid=67890,
+        name='test_reporting.txt',
+        checksum='bop',
+        size=1,
+        expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
+        stream='prod',
+        shortname='TSIS2_L1',
+        version='01',
+        ingest_date=datetime.datetime(2022, 1, 1).date(),
+        available=True
+    ))
+
+    # Add entry to satisfy integrity constraint for test_database_controller
+    data_to_insert.append(db.Files(
+        fileid=78901,
+        name='test_db_controller.txt',
+        checksum='bat',
+        size=1,
+        expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
+        stream='prod',
+        shortname='TSIS2_L1',
+        version='01',
+        ingest_date=datetime.datetime(2022, 1, 1).date(),
+        available=True
+    ))
+
+    # A separate call to insert data is needed so that the correct fileids are inserted
+    db.insert_data(data_to_insert)
+
+
+def _add_shortnames_entries():
+    """Add necessary ``Shortnames`` table entries used for testing"""
+
+    shortnames_for_testing = [
+        'TSIS2_L1',
+        'TSIS2_SIM_CAL',
+        'TSIS2_TIM_CAL',
+        'TSIS2_SIM_L2',
+        'TSIS2_TIM_L2',
+        'TSIS_SC_L2',
+        'TSIS2_SSI_L3_12HR_TXT',
+        'TSIS2_SSI_L3_24HR_TXT',
+        'TSIS2_TSI_L3_06HR_TXT',
+        'TSIS2_TSI_L3_24HR_TXT',
+        'TSIS2_SSI_L3_12HR_NC',
+        'TSIS2_SSI_L3_24HR_NC',
+        'TSIS2_TSI_L3_06HR_NC',
+        'TSIS2_TSI_L3_24HR_NC',
+    ]
+
+    data_to_insert = [db.Shortnames(shortname=shortname, filename_pattern='some_regex_expression') for shortname in shortnames_for_testing]
+    db.insert_data(data_to_insert)
 
 def _add_transactions_entries():
-    """Add necessary ``transactions`` table entries used for testing"""
+    """Add necessary ``Transactions`` table entries used for testing"""
 
     # Add a transaction for test_reporting
-    data_to_insert = [{
-        'transactionid': 999,
-        'action': 'GET /files/666',
-        'username': 'test_account',
-        'start_time': datetime.datetime.utcnow() - datetime.timedelta(hours=36),  # A "long" transfer
-        'fileid': 67890,
-        'source': '/some/starting/location/',
-        'destination': '/some/ending/location',
-        'end_time': None,
-    }]
+    data_to_insert = [db.Transactions(
+        transactionid=999,
+        action='GET /files/666',
+        username='test_account',
+        start_time=datetime.datetime.utcnow() - datetime.timedelta(hours=36),  # A "long" transfer
+        fileid=67890,
+        source='/some/starting/location/',
+        destination='/some/ending/location',
+        end_time=None,
+    )]
 
-    db.insert_data('transactions', data_to_insert)
+    db.insert_data(data_to_insert)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -238,13 +244,15 @@ def setup(request: object):
     db.session.query(db.FileQueue).delete()
     db.session.query(db.Transactions).delete()
     db.session.query(db.Accounts).delete()
-    db.session.query(db.Metadata).delete()
-    db.session.query(db.AvailableFiles).delete()
+    db.session.query(db.TagsAndExtras).delete()
+    db.session.query(db.Files).delete()
+    db.session.query(db.Shortnames).delete()
     db.session.commit()
 
     # Add entries to database tables to support tests
     _add_accounts_entries()
-    _add_available_files_entries()
+    _add_shortnames_entries()
+    _add_files_entries()
     _add_file_queue_entries()
     _add_transactions_entries()
 
@@ -259,6 +267,7 @@ def teardown():
     db.session.query(db.FileQueue).delete()
     db.session.query(db.Transactions).delete()
     db.session.query(db.Accounts).delete()
-    db.session.query(db.Metadata).delete()
-    db.session.query(db.AvailableFiles).delete()
+    db.session.query(db.TagsAndExtras).delete()
+    db.session.query(db.Files).delete()
+    db.session.query(db.Shortnames).delete()
     db.session.commit()

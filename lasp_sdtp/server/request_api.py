@@ -36,7 +36,7 @@ from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.database.database_queries import query_for_account
 from lasp_sdtp.database.database_queries import query_for_filelist
-from lasp_sdtp.database.database_queries import query_for_metadata
+from lasp_sdtp.database.database_queries import query_for_tags_and_extras
 from lasp_sdtp.utils.utils import combine_metadata
 from lasp_sdtp.utils.utils import CustomJSONEncoder
 from lasp_sdtp.utils.utils import filter_for_subscriber_tags
@@ -159,7 +159,7 @@ def get_filelist() -> dict:
 
     # Get the tags & extras for the files
     fileids = [item['fileid'] for item in filelist]
-    tags_and_extras = query_for_metadata(fileids)
+    tags_and_extras = query_for_tags_and_extras(fileids)
 
     # Structure the file metadata, tags, and extras together into one dictionary to comply with the ICD
     data = combine_metadata(filelist, tags_and_extras)
@@ -216,10 +216,10 @@ def register_subscriber() -> dict:
         ).filter(
             db.Accounts.username == subscriber_config['username']
         ).update(
-            {'registration_open': False,
-             'certuid': certuid,
-             'registration_date': registration_date,
-             'registration_expires': registration_expires})
+            {'registrationOpen': False,
+             'certUid': certuid,
+             'registrationDate': registration_date,
+             'registrationExpires': registration_expires})
         db.session.commit()
         logger.info('Registered account for %s' % subscriber_config['username'])
 

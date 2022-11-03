@@ -25,72 +25,107 @@ Base = sa.ext.declarative.declarative_base()
 
 
 class Accounts(Base):
-    """ORM for the ``accounts`` table"""
+    """ORM for the ``Accounts`` table"""
 
-    __tablename__ = 'accounts'
-    __table_args__ = (sa.UniqueConstraint('username', 'certuid', name='accounts_uc'),)
+    __tablename__ = 'ACCOUNTS'
 
-    username = sa.Column(sa.String(30), primary_key=True)
-    role = sa.Column(sa.Enum('admin', 'subscriber', name='role'), nullable=False)
-    allowed_data_products = sa.Column(sa.String(255))
-    registration_open = sa.Column(sa.Boolean, nullable=False)
-    certuid = sa.Column(sa.String(20), unique=True)
-    registration_date = sa.Column(sa.DateTime)
-    registration_expires = sa.Column(sa.DateTime)
-
-
-class AvailableFiles(Base):
-    """ORM for the ``available_files`` table"""
-
-    __tablename__ = 'available_files'
-    __table_args__ = (sa.UniqueConstraint('fileid', 'name', 'checksum', name='file_metadata_uc'),)
-
-    fileid = sa.Column(sa.Integer, primary_key=True)
-    name = sa.Column(sa.String(255), unique=True, nullable=False)
-    checksum = sa.Column(sa.String(71), unique=True, nullable=False)
-    data_product_id = sa.Column(sa.String(30), nullable=False)
-    size = sa.Column(sa.Float, nullable=False)
-    expires = sa.Column(sa.DateTime, nullable=False)
-    stream = sa.Column(sa.String(255), nullable=False)
-    shortname = sa.Column(sa.String(255), nullable=False)
-    version = sa.Column(sa.String(3), nullable=False)
-    date = sa.Column(sa.DateTime, nullable=False)
+    username = sa.Column('username', sa.String(30), primary_key=True)
+    role = sa.Column('role', sa.Enum('admin', 'subscriber', name='role'), nullable=False)
+    registration_open = sa.Column('registrationopen', sa.Boolean, nullable=False)
+    certuid = sa.Column('certuid', sa.String(20), unique=True)
+    registration_date = sa.Column('registrationdate', sa.DateTime)
+    registration_expires = sa.Column('registrationexpires', sa.DateTime)
 
 
 class FileQueue(Base):
-    """ORM for the ``file_queue`` table"""
+    """ORM for the ``FileQueue`` table"""
 
-    __tablename__ = 'file_queue'
-    __table_args__ = (sa.UniqueConstraint('queueid', 'username', 'fileid', name='file_queue_uc'),)
+    __tablename__ = 'FILEQUEUE'
 
-    queueid = sa.Column(sa.Integer, primary_key=True)
-    username = sa.Column(sa.String(30), sa.ForeignKey('accounts.username'), nullable=False)
-    fileid = sa.Column(sa.Integer, sa.ForeignKey('available_files.fileid'), nullable=False)
-    entry_date = sa.Column(sa.DateTime, nullable=False)
-    expires = sa.Column(sa.DateTime, nullable=False)
+    username = sa.Column('username', sa.String(30), primary_key=True, nullable=False)
+    fileid = sa.Column('fileid', sa.Integer, primary_key=True, nullable=False)
+    entry_date = sa.Column('entrydate', sa.DateTime, nullable=False)
+    expires = sa.Column('expires', sa.DateTime, nullable=False)
 
 
-class Metadata(Base):
-    """ORM for the ``metadata`` table"""
+class Files(Base):
+    """ORM for the ``Files`` table"""
 
-    __tablename__ = 'metadata'
+    __tablename__ = 'FILES'
+    __table_args__ = (sa.UniqueConstraint('fileid', 'name', 'checksum', name='file_metadata_uc'),)
 
-    fileid = sa.Column(sa.Integer, sa.ForeignKey('available_files.fileid'), primary_key=True)
-    field_name = sa.Column(sa.String(255), primary_key=True)
-    field_type = sa.Column(sa.Enum('tag', 'extra', name='field_type'), primary_key=True)
-    value = sa.Column(sa.String(255))
+    fileid = sa.Column('fileid', sa.Integer, primary_key=True)
+    name = sa.Column('name', sa.String(255), unique=True, nullable=False)
+    checksum = sa.Column('checksum', sa.String(71), unique=True, nullable=False)
+    size = sa.Column('size', sa.Float, nullable=False)
+    expires = sa.Column('expires', sa.DateTime, nullable=False)
+    stream = sa.Column('stream', sa.String(255), nullable=False)
+    shortname = sa.Column('shortname', sa.String(255), nullable=False)
+    version = sa.Column('version', sa.String(5), nullable=False)
+    ingest_date = sa.Column('ingestdate', sa.DateTime, nullable=False)
+    available = sa.Column('available', sa.Boolean, nullable=False)
+    deletion_date = sa.Column('deletiondate', sa.DateTime)
+
+
+class MissionAccountMapping(Base):
+    """ORM for the ``MissionAccountMapping`` table"""
+
+    __tablename__ = 'MISSIONACCOUNTMAPPING'
+
+    mission = sa.Column('mission', sa.String(30), primary_key=True)
+    account = sa.Column('account', sa.String(30), primary_key=True)
+
+
+class Missions(Base):
+    """ORM for the ``Missions`` table"""
+
+    __tablename__ = 'MISSIONS'
+    __table_args__ = (sa.UniqueConstraint('mission', 'ingestdirectory', name='missions_uc'),)
+
+    mission = sa.Column('mission', sa.String(30), primary_key=True)
+    ingest_directory = sa.Column('ingestdirectory', sa.String(255), unique=True, nullable=False)
+
+
+class MissionShortnameMapping(Base):
+    """ORM for the ``MissionShortnameMapping`` table"""
+
+    __tablename__ = 'MISSIONSHORTNAMEMAPPING'
+
+    mission = sa.Column('mission', sa.String(30), primary_key=True)
+    shortname = sa.Column('shortname', sa.String(255), primary_key=True)
+
+
+class Shortnames(Base):
+    """ORM for the ``Shortnames`` table"""
+
+    __tablename__ = 'SHORTNAMES'
+
+    shortname = sa.Column('shortname', sa.String(255), primary_key=True)
+    filename_pattern = sa.Column('filenamepattern', sa.String(255), nullable=False)
+
+
+class TagsAndExtras(Base):
+    """ORM for the ``TagsAndExtras`` table"""
+
+    __tablename__ = 'TAGSANDEXTRAS'
+
+    fileid = sa.Column('fileid', sa.Integer, primary_key=True)
+    field_name = sa.Column('fieldname', sa.String(255), primary_key=True)
+    field_type = sa.Column('fieldtype', sa.Enum('tag', 'extra', name='fieldType'), primary_key=True)
+    value = sa.Column('value', sa.String(255))
 
 
 class Transactions(Base):
-    """ORM for the ``transactions`` table"""
+    """ORM for the ``Transactions`` table"""
 
-    __tablename__ = 'transactions'
+    __tablename__ = 'TRANSACTIONS'
 
-    transactionid = sa.Column(sa.Integer, primary_key=True)
-    action = sa.Column(sa.String(255), nullable=False)
-    username = sa.Column(sa.String(30), sa.ForeignKey('accounts.username'), nullable=False)
-    start_time = sa.Column(sa.DateTime, nullable=False)
-    fileid = sa.Column(sa.Integer, sa.ForeignKey('available_files.fileid'))
-    source = sa.Column(sa.String(255))
-    destination = sa.Column(sa.String(255))
-    end_time = sa.Column(sa.DateTime)
+    transactionid = sa.Column('transactionid', sa.Integer, primary_key=True)
+    action = sa.Column('action', sa.String(255), nullable=False)
+    username = sa.Column('username', sa.String(30), nullable=False)
+    start_time = sa.Column('starttime', sa.DateTime, nullable=False)
+    fileid = sa.Column('fileid', sa.Integer)
+    source = sa.Column('source', sa.String(255))
+    destination = sa.Column('destination', sa.String(255))
+    end_time = sa.Column('endtime', sa.DateTime)
+    response_status = sa.Column('responsestatus', sa.String(255))

@@ -11,11 +11,12 @@ Use
     ::
         from lasp_sdtp.utils.utils import get_checksum
 
-#TODO: Make create_test_filesystem and get_shortname to be more generic, avoid
+TODO: Make create_test_filesystem and get_shortname to be more generic, avoid
       hard references to TSIS-2
-#TODO: Parse subscriber provided tags
-#TODO: Move functions closer to their parent, where it makes sense
-#TODO: Update docstrings
+TODO: Parse subscriber provided tags
+TODO: Move functions closer to their parent, where it makes sense
+TODO: Update docstrings
+TODO: Avoid hardcoded shortname mapping
 """
 
 import datetime
@@ -32,7 +33,7 @@ from flask.wrappers import Response
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_available_files
+from lasp_sdtp.database.database_queries import query_for_files
 from lasp_sdtp.database.database_queries import query_for_account
 
 logger = logging.getLogger(__name__)

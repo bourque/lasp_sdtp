@@ -1,5 +1,5 @@
 """This module ingests a list of files (and their metadata) into the database.
-The ``available_files`` and ``metadata`` tables are updated accordingly.
+The ``Files`` and ``TagsAndExtras`` tables are updated accordingly.
 
 Authors
 -------
@@ -16,6 +16,8 @@ Use
         from lasp_sdtp.database.ingest import Ingest
         i = Ingest(filelist, 'prod', 'v01')
         i.ingest()
+
+TODO: Get the actual Tags/Extra values to store in the database
 """
 
 import datetime
@@ -51,12 +53,11 @@ class Ingest():
         Ingest the files into the database
     """
 
-    def __init__(self, filelist: list, stream: str, version: str, data_product_id: str):
+    def __init__(self, filelist: list, stream: str, version: str):
 
         self.filelist = filelist
         self.stream = stream
         self.version = version
-        self.data_product_id = data_product_id
 
     def ingest(self):
         """Perform the ingest operation.  See module docstrings for further
@@ -68,16 +69,16 @@ class Ingest():
             logger.info('Ingesting %s for stream %s version %s' % (Path(filename).name, self.stream, self.version))
 
             # Gather data for available_files table
-            data = db.AvailableFiles(
+            data = db.Files(
                 name=Path(filename).name,
                 checksum=utils.get_checksum(),
-                data_product_id=self.data_product_id,
                 size=os.path.getsize(filename),
                 expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period']),
                 stream=self.stream,
                 shortname=utils.get_shortname(Path(filename).name),
                 version=self.version,
-                date=datetime.datetime(2022, 1, 1).date() + datetime.timedelta(days=i - 1)
+                ingestDate=datetime.datetime(2022, 1, 1).date() + datetime.timedelta(days=i - 1),
+                available=True
             )
 
             # Insert the data, get back the fileid

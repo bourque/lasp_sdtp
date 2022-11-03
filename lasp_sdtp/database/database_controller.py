@@ -55,22 +55,32 @@ class DatabaseController():
     Attributes
     ----------
     Accounts : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
-        The ORM for the ``accounts`` database table
-    AvailableFiles : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
-        The ORM for the ``file_metadata`` database table
+        The ORM for the ``Accounts`` database table
     base : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
         Provides a base class for declarative class definitions.
     engine : ``sqlalchemy.engine.base.Engine`` object
         Provides a source of database connectivity and behavior.
     FileQueue : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
-        The ORM for the ``file_queue`` database table
+        The ORM for the ``FileQueue`` database table
+    Files : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
+        The ORM for the ``Files`` database table
     meta : ``sqlalchemy.sql.schema.MetaData`` object
         The connection metadata
+    MissionAccountMapping : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
+        The ORM for the ``MissionAccountMapping`` database table
+    Missions : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
+        The ORM for the ``Missions`` database table
+    MissionShortnameMapping : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
+        The ORM for the ``MissionShortnameMapping`` database table
     session : ``sqlalchemy.orm.session.Session`` object
         Provides a holding zone for all objects loaded or associated with
         the database.
+    Shortnames : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
+        The ORM for the ``Shortnames`` database table
+    TagsAndExtras : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
+        The ORM for the ``TagsAndExtras`` database table
     Transactions : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
-        The ORM for the ``transactions`` database table
+        The ORM for the ``Transactions`` database table
 
     Methods
     -------
@@ -78,13 +88,13 @@ class DatabaseController():
         Return ``session``, ``base``, ``engine``, and ``metadata`` objects
         for connecting to the database.
     delete_file_from_queue(fileid)
-        Remove the ``file_queue`` database entry for the given ``fileid``
+        Remove the ``FileQueue`` database entry for the given ``fileid``
     insert_data(table_name, data)
         Inserts the given data into the given table
     mark_transaction_complete(fileid)
-        Update the ``transactions`` table to mark the GET request transaction
+        Update the `Ttransactions`` table to mark the GET request transaction
         corresponding to the given ``fileid`` as complete by adding the
-        ``end_time``
+        ``endTime``
     query_for_account(username)
         Return account information for the given ``username``
     query_for_filelist(tags)
@@ -96,7 +106,7 @@ class DatabaseController():
         Return a list of queue database table entries that exist for the
         given ``fileid``
     update_transactions_table(request, fileid=None)
-        Insert information for a new transaction in the ``transactions``
+        Insert information for a new transaction in the ``Transactions``
         table
     """
 
@@ -104,9 +114,13 @@ class DatabaseController():
 
         self.session, self.base, self.engine, self.meta = self._connect()
         self.Accounts = database_interface.Accounts
-        self.AvailableFiles = database_interface.AvailableFiles
         self.FileQueue = database_interface.FileQueue
-        self.Metadata = database_interface.Metadata
+        self.Files = database_interface.Files
+        self.MissionAccountMapping = database_interface.MissionAccountMapping
+        self.Missions = database_interface.Missions
+        self.MissionShortnameMapping = database_interface.MissionShortnameMapping
+        self.Shortnames = database_interface.Shortnames
+        self.TagsAndExtras = database_interface.TagsAndExtras
         self.Transactions = database_interface.Transactions
 
     def _connect(self) -> (Session, DeclarativeMeta, Engine, MetaData):
@@ -155,24 +169,23 @@ class DatabaseController():
         self.session.commit()
         logger.info('Deleted %s from file queue' % fileid)
 
-    def insert_data(self, table_name: str, data: list[dict]):
+    def insert_data(self, data: list[object]):
         """Inserts the given data into the given table
 
         Parameters
         ----------
-        table : str
-            The table to insert data into (e.g. ``accounts``)
-        data : list of dicts
+        data : list of ``sqlalchemy`` Table objects
             The data to insert
         """
 
-        table = sa.Table(table_name, self.base.metadata, autoload=True)
+        db.session.add_all(data)
+        db.session.commit()
+
         for row in data:
-            self.engine.execute(table.insert().values(row))
-            logger.info('Inserted the following into the database: %s' % row)
+            logger.info('Inserted the following into the database: %s' % row.__dict__)
 
     def mark_transaction_complete(self, fileid: int):
-        """Update the ``transactions`` table to mark the GET request transaction
+        """Update the ``Transactions`` table to mark the GET request transaction
         corresponding to the given ``fileid`` as complete by adding the
         ``end_time``
 
@@ -189,12 +202,12 @@ class DatabaseController():
             self.Transactions.fileid == fileid,
             self.Transactions.username == subscriber_config['username']
         ).update(
-            {'end_time': end_time})
+            {'endTime': end_time})
         self.session.commit()
         logger.info('Transaction for %s for %s account marked complete' % (fileid, subscriber_config['username']))
 
     def update_registration(self):
-        """"""
+        """Update the ``Accounts`` table with registration information"""
 
         # Define metadata for the entry
         certuid = f'{subscriber_config["username"]}_cert'
@@ -207,16 +220,16 @@ class DatabaseController():
         ).filter(
             db.Accounts.username == subscriber_config['username']
         ).update(
-            {'registration_open': False,
+            {'registrationOpen': False,
              'certuid': certuid,
-             'registration_date': registration_date,
-             'registration_expires': registration_expires})
+             'registrationDate': registration_date,
+             'registrationExpires': registration_expires})
 
         db.session.commit()
         logger.info('Registered account for %s' % subscriber_config['username'])
 
     def update_transactions_table(self, request: object, fileid: Optional[int] = None) -> int:
-        """Insert information for a new transaction in the ``transactions``
+        """Insert information for a new transaction in the ``Transactions``
         table
 
         Parameters
@@ -238,21 +251,21 @@ class DatabaseController():
             data_to_insert = self.Transactions(
                 action=f'{request.method} {request.url}',
                 username=subscriber_config['username'],
-                start_time=datetime.datetime.utcnow())
+                startTime=datetime.datetime.utcnow())
 
         # For GET /files
         elif request.method == 'GET' and fileid is None:
             data_to_insert = self.Transactions(
                 action=f'{request.method} {request.url}',
                 username=subscriber_config['username'],
-                start_time=datetime.datetime.utcnow())
+                startTime=datetime.datetime.utcnow())
 
         # For GET /files/<fileid>
         elif request.method == 'GET' and fileid is not None:
             data_to_insert = self.Transactions(
                 action=f'{request.method} {request.url}',
                 username=subscriber_config['username'],
-                start_time=datetime.datetime.utcnow(),
+                startTime=datetime.datetime.utcnow(),
                 fileid=fileid,
                 source=admin_config['filesystem_loc'],
                 destination=admin_config['data_cache_loc'])
@@ -263,10 +276,10 @@ class DatabaseController():
             data_to_insert = self.Transactions(
                 action=f'{request.method} {url}',
                 username=subscriber_config['username'],
-                start_time=datetime.datetime.utcnow())
+                startTime=datetime.datetime.utcnow())
 
         else:
-            raise ValueError(f'Request method {request.method} is not recorgnized')
+            raise ValueError(f'Request method {request.method} is not recognized')
 
         # Insert the data, and get the transaction id
         self.session.add(data_to_insert)
