@@ -23,7 +23,6 @@ Use
         FLASK_APP=request_api.py FLASK_ENV=development flask run --port 8002
 """
 
-import datetime
 import logging
 from pathlib import Path
 
@@ -32,6 +31,7 @@ from flask import Flask
 from flask import request
 
 from lasp_sdtp.config import admin_config
+from lasp_sdtp.config import SubscriberConfig
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.database.database_queries import query_for_account
@@ -198,11 +198,6 @@ def register_subscriber() -> dict:
         The response object containing the appropriate content.
     """
 
-    # Define metadata for the entry
-    certuid = f'{subscriber_config["username"]}_cert'
-    registration_date = datetime.datetime.utcnow().date()
-    registration_expires = registration_date + datetime.timedelta(days=subscriber_config['account_expiration_period'])
-
     # Check to see if the account is open for registration
     account = query_for_account(subscriber_config['username'])
     registration_open = account['registration_open']
@@ -211,23 +206,14 @@ def register_subscriber() -> dict:
 
         # Update the account with registration information
         db.update_registration()
-        db.session.query(
-            db.Accounts
-        ).filter(
-            db.Accounts.username == subscriber_config['username']
-        ).update(
-            {'registrationOpen': False,
-             'certUid': certuid,
-             'registrationDate': registration_date,
-             'registrationExpires': registration_expires})
-        db.session.commit()
-        logger.info('Registered account for %s' % subscriber_config['username'])
 
-        # Create a queue space in cache
-        queue_path = Path(admin_config['data_cache_loc']) / subscriber_config['username']
-        if not queue_path.exists:
-            queue_path.mkdir()
-            logger.info('Created queue: %s' % queue_path)
+        # Update the MissionAccountMapping with which mission(s) the subscriber is subscribed to
+        db.update_mission_account_mapping()
+
+        # Create a queue space in cache for each stream
+        for stream in subscriber_config['streams']:
+            queue_path = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / stream
+            queue_path.mkdir(parents=True, exist_ok=True)
 
     else:
         logger.warning('Attempt to register account %s was made, but registration window is not open' % subscriber_config['username'])

@@ -33,7 +33,7 @@ from flask.wrappers import Response
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_files
+from lasp_sdtp.database.database_queries import query_for_file
 from lasp_sdtp.database.database_queries import query_for_account
 
 logger = logging.getLogger(__name__)
@@ -62,9 +62,7 @@ def combine_metadata(filelist: list, tags_and_extras: list) -> list:
 
     {
         'fileid': 4542,
-        'data_product_id': 'tsis2',
         'expires': datetime.datetime(2023, 3, 8, 0, 0),
-        'date': datetime.datetime(2022, 2, 1, 0, 0),
         'size': 47.0,
         'name': 'tsis2_tim_L2_v01_20220105.zip',
         'checksum': 'sha256:dtjeijvhnlexw28irt24j9kc18wgn1rwdlmm2sf505wczoopnld7zllhw1loqs3t',
@@ -273,6 +271,26 @@ def get_subscriber_tags_and_extras(stream):
     return subscriber_tags, subscriber_extras
 
 
+def get_tag_value(filename: str, field_name: str) -> object:
+    """Retrieve and return the tag value for the given file and ``field_name``
+
+    Parameters
+    ----------
+    filename : str
+        The file from which to retrieve the tag value
+    field_name : str
+        The name of the tag to retrieve
+
+    Returns
+    -------
+    value : obj
+        The tag value
+    """
+
+    logger.info('Retrieving %s from %s' % (filename, field_name))
+    return 'some_value'
+
+
 def parse_api_response(api: str, response: Response) -> dict:
     """Parse a response from the given API.
 
@@ -321,12 +339,9 @@ def parse_request_parameters(request: object) -> dict:
     default_tag_list = [
         ('stream', 'prod', str),
         ('shortname', 'all', str),
-        ('version', 'v01', str),
+        ('version', '01', str),
         ('maxfile', subscriber_config['max_num_files'], int),
-        ('startfileid', 1, int),
-        ('date', None, str),
-        ('start_date', None, str),
-        ('end_date', None, str)]
+        ('startfileid', 1, int)]
 
     # Determine the stream of the request
     if 'stream' in request.args.keys():
@@ -342,7 +357,7 @@ def parse_request_parameters(request: object) -> dict:
 
     # Check to see if any of the provided tags in the request are not supported
     for item in request.args.keys():
-        if item not in [item[0] for item in supported_tags_and_extras]:
+        if item.lower() not in [item[0] for item in supported_tags_and_extras]:
             abort(400)
 
     # Store tags from request in a dictionary
@@ -386,16 +401,20 @@ def validate_access(fileid: str) -> bool:
         True or False for whether or not the subscriber has access to the file
     """
 
-    # Get the data_product_id for the file
-    file_metadata = query_for_available_files(fileid)
-    data_product_id = file_metadata.data_product_id
+    # Get the shortname for the file
+    file_metadata = query_for_file(fileid)
+    shortname = file_metadata.shortname
 
-    # Check to see the subscriber has access to the data_product_id
-    username = subscriber_config['username']
-    account = query_for_account(username)
-    allowed_data_products = account['allowed_data_products']
+    # Check to see the subscriber has access to the shortname
+    # Get missions associated with account
+    missions = db.session.query(db.MissionAccountMapping).filter(db.MissionAccountMapping.account == subscriber_config['username']).all()
+    missions = [item.mission for item in missions]
 
-    if data_product_id in allowed_data_products:
+    # Get shortnames associated with missions
+    allowed_shortnames = db.session.query(db.MissionShortnameMapping).filter(db.MissionShortnameMapping.mission.in_(missions)).all()
+    allowed_shortnames = [item.shortname for item in allowed_shortnames]
+
+    if shortname in allowed_shortnames:
         return True
     else:
         return False
@@ -479,21 +498,6 @@ def validate_tags(tags: dict) -> bool:
     bool
         True or False for whether or not the tags are valid
     """
-
-    # Make sure dates are of proper format (i.e. YYYY-MM-DD)
-    for date_tag in [tags['date'], tags['start_date'], tags['end_date']]:
-        if date_tag is not None:
-            try:
-                datetime.datetime.strptime(date_tag, '%Y-%m-%d')
-            except ValueError:
-                return False
-
-    # Make sure the date/start_date/end_date combination is valid
-    # e.g. if a date is provided, the start and end dates should be None
-    date_types = (type(tags['date']), type(tags['start_date']), type(tags['end_date']))
-    valid_date_type_combos = [(type(None), type(None), type(None)), (str, type(None), type(None)), (type(None), str, str)]
-    if date_types not in valid_date_type_combos:
-        return False
 
     # Make sure the maxfile tag does not exceed the max number of files agreement
     if tags['maxfile'] > subscriber_config['max_num_files']:

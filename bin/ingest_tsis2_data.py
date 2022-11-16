@@ -1,4 +1,4 @@
-"""This script ingests TSIS-2 data into the database.
+"""This script ingests TSIS2 data into the database.
 
 Authors
 -------
@@ -8,6 +8,8 @@ Use
 ---
     This module is intended to be executed via the command line as such:
         python ingest_tsis2_data.py
+
+TODO: Add support for ingesting data from dropbox folder
 """
 
 import glob
@@ -24,9 +26,9 @@ if __name__ == '__main__':
     filelist = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
 
     # Ingest a 'production' version of the data
-    production = Ingest(filelist, 'prod', 'v01', 'tsis2_prod')
+    production = Ingest(filelist, 'prod', '01')
     production.ingest()
 
     # Ingest a 'development' version of the data
-    development = Ingest(filelist, 'dev', 'v01', 'tsis2_dev')
+    development = Ingest(filelist, 'dev', '01')
     development.ingest()

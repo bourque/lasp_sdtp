@@ -21,20 +21,20 @@ def test_ingest():
     """Tests the ``ingest`` method"""
 
     # Create some files to test with
-    test_filelist = ['tsis2_L1_test.txt', 'tsis2_sim_cal_test.txt', 'tsis2_sc_L2_test.txt']
+    test_filelist = ['tsis2_L1_test.zip', 'tsis2_sim_cal_test.zip', 'tsis2_sc_L2_test.zip']
     for test_file in test_filelist:
         Path(test_file).touch(exist_ok=True)
 
     # Ingest the files
-    test_ingest = Ingest(test_filelist, 'prod', 'v01', 'tsis2')
+    test_ingest = Ingest(test_filelist, 'prod', 'v01')
     test_ingest.ingest()
 
-    # Query the available_files table to see if the files are there
-    available_files = db.session.query(db.AvailableFiles.name).all()
-    available_files = [item[0] for item in available_files]
+    # Query the f table to see if the files are there
+    files = db.session.query(db.Files.name).all()
+    files = [item[0] for item in files]
     for test_file in test_filelist:
 
-        assert test_file in available_files
+        assert test_file in files
 
         # Remove the file that were just created
         Path(test_file).unlink()

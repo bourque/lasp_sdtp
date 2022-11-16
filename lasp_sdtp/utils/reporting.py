@@ -82,20 +82,20 @@ def _get_report_queries() -> list:
     queries.append((
         'Recent Transactions',
         db.session.query(
-            db.Transactions.transactionid, db.Transactions.action, db.Transactions.username, db.AvailableFiles.name,
+            db.Transactions.transactionid, db.Transactions.action, db.Transactions.username, db.Files.name,
             db.Transactions.start_time, db.Transactions.end_time, db.Transactions.source, db.Transactions.destination
         ).join(
-            db.Transactions, db.AvailableFiles.fileid == db.Transactions.fileid)))
+            db.Transactions, db.Files.fileid == db.Transactions.fileid)))
 
     # File queue contents
     queries.append((
         'File Queue Contents',
         db.session.query(
-            db.FileQueue.queueid, db.FileQueue.fileid, db.AvailableFiles.name, db.FileQueue.username, db.FileQueue.entry_date, db.FileQueue.expires
+            db.FileQueue.fileid, db.Files.name, db.FileQueue.username, db.FileQueue.entry_date, db.FileQueue.expires
         ).select_from(
-            db.AvailableFiles
+            db.Files
         ).join(
-            db.FileQueue, db.AvailableFiles.fileid == db.FileQueue.fileid
+            db.FileQueue, db.Files.fileid == db.FileQueue.fileid
         ).filter(
             db.FileQueue.expires >= datetime.datetime.utcnow().date())))
 
@@ -103,10 +103,10 @@ def _get_report_queries() -> list:
     queries.append((
         'Long Transfers',
         db.session.query(
-            db.Transactions.transactionid, db.Transactions.action, db.Transactions.username, db.AvailableFiles.name,
+            db.Transactions.transactionid, db.Transactions.action, db.Transactions.username, db.Files.name,
             db.Transactions.start_time, db.Transactions.end_time, db.Transactions.source, db.Transactions.destination
         ).join(
-            db.Transactions, db.AvailableFiles.fileid == db.Transactions.fileid
+            db.Transactions, db.Files.fileid == db.Transactions.fileid
         ).filter(
             db.Transactions.end_time == None,
             db.Transactions.start_time <= datetime.datetime.utcnow() - datetime.timedelta(hours=24))))
@@ -115,11 +115,11 @@ def _get_report_queries() -> list:
     queries.append((
         'Expiring Files',
         db.session.query(
-            db.FileQueue.queueid, db.FileQueue.fileid, db.AvailableFiles.name, db.FileQueue.username, db.FileQueue.entry_date, db.FileQueue.expires
+            db.FileQueue.fileid, db.Files.name, db.FileQueue.username, db.FileQueue.entry_date, db.FileQueue.expires
         ).select_from(
-            db.AvailableFiles
+            db.Files
         ).join(
-            db.FileQueue, db.AvailableFiles.fileid == db.FileQueue.fileid
+            db.FileQueue, db.Files.fileid == db.FileQueue.fileid
         ).filter(
             db.FileQueue.expires <= datetime.datetime.utcnow().date() + datetime.timedelta(days=7))))
 

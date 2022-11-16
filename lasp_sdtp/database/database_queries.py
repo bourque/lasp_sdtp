@@ -13,9 +13,10 @@ Use
     ::
         from lasp_sdtp.database.database_queries import query_for_files
         data = query_for_files(fileid)
+
+TODO: Only return files that the user has access to
 """
 
-import datetime
 import logging
 
 from lasp_sdtp.database.database_controller import db
@@ -49,17 +50,29 @@ def query_for_account(username: str) -> dict:
     return account
 
 
+def query_for_accounts_by_mission(mission: str) -> list:
+    """Return the accounts associated with the given ``mission``
+
+    Parameters
+    ----------
+    mission : str
+        The mission of interest (e.g. ``TSIS2``)
+
+    Returns
+    -------
+    accounts : list
+        The account(s) that are subscribed to the given ``mission``
+    """
+
+    results = db.session.query(db.MissionAccountMapping).filter(db.MissionAccountMapping.mission == mission).all()
+    accounts = [item.account for item in results]
+
+    return accounts
+
+
 def query_for_filelist(tags: dict) -> list:
     """Return a list of files (and their metadata) based on user-provided
     tags.
-
-    For the ``date`` tag, the user may provide a specific date to filter on
-    (e.g. ``date=2022-01-01``) or the user may provide a specific date range
-    to filter on via the ``start_date`` and ``end_date`` tags (e.g.
-    ``start_date=2022-01-01&end_date=2022-02-01``).  If a ``date`` is
-    provided, then ``start_date`` and ``end_date`` must remain as ``None``.
-    Alternatively, if both a ``start_date`` and ``end_date`` are provided,
-    the ``date`` tag must remain as ``None``.
 
     Parameters
     ----------
@@ -74,6 +87,9 @@ def query_for_filelist(tags: dict) -> list:
 
     logger.info('Querying available_files database table for files with parameters %s' % str(tags))
 
+    print('the tags of the query are:')
+    print(tags)
+
     # Build the query
     query = db.session.query(db.Files)  # base query
     query = query.filter(db.Files.stream == tags['stream'])  # stream is always supplied via default value
@@ -82,15 +98,6 @@ def query_for_filelist(tags: dict) -> list:
     # For non-default shortname values
     if tags['shortname'] != 'all':
         query = query.filter(db.Files.shortname == tags['shortname'])
-
-    # For non-default date values
-    if tags['date'] is not None:
-        query = query.filter(db.Files.date == datetime.datetime.strptime(tags['date'], '%Y-%m-%d').date())
-
-    # For non-default start_date and end_date values
-    if tags['start_date'] and tags['end_date'] is not None:
-        query = query.filter(db.Files.date >= datetime.datetime.strptime(tags['start_date'], '%Y-%m-%d').date())
-        query = query.filter(db.Files.date <= datetime.datetime.strptime(tags['end_date'], '%Y-%m-%d').date())
 
     # Order the results by fileid
     query = query.order_by(db.Files.fileid)
@@ -104,15 +111,21 @@ def query_for_filelist(tags: dict) -> list:
         del item['_sa_instance_state']
 
     # Only return files that the user has access to
-    allowed_data_products = query_for_account(subscriber_config['username'])['allowed_data_products']
-    allowed_data_products = allowed_data_products.split(',')
-    allowed_data_products = [item.strip() for item in allowed_data_products]
-    results = [result for result in results if result['data_product_id'] in allowed_data_products]
+    # Get missions associated with account
+    missions = db.session.query(db.MissionAccountMapping).filter(db.MissionAccountMapping.account == subscriber_config['username']).all()
+    missions = [item.mission for item in missions]
+
+    # Get shortnames associated with missions
+    shortnames = db.session.query(db.MissionShortnameMapping).filter(db.MissionShortnameMapping.mission.in_(missions)).all()
+    shortnames = [item.shortname for item in shortnames]
+
+    # Filter out the shortnames
+    results = [result for result in results if result['shortname'] in shortnames]
 
     return results
 
 
-def query_for_files(fileid: int) -> object:
+def query_for_file(fileid: int) -> object:
     """Return the metadata associated with the given ``fileid``
 
     Parameters
@@ -132,6 +145,26 @@ def query_for_files(fileid: int) -> object:
     file_metadata = files[0]  # There should only be one entry
 
     return file_metadata
+
+
+def query_for_mission_by_shortname(shortname: str) -> str:
+    """Return the mission associated with the given ``shortname``
+
+    Parameters
+    ----------
+    shortname : str
+        The shortname of interest (e.g. ``TSIS2_L1``)
+
+    Returns
+    -------
+    mission : str
+        The mission associated with the shortname (e.g. ``TSIS2``)
+    """
+
+    results = db.session.query(db.MissionShortnameMapping).filter(db.MissionShortnameMapping.shortname == shortname).all()
+    mission = results[0].mission
+
+    return mission
 
 
 def query_for_queue_entries(fileid: int) -> list:

@@ -27,9 +27,25 @@ from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.utils import utils
 
+SHORTNAMES_FOR_TESTING = [
+    'TSIS2_L1',
+    'TSIS2_SIM_CAL',
+    'TSIS2_TIM_CAL',
+    'TSIS2_SIM_L2',
+    'TSIS2_TIM_L2',
+    'TSIS_SC_L2',
+    'TSIS2_SSI_L3_12HR_TXT',
+    'TSIS2_SSI_L3_24HR_TXT',
+    'TSIS2_TSI_L3_06HR_TXT',
+    'TSIS2_TSI_L3_24HR_TXT',
+    'TSIS2_SSI_L3_12HR_NC',
+    'TSIS2_SSI_L3_24HR_NC',
+    'TSIS2_TSI_L3_06HR_NC',
+    'TSIS2_TSI_L3_24HR_NC',
+]
 
 def _add_accounts_entries():
-    """Add necessary ``Accounts`` table entries used for testing"""
+    """Add ``Accounts`` table entries used for testing"""
 
     # Add nominal test account used for general testing
     data_to_insert = [db.Accounts(
@@ -69,7 +85,7 @@ def _add_accounts_entries():
     db.insert_data(data_to_insert)
 
 def _add_file_queue_entries():
-    """Add necessary ``FileQueue`` table entries used for testing"""
+    """Add ``FileQueue`` table entries used for testing"""
 
     # Add an entry associated with the expired account (for test_cleanup_database)
     data_to_insert = [db.FileQueue(
@@ -87,12 +103,16 @@ def _add_file_queue_entries():
         expires=datetime.datetime.utcnow().date() - datetime.timedelta(days=10)
     ))
 
-    # Add an expired file to the file queue storage associated with expired account (for test_cleanup_database)
-    with open(Path(admin_config['data_cache_loc']) / 'test_cleanup_db.txt', 'w') as f:
+    # Create a queue space for the expired account (used in test_cleanup_database)
+    queue_path = Path(admin_config['data_cache_loc']) / 'expired_account' / 'prod'
+    queue_path.mkdir(parents=True, exist_ok=True)
+
+    # Add a file associated with expired account (used in test_cleanup_database)
+    with open(queue_path / 'test_cleanup_db.txt', 'w') as f:
         f.write('')
 
     # Add an expired file to the file queue storage associated with non-expired account (for test_cleanup_database)
-    with open(Path(admin_config['data_cache_loc']) / 'test_cleanup_db_2.txt', 'w') as f:
+    with open(Path(admin_config['data_cache_loc']) / subscriber_config['username'] / 'prod' / 'test_cleanup_db2.txt', 'w') as f:
         f.write('')
 
     # Add an entry used for test_reporting
@@ -115,7 +135,7 @@ def _add_file_queue_entries():
 
 
 def _add_files_entries():
-    """Add necessary ``Files`` table entries used for testing"""
+    """Add ``Files`` table entries used for testing"""
 
     # Locate files in test filesystem
     test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
@@ -155,7 +175,7 @@ def _add_files_entries():
         name='test_cleanup_db2.txt',
         checksum='bar',
         size=1,
-        expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
+        expires=datetime.datetime.utcnow().date() - datetime.timedelta(days=1),
         stream='prod',
         shortname='TSIS2_L1',
         version='01',
@@ -195,31 +215,51 @@ def _add_files_entries():
     db.insert_data(data_to_insert)
 
 
-def _add_shortnames_entries():
-    """Add necessary ``Shortnames`` table entries used for testing"""
+def _add_mission_account_mapping_entries():
+    """Add ``MissionAccountMapping`` table entries used for testing"""
 
-    shortnames_for_testing = [
-        'TSIS2_L1',
-        'TSIS2_SIM_CAL',
-        'TSIS2_TIM_CAL',
-        'TSIS2_SIM_L2',
-        'TSIS2_TIM_L2',
-        'TSIS_SC_L2',
-        'TSIS2_SSI_L3_12HR_TXT',
-        'TSIS2_SSI_L3_24HR_TXT',
-        'TSIS2_TSI_L3_06HR_TXT',
-        'TSIS2_TSI_L3_24HR_TXT',
-        'TSIS2_SSI_L3_12HR_NC',
-        'TSIS2_SSI_L3_24HR_NC',
-        'TSIS2_TSI_L3_06HR_NC',
-        'TSIS2_TSI_L3_24HR_NC',
-    ]
+    data_to_insert = [db.MissionAccountMapping(
+        mission='TSIS2',
+        account=subscriber_config['username']
+    )]
 
-    data_to_insert = [db.Shortnames(shortname=shortname, filename_pattern='some_regex_expression') for shortname in shortnames_for_testing]
     db.insert_data(data_to_insert)
 
+
+def _add_missions_entries():
+    """Add ``Missions`` table entries used for testing"""
+
+    data_to_insert = [db.Missions(
+        mission='TSIS2',
+        ingest_directory='/path/to/tsis2/data/'
+    )]
+
+    db.insert_data(data_to_insert)
+
+
+def _add_mission_shortname_mapping_entries():
+    """Add  ``MissionShortnameMapping`` table entries used for testing"""
+
+    data_to_insert = []
+
+    for shortname in SHORTNAMES_FOR_TESTING:
+        data_to_insert.append(db.MissionShortnameMapping(
+            mission='TSIS2',
+            shortname=shortname
+        ))
+
+    db.insert_data(data_to_insert)
+
+
+def _add_shortnames_entries():
+    """Add ``Shortnames`` table entries used for testing"""
+
+    data_to_insert = [db.Shortnames(shortname=shortname, filename_pattern='some_regex_expression') for shortname in SHORTNAMES_FOR_TESTING]
+    db.insert_data(data_to_insert)
+
+
 def _add_transactions_entries():
-    """Add necessary ``Transactions`` table entries used for testing"""
+    """Add ``Transactions`` table entries used for testing"""
 
     # Add a transaction for test_reporting
     data_to_insert = [db.Transactions(
@@ -243,15 +283,21 @@ def setup(request: object):
     # Remove any data that may already exist in the database
     db.session.query(db.FileQueue).delete()
     db.session.query(db.Transactions).delete()
-    db.session.query(db.Accounts).delete()
     db.session.query(db.TagsAndExtras).delete()
     db.session.query(db.Files).delete()
+    db.session.query(db.MissionShortnameMapping).delete()
     db.session.query(db.Shortnames).delete()
+    db.session.query(db.MissionAccountMapping).delete()
+    db.session.query(db.Missions).delete()
+    db.session.query(db.Accounts).delete()
     db.session.commit()
 
     # Add entries to database tables to support tests
+    _add_missions_entries()
     _add_accounts_entries()
+    _add_mission_account_mapping_entries()
     _add_shortnames_entries()
+    _add_mission_shortname_mapping_entries()
     _add_files_entries()
     _add_file_queue_entries()
     _add_transactions_entries()
@@ -262,12 +308,15 @@ def setup(request: object):
 
 def teardown():
     """Teardown function"""
-
+    pass
     # Clean out the database
-    db.session.query(db.FileQueue).delete()
-    db.session.query(db.Transactions).delete()
-    db.session.query(db.Accounts).delete()
-    db.session.query(db.TagsAndExtras).delete()
-    db.session.query(db.Files).delete()
-    db.session.query(db.Shortnames).delete()
-    db.session.commit()
+    # db.session.query(db.FileQueue).delete()
+    # db.session.query(db.Transactions).delete()
+    # db.session.query(db.TagsAndExtras).delete()
+    # db.session.query(db.Files).delete()
+    # db.session.query(db.MissionShortnameMapping).delete()
+    # db.session.query(db.Shortnames).delete()
+    # db.session.query(db.MissionAccountMapping).delete()
+    # db.session.query(db.Missions).delete()
+    # db.session.query(db.Accounts).delete()
+    # db.session.commit()

@@ -39,7 +39,6 @@ def test_combine_metadata():
 
     filelist = [
         {'fileid': 1,
-         'data_product_id': 'tsis2',
          'expires': datetime.datetime(2022, 9, 21, 0, 0),
          'shortname': 'TEST_FILE',
          'date': datetime.datetime(2022, 1, 1, 0, 0),
@@ -47,7 +46,10 @@ def test_combine_metadata():
          'name': 'test_combine_metadata.txt',
          'checksum': 'foo',
          'stream': 'prod',
-         'version': 'v01'},
+         'version': '01',
+         'ingest_date': datetime.datetime(2022, 9, 20, 0, 0),
+         'available': True,
+         'deletion_date': None}
     ]
 
     tags_and_extras = [[
@@ -63,10 +65,13 @@ def test_combine_metadata():
         'size': 1.0,
         'name': 'test_combine_metadata.txt',
         'checksum': 'foo',
+        'ingest_date': datetime.datetime(2022, 9, 20, 0, 0),
+        'available': True,
+        'deletion_date': None,
         'tags': {
             'shortname': 'TEST_FILE',
             'stream': 'prod',
-            'version': 'v01',
+            'version': '01',
             'irradiance': 'some_value'
         },
         'extras': {

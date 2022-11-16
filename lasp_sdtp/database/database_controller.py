@@ -92,9 +92,9 @@ class DatabaseController():
     insert_data(table_name, data)
         Inserts the given data into the given table
     mark_transaction_complete(fileid)
-        Update the `Ttransactions`` table to mark the GET request transaction
+        Update the `Transactions`` table to mark the GET request transaction
         corresponding to the given ``fileid`` as complete by adding the
-        ``endTime``
+        ``end_time``
     query_for_account(username)
         Return account information for the given ``username``
     query_for_filelist(tags)
@@ -202,9 +202,23 @@ class DatabaseController():
             self.Transactions.fileid == fileid,
             self.Transactions.username == subscriber_config['username']
         ).update(
-            {'endTime': end_time})
+            {'end_time': end_time})
         self.session.commit()
         logger.info('Transaction for %s for %s account marked complete' % (fileid, subscriber_config['username']))
+
+    def update_mission_account_mapping(self):
+        """Update the ``MissionAccountMapping`` table with missions that the
+        subscriber is subscribed to"""
+
+        missions = subscriber_config['missions']
+        data_to_insert = []
+        for mission in missions:
+            data_to_insert.append(self.MissionAccountMapping(
+                mission=mission,
+                account=subscriber_config['username']
+            ))
+        self.insert_data(data_to_insert)
+        logger.info('Mapped the following missions to account %s' % data_to_insert)
 
     def update_registration(self):
         """Update the ``Accounts`` table with registration information"""
@@ -220,10 +234,10 @@ class DatabaseController():
         ).filter(
             db.Accounts.username == subscriber_config['username']
         ).update(
-            {'registrationOpen': False,
+            {'registration_open': False,
              'certuid': certuid,
-             'registrationDate': registration_date,
-             'registrationExpires': registration_expires})
+             'registration_date': registration_date,
+             'registration_expires': registration_expires})
 
         db.session.commit()
         logger.info('Registered account for %s' % subscriber_config['username'])
@@ -251,21 +265,21 @@ class DatabaseController():
             data_to_insert = self.Transactions(
                 action=f'{request.method} {request.url}',
                 username=subscriber_config['username'],
-                startTime=datetime.datetime.utcnow())
+                start_time=datetime.datetime.utcnow())
 
         # For GET /files
         elif request.method == 'GET' and fileid is None:
             data_to_insert = self.Transactions(
                 action=f'{request.method} {request.url}',
                 username=subscriber_config['username'],
-                startTime=datetime.datetime.utcnow())
+                start_time=datetime.datetime.utcnow())
 
         # For GET /files/<fileid>
         elif request.method == 'GET' and fileid is not None:
             data_to_insert = self.Transactions(
                 action=f'{request.method} {request.url}',
                 username=subscriber_config['username'],
-                startTime=datetime.datetime.utcnow(),
+                start_time=datetime.datetime.utcnow(),
                 fileid=fileid,
                 source=admin_config['filesystem_loc'],
                 destination=admin_config['data_cache_loc'])
@@ -276,7 +290,7 @@ class DatabaseController():
             data_to_insert = self.Transactions(
                 action=f'{request.method} {url}',
                 username=subscriber_config['username'],
-                startTime=datetime.datetime.utcnow())
+                start_time=datetime.datetime.utcnow())
 
         else:
             raise ValueError(f'Request method {request.method} is not recognized')

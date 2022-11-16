@@ -18,9 +18,9 @@ Use
     ::
         from lasp_sdtp.config import admin_config
         from lasp_sdtp.config import subscriber_config
-"""
 
-# TODO: Implement more complex jsonschema for checking nested objects
+TODO: Implement more complex jsonschema for checking nested objects
+"""
 
 import json
 import jsonschema
@@ -86,6 +86,8 @@ class SubscriberConfig():
         ``1`` or greater.
     max_num_files : int
         The maximum number of files to return in a file list.
+    missions : list
+        A list of missions that the subscriber is subscribed to.
     num_download_threads : int
         The number of parallel threads to use for file transfers.
     username : str
@@ -109,6 +111,7 @@ class SubscriberConfig():
         self.distinguished_name = ''
         self.expiration_period = 180
         self.max_num_files = 10000
+        self.missions = []
         self.num_download_threads = 5
         self.username = ''
         self.streams = None
@@ -138,6 +141,7 @@ class SubscriberConfig():
                 "distinguished_name": {"type": "string"},
                 "expiration_period": {"type": "integer", "minimum": 1},
                 "max_num_files": {"type": "integer", "minimum": 1, "maximum": 10000},
+                "missions": {"type": "array"},
                 "num_download_threads": {"type": "integer", "minimum": 1},
                 "username": {"type": "string", "minLength": 5, "maxLength": 30},
                 "streams": {"type": "object"}

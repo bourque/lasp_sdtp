@@ -36,7 +36,7 @@ from sqlalchemy.exc import IntegrityError
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_files
+from lasp_sdtp.database.database_queries import query_for_file
 from lasp_sdtp.database.database_queries import query_for_queue_entries
 
 
@@ -66,12 +66,12 @@ def delete_file(fileid: int) -> dict:
 
     # Get the metadata for the file of interest
     try:
-        metadata = query_for_files(fileid)
+        metadata = query_for_file(fileid)
     except IndexError:  # No results, send a 404
         abort(404)
 
     # Determine where the file exists in the queue
-    filepath = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / metadata.stream / metadata.name
+    file_loc = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / metadata.stream / metadata.name
 
     # Check to see if the file is in the queue for another subscriber
     queue_entries = query_for_queue_entries(fileid)
@@ -83,21 +83,25 @@ def delete_file(fileid: int) -> dict:
 
     # If not, delete the file from the queue if it is still there
     if not file_needed:
-        if filepath.exists:
-            filepath.unlink(missing_ok=True)
-            logger.info('Removed %s from queue' % filepath)
+        if file_loc.exists:
+            file_loc.unlink(missing_ok=True)
+            logger.info('Removed %s from queue' % file_loc)
 
-        # Remove entry from database
+        # Remove entry from the FileQueue table
         db.delete_file_from_queue(fileid)
         logger.info('Removed fileid %s from queue' % fileid)
+
+        # Update Files table to indicate that the file is no longer available
+        db.session.query(db.Files).filter(db.Files.fileid == fileid).update({'available': False})
+        db.session.commit()
+        logger.info('Updated Files table to indicate %s is no longer available' % fileid)
 
     return {}  # No content needed for response, but Flask expects a response that is not None
 
 
 @queue_app.route('/get_file/<fileid>', methods=['GET'])
 def get_file(fileid: int) -> dict:
-    """Copy a file into the data cache (if it isn't already there) and return
-    its contents.
+    """Return the contents of the requested file
 
     See the corresponding docstrings in the ``sdtp_api.py`` module for further
     details.
@@ -115,37 +119,14 @@ def get_file(fileid: int) -> dict:
 
     logger.info('Retrieving file contents for file %s' % fileid)
 
-    # Determine where the file exists in the filesystem
-    metadata = query_for_available_files(fileid)
-    filepath = Path(admin_config['filesystem_loc']) / metadata.stream / metadata.name
-
-    # Create the parent directory where the file will be stored, if necessary
-    parent_directory = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / metadata.stream
-    parent_directory.mkdir(parents=False, exist_ok=True)
-
-    # Copy the file to the queue if it doesn't already exist
-    dst = parent_directory / metadata.name
-
-    try:
-        shutil.copyfile(filepath, dst)
-        logger.info('Copied %s to queue: %s' % (filepath, dst))
-
-        # Add a file queue database record
-        entry_date = datetime.datetime.utcnow().date()
-        expiration_date = entry_date + datetime.timedelta(days=subscriber_config['expiration_period'])
-        data = [{'username': subscriber_config['username'],
-                 'fileid': fileid,
-                 'entry_date': entry_date,
-                 'expires': expiration_date}]
-        db.insert_data('file_queue', data)
-        logger.info('Added fileid %s to queue' % fileid)
-    except IntegrityError:
-        logger.warning('%s is already in the queue' % fileid)
+    # Determine where the file exists in the queue
+    metadata = query_for_file(fileid)
+    file_loc = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / metadata.stream / metadata.name
 
     # Get the file contents
-    with open(dst, 'r') as f:
+    with open(file_loc, 'r') as f:
         contents = f.readlines()
 
-    response = {'filename': Path(dst).name, 'contents': contents}
+    response = {'filename': Path(file_loc).name, 'contents': contents}
 
     return response

@@ -16,17 +16,19 @@ Use
         from lasp_sdtp.database.ingest import Ingest
         i = Ingest(filelist, 'prod', 'v01')
         i.ingest()
-
-TODO: Get the actual Tags/Extra values to store in the database
 """
 
 import datetime
 import logging
 import os
 from pathlib import Path
+import shutil
 
+from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.database_queries import query_for_accounts_by_mission
+from lasp_sdtp.database.database_queries import query_for_mission_by_shortname
 from lasp_sdtp.utils import utils
 
 
@@ -44,8 +46,6 @@ class Ingest():
         The stream associated with the files and ingestion (e.g. ``prod``).
     version : str
         The version associated with the files and ingestion (e.g. ``v01``).
-    data_product_id : str
-        The data product ID associated with the files (e.g. ``tsis2``).
 
     Methods
     -------
@@ -67,36 +67,57 @@ class Ingest():
         for i, filename in enumerate(self.filelist):
 
             logger.info('Ingesting %s for stream %s version %s' % (Path(filename).name, self.stream, self.version))
+            print('Ingesting %s for stream %s version %s' % (Path(filename).name, self.stream, self.version))
 
-            # Gather data for available_files table
+            # Gather some metadata for the file
+            shortname = utils.get_shortname(Path(filename).name)
+            mission = query_for_mission_by_shortname(shortname)
+            subscribed_accounts = query_for_accounts_by_mission(mission)
+
+            # Insert data into the Files table
             data = db.Files(
                 name=Path(filename).name,
                 checksum=utils.get_checksum(),
                 size=os.path.getsize(filename),
                 expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period']),
                 stream=self.stream,
-                shortname=utils.get_shortname(Path(filename).name),
+                shortname=shortname,
                 version=self.version,
-                ingestDate=datetime.datetime(2022, 1, 1).date() + datetime.timedelta(days=i - 1),
+                ingest_date=datetime.datetime(2022, 1, 1).date() + datetime.timedelta(days=i - 1),
                 available=True
             )
-
-            # Insert the data, get back the fileid
             db.session.add(data)
-            db.session.flush()
+            db.session.flush()  # Necessary in order to get back the fileid
             fileid = data.fileid
             db.session.commit()
 
-            # Gather data for metadata table
+            # Insert data into the TagsAndExtras table
             for field_type in ['tags', 'extras']:
                 field_list = subscriber_config['streams'][self.stream][field_type]
                 for field_name in field_list:
-                    # value = utils.get_tag_value(filename, field)
-                    value = 'some_value'
-                    data = {
-                        'fileid': fileid,
-                        'field_name': field_name,
-                        'field_type': field_type[:-1],  # Remove the 's'
-                        'value': value
-                    }
-                    db.insert_data('metadata', [data])
+                    value = utils.get_tag_value(filename, field_name)
+                    data = [db.TagsAndExtras(
+                        fileid=fileid,
+                        field_name=field_name,
+                        field_type=field_type[:-1],  # Remove the 's'
+                        value=value
+                    )]
+                    db.insert_data(data)
+
+            # Copy the files into subscriber queues who are subscribed to the data
+            # and add appropriate entries to the FileQueue table
+            for account in subscribed_accounts:
+
+                # Add entry to FileQueue table
+                data = [db.FileQueue(
+                    username=account,
+                    fileid=fileid,
+                    entry_date=datetime.datetime.utcnow().date(),
+                    expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period'])
+                )]
+                db.insert_data(data)
+
+                # Copy file to subscriber queue
+                dst = Path(admin_config['data_cache_loc']) / account / self.stream / Path(filename).name
+                shutil.copyfile(filename, dst)
+                logger.info('Copied %s to subscriber queue: %s' % (filename, dst))

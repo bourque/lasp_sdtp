@@ -24,6 +24,9 @@ def test_get_admin_config():
     """Tests the ``get_admin_config`` function"""
 
     required_keys = {
+        'api_endpoint': str,
+        'certificate_authority': str,
+        'data_cache_loc': str,
         'db_connection_string': str,
         'email_address': str,
         'email_password': str,
@@ -31,7 +34,9 @@ def test_get_admin_config():
         'email_server': str,
         'endpoint': str,
         'filesystem_loc': str,
-        'data_cache_loc': str
+        'queue_api_port': int,
+        'request_api_port': int,
+        'sdtp_api_port': int
     }
 
     # Get the config data

@@ -42,54 +42,53 @@ def test_delete_file_from_queue():
 def test_insert_data():
     """Tests the ``insert_data`` method"""
 
-    data = {
-        'fileid': 98765,
-        'name': 'insert_data.txt',
-        'checksum': 'hash',
-        'data_product_id': 'tsis2',
-        'size': 1,
-        'expires': datetime.datetime.utcnow().date(),
-        'stream': 'prod',
-        'shortname': 'foo',
-        'version': '001',
-        'date': datetime.datetime.utcnow().date()
-    }
-    db.insert_data('available_files', [data])
+    data = [db.Files(
+        fileid=98765,
+        name='insert_data.txt',
+        checksum='hash',
+        size=1,
+        expires=datetime.datetime.utcnow().date(),
+        stream='prod',
+        shortname='TSIS2_L1',
+        version='01',
+        ingest_date=datetime.datetime.utcnow().date(),
+        available=True
+    )]
+    db.insert_data(data)
 
-    results = db.session.query(db.AvailableFiles).filter(db.AvailableFiles.fileid == 98765).all()
+    results = db.session.query(db.Files).filter(db.Files.fileid == 98765).all()
     assert len(results) == 1  # There should only be one entry
 
 
 def test_fileid_boundary():
     """Tests that the ``fileid`` cannot exceed 15 digits"""
 
-    table = sa.Table('available_files', db.base.metadata)
-
-    data = {
-        'fileid': 9999999999999999,  # 16 digits
-        'name': 'foo',
-        'checksum': 'foo',
-        'data_product_id': 'tsis2',
-        'size': 1,
-        'expires': datetime.datetime.utcnow().date(),
-        'stream': 'prod',
-        'shortname': 'foo',
-        'version': '001',
-        'date': datetime.datetime.utcnow().date()
-    }
+    data = [db.Files(
+        fileid=9999999999999999,  # 16 digits
+        name='foo',
+        checksum='foo',
+        size=1,
+        expires=datetime.datetime.utcnow().date(),
+        stream='prod',
+        shortname='TSIS2_L1',
+        version='01',
+        ingest_date=datetime.datetime.utcnow().date(),
+        available=True
+    )]
 
     # Try to insert data into database
     with pytest.raises(Exception) as error:
-        table.insert().execute([data])
+        db.insert_data(data)
     assert 'ORA-01438' in str(error.value)  # ORA-01438: value larger than specified precision allowed
+    db.session.rollback()
 
 
 def test_update_transactions_table():
     """Tests the ``update_transactions_table`` method"""
 
     # Get the lowest fileid that exists
-    available_files = db.session.query(db.AvailableFiles).filter().order_by(db.AvailableFiles.fileid).all()
-    test_fileid = str(available_files[0].__dict__['fileid'])
+    files = db.session.query(db.Files).filter().order_by(db.Files.fileid).all()
+    test_fileid = str(files[0].__dict__['fileid'])
 
     # Create dummy requests
     Request = namedtuple('request', ['method', 'url'])

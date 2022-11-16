@@ -207,10 +207,10 @@ def get_file(fileid: int) -> Response:
 
 @sdtp_api_app.route('/files', methods=['GET'])
 def get_filelist() -> Response:
-    """Returns a list of files available in the filesystem.
+    """Returns a list of files available to the subscriber for file transfer.
 
     The user may supply parameters (i.e. 'tags') within the request
-    (e.g. ``date=2021-01-01``). If parameters are given, they are parsed and
+    (e.g. ``shortname=TSIS2_L1``). If parameters are given, they are parsed and
     applied to the query that determines the list of available files.  If no
     parameters are supplied, all available files are returned.
 
