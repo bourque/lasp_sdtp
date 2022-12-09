@@ -34,7 +34,7 @@ def authorize():
     # Check for a valid certificate in the header
     if 'Cert-UID' in request.headers:
         certificate = request.headers['Cert-UID']
-        authorized_certificates = ['ges_disc_cert']  # Probably better to do a db lookup here?
+        authorized_certificates = ['ges_disc_cert', 'test_account_cert']  # Probably better to do a db lookup here?
         if certificate in authorized_certificates:
             valid_certificate = True
 

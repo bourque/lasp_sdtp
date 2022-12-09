@@ -87,9 +87,6 @@ def query_for_filelist(tags: dict) -> list:
 
     logger.info('Querying available_files database table for files with parameters %s' % str(tags))
 
-    print('the tags of the query are:')
-    print(tags)
-
     # Build the query
     query = db.session.query(db.Files)  # base query
     query = query.filter(db.Files.stream == tags['stream'])  # stream is always supplied via default value

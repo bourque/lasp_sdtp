@@ -51,15 +51,13 @@ def _add_accounts_entries():
     data_to_insert = [db.Accounts(
         username='test_account',
         role='subscriber',
-        registration_open=False,
+        registration_open=True,
         certuid='test_cert',
-        registration_date=datetime.datetime.utcnow().date(),
-        registration_expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
     )]
 
     # Add an account for the subscriber
     data_to_insert.append(db.Accounts(
-        username=subscriber_config['username'],
+        username='ges_disc',
         role='subscriber',
         registration_open=True,
         certuid='test_cert'
@@ -103,6 +101,10 @@ def _add_file_queue_entries():
         expires=datetime.datetime.utcnow().date() - datetime.timedelta(days=10)
     ))
 
+    # Create a queue space for the test account (used in test_cleanup_database)
+    queue_path = Path(admin_config['data_cache_loc']) / 'test_account' / 'prod'
+    queue_path.mkdir(parents=True, exist_ok=True)
+
     # Create a queue space for the expired account (used in test_cleanup_database)
     queue_path = Path(admin_config['data_cache_loc']) / 'expired_account' / 'prod'
     queue_path.mkdir(parents=True, exist_ok=True)
@@ -112,7 +114,7 @@ def _add_file_queue_entries():
         f.write('')
 
     # Add an expired file to the file queue storage associated with non-expired account (for test_cleanup_database)
-    with open(Path(admin_config['data_cache_loc']) / subscriber_config['username'] / 'prod' / 'test_cleanup_db2.txt', 'w') as f:
+    with open(Path(admin_config['data_cache_loc']) / 'test_account' / 'prod' / 'test_cleanup_db2.txt', 'w') as f:
         f.write('')
 
     # Add an entry used for test_reporting
@@ -211,6 +213,20 @@ def _add_files_entries():
         available=True
     ))
 
+    # Add 'restricted' file (used to test utils.validate_access)
+    data_to_insert.append(db.Files(
+        fileid=23456,
+        name='restricted_file.txt',
+        checksum='fop',
+        size=1,
+        expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
+        stream='prod',
+        shortname='RESTRICTED',
+        version='01',
+        ingest_date=datetime.datetime.utcnow().date(),
+        available=True
+    ))
+
     # A separate call to insert data is needed so that the correct fileids are inserted
     db.insert_data(data_to_insert)
 
@@ -220,7 +236,7 @@ def _add_mission_account_mapping_entries():
 
     data_to_insert = [db.MissionAccountMapping(
         mission='TSIS2',
-        account=subscriber_config['username']
+        account='test_account'
     )]
 
     db.insert_data(data_to_insert)
@@ -254,7 +270,12 @@ def _add_mission_shortname_mapping_entries():
 def _add_shortnames_entries():
     """Add ``Shortnames`` table entries used for testing"""
 
+    # Add nominal shortnames
     data_to_insert = [db.Shortnames(shortname=shortname, filename_pattern='some_regex_expression') for shortname in SHORTNAMES_FOR_TESTING]
+
+    # Add a 'restricted' shortname (used to test utils.validate_access
+    data_to_insert.append(db.Shortnames(shortname='RESTRICTED', filename_pattern='some_regex_expression'))
+
     db.insert_data(data_to_insert)
 
 

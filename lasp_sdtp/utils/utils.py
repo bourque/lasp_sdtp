@@ -33,6 +33,7 @@ from flask.wrappers import Response
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.database_queries import query_for_account
 from lasp_sdtp.database.database_queries import query_for_file
 from lasp_sdtp.database.database_queries import query_for_account
 
@@ -287,7 +288,7 @@ def get_tag_value(filename: str, field_name: str) -> object:
         The tag value
     """
 
-    logger.info('Retrieving %s from %s' % (filename, field_name))
+    logger.info('Retrieving %s from %s' % (field_name, filename))
     return 'some_value'
 
 
@@ -372,17 +373,17 @@ def register_admin():
     """Registers an ``admin`` account if it doesn't already exist"""
 
     # Check if an admin account already exists
-    account = db.query_for_account('lasp_admin')
+    account = query_for_account('lasp_admin')
 
     # If it doesn't, create one
     if not account:
-        data = [{
-            'username': 'lasp_admin',
-            'role': 'admin',
-            'registration_open': False,
-            'certuid': 'admin_cert',
-            'registration_date': datetime.datetime.utcnow().date()}]
-        db.insert_data('accounts', data)
+        data = [db.Accounts(
+            username='lasp_admin',
+            role='admin',
+            registration_open=False,
+            certuid='admin_cert',
+            registration_date=datetime.datetime.utcnow().date())]
+        db.insert_data(data)
         logger.info('Registered admin account')
 
 

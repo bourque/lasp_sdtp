@@ -11,26 +11,26 @@ Use
         pytest -s test_utils.py
 """
 
+# TODO: Add test for filter_for_subscriber_tags (requires mock request)
 # TODO: Add test for parse_api_response (requires mock request)
 # TODO: Add test for parse_request_parameters (requires mock request)
 # TODO: Add test for register_admin (requires database manipulation)
 
 import datetime
+from pathlib import Path
 import pytest
 
+from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
+from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.database_queries import query_for_account
 from lasp_sdtp.utils import utils
 
 
 TEST_TAGS = [
-    ({'date': '19840404', 'start_date': None, 'end_date': None, 'maxfile': 10000, 'startfileid': 1}, False),
-    ({'date': '1984-04-04', 'start_date': '1984-04-05', 'end_date': None, 'maxfile': 10000, 'startfileid': 1}, False),
-    ({'date': '1984-04-04', 'start_date': None, 'end_date': '1984-04-05', 'maxfile': 10000, 'startfileid': 1}, False),
-    ({'date': None, 'start_date': None, 'end_date': None, 'maxfile': 9999999999, 'startfileid': 1}, False),
-    ({'date': '19840404', 'start_date': None, 'end_date': None, 'maxfile': 10000, 'startfileid': 'foo'}, False),
-    ({'date': None, 'start_date': None, 'end_date': None, 'maxfile': 10000, 'startfileid': 1}, True),
-    ({'date': '1984-04-04', 'start_date': None, 'end_date': None, 'maxfile': 10000, 'startfileid': 1}, True),
-    ({'date': None, 'start_date': '1984-04-04', 'end_date': '1984-04-05', 'maxfile': 10000, 'startfileid': 1}, True)
+    ({'maxfile': 9999999999, 'startfileid': 1}, False),
+    ({'maxfile': 10000, 'startfileid': 'foo'}, False),
+    ({'maxfile': 10000, 'startfileid': 1}, True)
 ]
 
 
@@ -54,12 +54,11 @@ def test_combine_metadata():
 
     tags_and_extras = [[
         {'fileid': 1, 'field_name': 'irradiance', 'field_type': 'tag', 'value': 'some_value'},
-        {'fileid': 1, 'field_name': 'type', 'field_type': 'extra', 'value': 'some_value'}
+        {'fileid': 1, 'field_name': 'aperture', 'field_type': 'extra', 'value': 'some_value'}
     ]]
 
     expected_result = [{
         'fileid': 1,
-        'data_product_id': 'tsis2',
         'expires': datetime.datetime(2022, 9, 21, 0, 0),
         'date': datetime.datetime(2022, 1, 1, 0, 0),
         'size': 1.0,
@@ -75,13 +74,27 @@ def test_combine_metadata():
             'irradiance': 'some_value'
         },
         'extras': {
-            'type': 'some_value'
+            'aperture': 'some_value'
         }
     }]
 
     result = utils.combine_metadata(filelist, tags_and_extras)
 
     assert result == expected_result
+
+
+def test_create_test_filesystem():
+    """Tests the ``create_test_filesystem`` function"""
+
+    utils.create_test_filesystem()
+
+    # Check that the filesystem directory exists
+    test_directory = Path(admin_config['filesystem_loc']) / 'prod'
+    assert test_directory.exists
+
+    # Check that there are test files
+    test_files = list(test_directory.glob('*'))
+    assert len(test_files) > 0
 
 
 def test_get_checksum():
@@ -100,6 +113,35 @@ def test_get_shortname():
     """Tests the ``get_shortname`` function"""
 
     assert utils.get_shortname('tsis2_L1') == 'TSIS2_L1'
+
+
+def test_get_subscriber_tags_and_extras():
+    """Tests the ``get_subscriber_tags_and_extras`` function"""
+
+    subscriber_tags, subscriber_extras = utils.get_subscriber_tags_and_extras('prod')
+
+    for tag in subscriber_tags:
+        assert tag[0] in str(subscriber_config['streams']['prod']['tags'])
+
+    for extra in subscriber_extras:
+        assert extra[0] in str(subscriber_config['streams']['prod']['extras'])
+
+
+def test_get_tag_value():
+    """Tests the ``get_tag_value`` function"""
+
+    value = utils.get_tag_value('test_filename.txt', 'aperture')
+    assert value == 'some_value'
+
+
+def test_register_admin():
+    """Tests the ``register_admin`` function"""
+
+    utils.register_admin()
+
+    # Check that there is an account entry
+    account = query_for_account('lasp_admin')
+    assert account
 
 
 def test_validate_access():

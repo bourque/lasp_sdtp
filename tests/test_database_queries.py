@@ -37,10 +37,7 @@ def test_query_for_filelist():
     tags = {
         'stream': 'prod',
         'version': '01',
-        'shortname': 'TSIS2_L1',
-        'date': None,
-        'start_date': None,
-        'end_date': None}
+        'shortname': 'TSIS2_L1'}
     filelist = query_for_filelist(tags=tags)
     assert len(filelist) == 10
 
