@@ -19,6 +19,7 @@ import datetime
 import glob
 import os
 from pathlib import Path
+import shutil
 
 import pytest
 
@@ -101,10 +102,6 @@ def _add_file_queue_entries():
         expires=datetime.datetime.utcnow().date() - datetime.timedelta(days=10)
     ))
 
-    # Create a queue space for the test account (used in test_cleanup_database)
-    queue_path = Path(admin_config['data_cache_loc']) / 'test_account' / 'prod'
-    queue_path.mkdir(parents=True, exist_ok=True)
-
     # Create a queue space for the expired account (used in test_cleanup_database)
     queue_path = Path(admin_config['data_cache_loc']) / 'expired_account' / 'prod'
     queue_path.mkdir(parents=True, exist_ok=True)
@@ -141,6 +138,15 @@ def _add_files_entries():
 
     # Locate files in test filesystem
     test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
+
+    # Create a queue space for the test account
+    queue_path = Path(admin_config['data_cache_loc']) / 'test_account' / 'prod'
+    queue_path.mkdir(parents=True, exist_ok=True)
+
+    # Copy files to test subscriber queue
+    for test_file in test_files:
+        dst = queue_path / Path(test_file).name
+        shutil.copyfile(test_file, dst)
 
     # Insert test file data (mostly used for test_run_server)
     data_to_insert = []

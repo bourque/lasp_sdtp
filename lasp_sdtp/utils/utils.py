@@ -253,21 +253,25 @@ def get_subscriber_tags_and_extras(stream):
     # Values are stored as tuples, e.g. ('tag_name', 'default_value', 'type')
     subscriber_tags, subscriber_extras = [], []
 
-    # Get the tags
-    for tag in subscriber_config['streams'][stream]['tags']:
-        subscriber_tags.append((
-            tag,
-            subscriber_config['streams'][stream]['tags'][tag]['default'],
-            eval(subscriber_config['streams'][stream]['tags'][tag]['type'])
-        ))
+    # Make sure the stream is in the subscriber configuration
+    # If it isn't, then no data will be returned
+    if stream in list(subscriber_config['streams'].keys()):
 
-    # Get the extras
-    for extra in subscriber_config['streams'][stream]['extras']:
-        subscriber_extras.append((
-            extra,
-            subscriber_config['streams'][stream]['extras'][extra]['default'],
-            eval(subscriber_config['streams'][stream]['extras'][extra]['type'])
-    ))
+        # Get the tags
+        for tag in subscriber_config['streams'][stream]['tags']:
+            subscriber_tags.append((
+                tag,
+                subscriber_config['streams'][stream]['tags'][tag]['default'],
+                eval(subscriber_config['streams'][stream]['tags'][tag]['type'])
+            ))
+
+        # Get the extras
+        for extra in subscriber_config['streams'][stream]['extras']:
+            subscriber_extras.append((
+                extra,
+                subscriber_config['streams'][stream]['extras'][extra]['default'],
+                eval(subscriber_config['streams'][stream]['extras'][extra]['type'])
+        ))
 
     return subscriber_tags, subscriber_extras
 

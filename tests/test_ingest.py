@@ -26,7 +26,7 @@ def test_ingest():
         Path(test_file).touch(exist_ok=True)
 
     # Ingest the files
-    test_ingest = Ingest(test_filelist, 'prod', 'v01')
+    test_ingest = Ingest(test_filelist, 'prod', '01')
     test_ingest.ingest()
 
     # Query the f table to see if the files are there

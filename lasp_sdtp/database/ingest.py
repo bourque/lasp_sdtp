@@ -67,7 +67,6 @@ class Ingest():
         for i, filename in enumerate(self.filelist):
 
             logger.info('Ingesting %s for stream %s version %s' % (Path(filename).name, self.stream, self.version))
-            print('Ingesting %s for stream %s version %s' % (Path(filename).name, self.stream, self.version))
 
             # Gather some metadata for the file
             shortname = utils.get_shortname(Path(filename).name)
