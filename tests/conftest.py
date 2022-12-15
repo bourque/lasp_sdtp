@@ -28,22 +28,22 @@ from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.utils import utils
 
-SHORTNAMES_FOR_TESTING = [
-    'TSIS2_L1',
-    'TSIS2_SIM_CAL',
-    'TSIS2_TIM_CAL',
-    'TSIS2_SIM_L2',
-    'TSIS2_TIM_L2',
-    'TSIS_SC_L2',
-    'TSIS2_SSI_L3_12HR_TXT',
-    'TSIS2_SSI_L3_24HR_TXT',
-    'TSIS2_TSI_L3_06HR_TXT',
-    'TSIS2_TSI_L3_24HR_TXT',
-    'TSIS2_SSI_L3_12HR_NC',
-    'TSIS2_SSI_L3_24HR_NC',
-    'TSIS2_TSI_L3_06HR_NC',
-    'TSIS2_TSI_L3_24HR_NC',
-]
+TEST_SHORTNAME_MAPPING = {
+    'TSIS2_L1': r'tsis2_L1_(?P<date>\d{8}).zip',
+    'TSIS2_SIM_CAL': r'tsis2_sim_cal_v(?P<version>\d{2}).zip',
+    'TSIS2_TIM_CAL': r'tsis2_tim_cal_v(?P<version>\d{2}).zip',
+    'TSIS2_SIM_L2': r'tsis2_sim_L2_v(?P<version>\d{2})_(?P<date>\d{8}).zip',
+    'TSIS2_TIM_L2': r'tsis2_tim_L2_v(?P<version>\d{2})_(?P<date>\d{8}).zip',
+    'TSIS2_SC_L2': r'tsis2_sc_L2_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).zip',
+    'TSIS2_SSI_L3_12HR_TXT': r'tsis2_ssi_L3_c12h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt',
+    'TSIS2_SSI_L3_24HR_TXT': r'tsis2_ssi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt',
+    'TSIS2_TSI_L3_06HR_TXT': r'tsis2_tsi_L3_c06h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt',
+    'TSIS2_TSI_L3_24HR_TXT': r'tsis2_tsi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt',
+    'TSIS2_SSI_L3_12HR_NC': r'tsis2_ssi_L3_c12h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc',
+    'TSIS2_SSI_L3_24HR_NC': r'tsis2_ssi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc',
+    'TSIS2_TSI_L3_06HR_NC': r'tsis2_tsi_L3_c06h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc',
+    'TSIS2_TSI_L3_24HR_NC': r'tsis2_tsi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc'
+}
 
 def _add_accounts_entries():
     """Add ``Accounts`` table entries used for testing"""
@@ -264,7 +264,7 @@ def _add_mission_shortname_mapping_entries():
 
     data_to_insert = []
 
-    for shortname in SHORTNAMES_FOR_TESTING:
+    for shortname in TEST_SHORTNAME_MAPPING:
         data_to_insert.append(db.MissionShortnameMapping(
             mission='TSIS2',
             shortname=shortname
@@ -277,7 +277,7 @@ def _add_shortnames_entries():
     """Add ``Shortnames`` table entries used for testing"""
 
     # Add nominal shortnames
-    data_to_insert = [db.Shortnames(shortname=shortname, filename_pattern='some_regex_expression') for shortname in SHORTNAMES_FOR_TESTING]
+    data_to_insert = [db.Shortnames(shortname=shortname, filename_pattern=TEST_SHORTNAME_MAPPING[shortname]) for shortname in TEST_SHORTNAME_MAPPING]
 
     # Add a 'restricted' shortname (used to test utils.validate_access
     data_to_insert.append(db.Shortnames(shortname='RESTRICTED', filename_pattern='some_regex_expression'))

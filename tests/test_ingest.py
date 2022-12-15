@@ -21,7 +21,7 @@ def test_ingest():
     """Tests the ``ingest`` method"""
 
     # Create some files to test with
-    test_filelist = ['tsis2_L1_test.zip', 'tsis2_sim_cal_test.zip', 'tsis2_sc_L2_test.zip']
+    test_filelist = ['tsis2_L1_19840404.zip', 'tsis2_sim_cal_v01.zip', 'tsis2_sc_L2_v01_19840404_19840405.zip']
     for test_file in test_filelist:
         Path(test_file).touch(exist_ok=True)
 

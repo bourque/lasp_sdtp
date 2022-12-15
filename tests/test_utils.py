@@ -15,6 +15,7 @@ Use
 # TODO: Add test for parse_api_response (requires mock request)
 # TODO: Add test for parse_request_parameters (requires mock request)
 # TODO: Add test for register_admin (requires database manipulation)
+# TODO: Expand/parameterize test_get_shortname to test all of the TSIS2 shortnames
 
 import datetime
 from pathlib import Path
@@ -112,7 +113,7 @@ def test_get_checksum():
 def test_get_shortname():
     """Tests the ``get_shortname`` function"""
 
-    assert utils.get_shortname('tsis2_L1') == 'TSIS2_L1'
+    assert utils.get_shortname('tsis2_L1_19840404.zip') == 'TSIS2_L1'
 
 
 def test_get_subscriber_tags_and_extras():

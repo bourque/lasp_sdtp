@@ -108,20 +108,20 @@ INSERT INTO Accounts (username, role, registrationOpen, certUid, registrationDat
 
 INSERT INTO Missions (mission, ingestDirectory) VALUES ('TSIS2', '/path/to/tsis2/data/');
 
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_L1', 'some_regex_expression');
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SIM_CAL', 'some_regex_expression');
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TIM_CAL', 'some_regex_expression');
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SIM_L2', 'some_regex_expression');
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TIM_L2', 'some_regex_expression');
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_SC_L2', 'some_regex_expression');
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SSI_L3_12HR_TXT', 'some_regex_expression');
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SSI_L3_24HR_TXT', 'some_regex_expression');
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TSI_L3_06HR_TXT', 'some_regex_expression');
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TSI_L3_24HR_TXT', 'some_regex_expression');
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SSI_L3_12HR_NC', 'some_regex_expression');
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SSI_L3_24HR_NC', 'some_regex_expression');
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TSI_L3_06HR_NC', 'some_regex_expression');
-INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TSI_L3_24HR_NC', 'some_regex_expression');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_L1', 'tsis2_L1_(?P<date>\d{8}).zip');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SIM_CAL', 'tsis2_sim_cal_v(?P<version>\d{2}).zip');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TIM_CAL', 'tsis2_tim_cal_v(?P<version>\d{2}).zip');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SIM_L2', 'tsis2_sim_L2_v(?P<version>\d{2})_(?P<date>\d{8}).zip');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TIM_L2', 'tsis2_tim_L2_v(?P<version>\d{2})_(?P<date>\d{8}).zip');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SC_L2', 'tsis2_sc_L2_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).zip');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SSI_L3_12HR_TXT', 'tsis2_ssi_L3_c12h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SSI_L3_24HR_TXT', 'tsis2_ssi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TSI_L3_06HR_TXT', 'tsis2_tsi_L3_c06h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TSI_L3_24HR_TXT', 'tsis2_tsi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SSI_L3_12HR_NC', 'tsis2_ssi_L3_c12h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SSI_L3_24HR_NC', 'tsis2_ssi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TSI_L3_06HR_NC', 'tsis2_tsi_L3_c06h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TSI_L3_24HR_NC', 'tsis2_tsi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc');
 
 INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS2_L1');
 INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS2_SIM_CAL');
@@ -132,8 +132,8 @@ INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS2
 INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS2_SSI_L3_24HR_TXT');
 INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS2_TIM_CAL');
 INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS2_TIM_L2');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS2_SC_L2');
 INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS2_TSI_L3_06HR_NC');
 INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS2_TSI_L3_06HR_TXT');
 INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS2_TSI_L3_24HR_NC');
 INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS2_TSI_L3_24HR_TXT');
-INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS_SC_L2');

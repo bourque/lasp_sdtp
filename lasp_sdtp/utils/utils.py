@@ -23,6 +23,7 @@ import datetime
 import json
 import logging
 import random
+import re
 import string
 from pathlib import Path
 
@@ -212,33 +213,21 @@ def get_shortname(filename: str) -> str:
 
     Returns
     -------
-    shortname : str
+    matched_shortname : str
         The ``shortname`` that matches the given filename (e.g.
         ``TSIS2_TIM_L2``)
     """
 
-    shortname_mapping = {
-        'tsis2_L1': 'TSIS2_L1',
-        'tsis2_sim_cal': 'TSIS2_SIM_CAL',
-        'tsis2_tim_cal': 'TSIS2_TIM_CAL',
-        'tsis2_sim_L2': 'TSIS2_SIM_L2',
-        'tsis2_tim_L2': 'TSIS2_TIM_L2',
-        'tsis2_sc_L2': 'TSIS_SC_L2',
-        'tsis2_ssi_L3_c12h': 'TSIS2_SSI_L3_12HR',
-        'tsis2_ssi_L3_c24h': 'TSIS2_SSI_L3_24HR',
-        'tsis2_tsi_L3_c06h': 'TSIS2_TSI_L3_06HR',
-        'tsis2_tsi_L3_c24h': 'TSIS2_TSI_L3_24HR'
-    }
+    shortnames = db.session.query(db.Shortnames).all()
 
-    for item in shortname_mapping:
-        if filename.startswith(item):
-            shortname = shortname_mapping[item]
-            if filename.endswith('.txt'):
-                shortname += '_TXT'
-            elif filename.endswith('.nc'):
-                shortname += '_NC'
+    matched_shortname = None
+    for shortname in shortnames:
+        match = re.compile(shortname.filename_pattern).match(filename)
+        if match:
+            matched_shortname = shortname.shortname
+            break
 
-    return shortname
+    return matched_shortname
 
 
 def get_subscriber_tags_and_extras(stream):

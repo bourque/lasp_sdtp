@@ -175,7 +175,7 @@ def test_get_filelist(client: FlaskClient, request_url: str):
     # Check if the returned files are in the filesystem
     test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
     ignore_files = ['test_cleanup_db.txt', 'test_cleanup_db2.txt', 'test_reporting.txt', 'test_db_controller.txt',
-                    'tsis2_L1_test.zip', 'tsis2_sim_cal_test.zip', 'tsis2_sc_L2_test.zip', 'insert_data.txt']  # ignore files used in other tests
+                    'tsis2_L1_19840404.zip', 'tsis2_sim_cal_v01.zip', 'tsis2_sc_L2_v01_19840404_19840405.zip', 'insert_data.txt']  # ignore files used in other tests
     for entry in data['files']:
         filename = Path(admin_config['filesystem_loc']) / 'prod' / entry['name']
         if filename.name not in ignore_files:
