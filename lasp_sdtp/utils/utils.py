@@ -11,12 +11,8 @@ Use
     ::
         from lasp_sdtp.utils.utils import get_checksum
 
-TODO: Make create_test_filesystem and get_shortname to be more generic, avoid
-      hard references to TSIS-2
-TODO: Parse subscriber provided tags
 TODO: Move functions closer to their parent, where it makes sense
 TODO: Update docstrings
-TODO: Avoid hardcoded shortname mapping
 """
 
 import datetime
@@ -34,7 +30,6 @@ from flask.wrappers import Response
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_account
 from lasp_sdtp.database.database_queries import query_for_file
 from lasp_sdtp.database.database_queries import query_for_account
 
@@ -378,6 +373,14 @@ def register_admin():
             registration_date=datetime.datetime.utcnow().date())]
         db.insert_data(data)
         logger.info('Registered admin account')
+
+
+def set_as_unavailable(fileid: str):
+    """Set the given file as unavailable in the Files table"""
+
+    db.session.query(db.Files).filter(db.Files.fileid == fileid).update({'available': False})
+    db.session.commit()
+    logger.info('Updated Files table to indicate %s is no longer available' % fileid)
 
 
 def validate_access(fileid: str) -> bool:

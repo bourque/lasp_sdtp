@@ -19,8 +19,6 @@ Use
     ::
         from lasp_sdtp.database import cleanup_database
         cleanup_database.cleanup_accounts()
-
-TODO: Make utils function for making a file unavailable
 """
 
 import datetime
@@ -30,6 +28,7 @@ from pathlib import Path
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.utils.utils import set_as_unavailable
 
 logger = logging.getLogger(__name__)
 
@@ -79,9 +78,7 @@ def cleanup_files():
         logger.info(f'Removed file queue database entry for {expired_file}')
 
         # Update Files table to indicate that the file is no longer available
-        db.session.query(db.Files).filter(db.Files.fileid == expired_file).update({'available': False})
-        db.session.commit()
-        logger.info('Updated Files table to indicate %s is no longer available' % expired_file)
+        set_as_unavailable(expired_file)
 
         # Remove file from the file queue storage
         filename = db.session.query(db.Files.name).filter(db.Files.fileid == expired_file).all()

@@ -256,6 +256,12 @@ def _add_missions_entries():
         ingest_directory='/path/to/tsis2/data/'
     )]
 
+    # Add 'test' mission (used in test_ingest)
+    data_to_insert.append(db.Missions(
+        mission='TEST',
+        ingest_directory='/path/to/test_data/'
+    ))
+
     db.insert_data(data_to_insert)
 
 
@@ -270,6 +276,12 @@ def _add_mission_shortname_mapping_entries():
             shortname=shortname
         ))
 
+    # Map the 'TEST_INGEST' shortname to the 'TEST' mission (used in test_ingest)
+    data_to_insert.append(db.MissionShortnameMapping(
+        mission='TEST',
+        shortname='TEST_INGEST'
+    ))
+
     db.insert_data(data_to_insert)
 
 
@@ -279,7 +291,10 @@ def _add_shortnames_entries():
     # Add nominal shortnames
     data_to_insert = [db.Shortnames(shortname=shortname, filename_pattern=TEST_SHORTNAME_MAPPING[shortname]) for shortname in TEST_SHORTNAME_MAPPING]
 
-    # Add a 'restricted' shortname (used to test utils.validate_access
+    # Add 'test' shortname (used in test_ingest)
+    data_to_insert.append(db.Shortnames(shortname='TEST_INGEST', filename_pattern='not_subscribed.txt'))
+
+    # Add a 'restricted' shortname (used to test utils.validate_access)
     data_to_insert.append(db.Shortnames(shortname='RESTRICTED', filename_pattern='some_regex_expression'))
 
     db.insert_data(data_to_insert)

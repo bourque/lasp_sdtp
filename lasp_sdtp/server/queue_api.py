@@ -38,6 +38,7 @@ from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.database.database_queries import query_for_file
 from lasp_sdtp.database.database_queries import query_for_queue_entries
+from lasp_sdtp.utils.utils import set_as_unavailable
 
 
 queue_app = Flask(__name__)
@@ -92,9 +93,7 @@ def delete_file(fileid: int) -> dict:
         logger.info('Removed fileid %s from queue' % fileid)
 
         # Update Files table to indicate that the file is no longer available
-        db.session.query(db.Files).filter(db.Files.fileid == fileid).update({'available': False})
-        db.session.commit()
-        logger.info('Updated Files table to indicate %s is no longer available' % fileid)
+        set_as_unavailable(fileid)
 
     return {}  # No content needed for response, but Flask expects a response that is not None
 

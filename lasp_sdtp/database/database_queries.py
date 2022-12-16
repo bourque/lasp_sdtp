@@ -13,8 +13,6 @@ Use
     ::
         from lasp_sdtp.database.database_queries import query_for_files
         data = query_for_files(fileid)
-
-TODO: Only return files that the user has access to
 """
 
 import logging

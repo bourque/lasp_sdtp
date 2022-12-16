@@ -15,7 +15,6 @@ Use
 # TODO: Add test for parse_api_response (requires mock request)
 # TODO: Add test for parse_request_parameters (requires mock request)
 # TODO: Add test for register_admin (requires database manipulation)
-# TODO: Expand/parameterize test_get_shortname to test all of the TSIS2 shortnames
 
 import datetime
 from pathlib import Path
@@ -33,6 +32,22 @@ TEST_TAGS = [
     ({'maxfile': 10000, 'startfileid': 'foo'}, False),
     ({'maxfile': 10000, 'startfileid': 1}, True)
 ]
+
+TEST_SHORTNAMES = [
+    ('tsis2_L1_19840404.zip', 'TSIS2_L1'),
+    ('tsis2_sim_cal_v01.zip', 'TSIS2_SIM_CAL'),
+    ('tsis2_tim_cal_v01.zip', 'TSIS2_TIM_CAL'),
+    ('tsis2_sim_L2_v01_19840404.zip', 'TSIS2_SIM_L2'),
+    ('tsis2_tim_L2_v01_19840404.zip', 'TSIS2_TIM_L2'),
+    ('tsis2_sc_L2_v01_19840404_19840405.zip', 'TSIS2_SC_L2'),
+    ('tsis2_ssi_L3_c12h_v01_19840404_19840405.txt', 'TSIS2_SSI_L3_12HR_TXT'),
+    ('tsis2_ssi_L3_c24h_v01_19840404_19840405.txt', 'TSIS2_SSI_L3_24HR_TXT'),
+    ('tsis2_tsi_L3_c06h_v01_19840404_19840405.txt', 'TSIS2_TSI_L3_06HR_TXT'),
+    ('tsis2_tsi_L3_c24h_v01_19840404_19840405.txt', 'TSIS2_TSI_L3_24HR_TXT'),
+    ('tsis2_ssi_L3_c12h_v01_19840404_19840405.nc', 'TSIS2_SSI_L3_12HR_NC'),
+    ('tsis2_ssi_L3_c24h_v01_19840404_19840405.nc', 'TSIS2_SSI_L3_24HR_NC'),
+    ('tsis2_tsi_L3_c06h_v01_19840404_19840405.nc', 'TSIS2_TSI_L3_06HR_NC'),
+    ('tsis2_tsi_L3_c24h_v01_19840404_19840405.nc', 'TSIS2_TSI_L3_24HR_NC')]
 
 
 def test_combine_metadata():
@@ -110,10 +125,11 @@ def test_get_checksum():
     assert len(checksum.split(':')[-1]) == 64
 
 
-def test_get_shortname():
+@pytest.mark.parametrize('shortname, expected_result', TEST_SHORTNAMES)
+def test_get_shortname(shortname: str, expected_result: str):
     """Tests the ``get_shortname`` function"""
 
-    assert utils.get_shortname('tsis2_L1_19840404.zip') == 'TSIS2_L1'
+    assert utils.get_shortname(shortname) == expected_result
 
 
 def test_get_subscriber_tags_and_extras():
@@ -144,6 +160,14 @@ def test_register_admin():
     account = query_for_account('lasp_admin')
     assert account
 
+
+def test_set_unavailable():
+    """Tests the ``set_as_unavailable`` function"""
+
+    utils.set_as_unavailable(23456)
+
+    results = db.session.query(db.Files).filter(db.Files.fileid == 23456).all()
+    assert results[0].available == False
 
 def test_validate_access():
     """Tests the ``validate_access`` function"""
