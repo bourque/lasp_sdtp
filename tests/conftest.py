@@ -45,6 +45,7 @@ TEST_SHORTNAME_MAPPING = {
     'TSIS2_TSI_L3_24HR_NC': r'tsis2_tsi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc'
 }
 
+
 def _add_accounts_entries():
     """Add ``Accounts`` table entries used for testing"""
 
@@ -82,6 +83,7 @@ def _add_accounts_entries():
     ))
 
     db.insert_data(data_to_insert)
+
 
 def _add_file_queue_entries():
     """Add ``FileQueue`` table entries used for testing"""

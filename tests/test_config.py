@@ -16,6 +16,8 @@ import pytest
 from lasp_sdtp.config import SubscriberConfig
 from lasp_sdtp.config import _get_admin_config
 from lasp_sdtp.config import _get_subscriber_config
+from lasp_sdtp.utils.properties import REQUIRED_ADMIN_CONFIG_KEYS
+from lasp_sdtp.utils.properties import REQUIRED_SUBSCRIBER_CONFIG_KEYS
 
 config = SubscriberConfig()
 
@@ -23,56 +25,29 @@ config = SubscriberConfig()
 def test_get_admin_config():
     """Tests the ``get_admin_config`` function"""
 
-    required_keys = {
-        'api_endpoint': str,
-        'certificate_authority': str,
-        'data_cache_loc': str,
-        'db_connection_string': str,
-        'email_address': str,
-        'email_password': str,
-        'email_port': int,
-        'email_server': str,
-        'endpoint': str,
-        'filesystem_loc': str,
-        'queue_api_port': int,
-        'request_api_port': int,
-        'sdtp_api_port': int
-    }
-
     # Get the config data
     config = _get_admin_config()
-    for key in required_keys:
+    for key in REQUIRED_ADMIN_CONFIG_KEYS:
 
         # Check that the file has the required key
         assert key in config
 
         # Check that the value is of expected type
-        assert isinstance(config[key], required_keys[key])
+        assert isinstance(config[key], REQUIRED_ADMIN_CONFIG_KEYS[key])
 
 
 def test_get_subscriber_config():
     """Tests the ``get_subscriber_config`` function"""
 
-    required_keys = {
-        'account_expiration_period': int,
-        'checksum_type': str,
-        'distinguished_name': str,
-        'expiration_period': int,
-        'max_num_files': int,
-        'num_download_threads': int,
-        'username': str,
-        'streams': dict
-    }
-
     # Get the config data
     config = _get_subscriber_config()
-    for key in required_keys:
+    for key in REQUIRED_SUBSCRIBER_CONFIG_KEYS:
 
         # Check that the file has the required key
         assert key in config
 
         # Check that the value is of expected type
-        assert isinstance(config[key], required_keys[key])
+        assert isinstance(config[key], REQUIRED_SUBSCRIBER_CONFIG_KEYS[key])
 
     # Check that the checksum type is supported
     assert config['checksum_type'] in ['sha256']

@@ -32,6 +32,7 @@ from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.database.database_queries import query_for_file
 from lasp_sdtp.database.database_queries import query_for_account
+from lasp_sdtp.utils.properties import TSIS2_FILENAME_STRUCTURES
 
 logger = logging.getLogger(__name__)
 
@@ -124,29 +125,12 @@ def create_test_filesystem():
     test_directory = Path(admin_config['filesystem_loc']) / 'prod'
     test_directory.mkdir(parents=True, exist_ok=True)
 
-    filename_structures = {
-        'TSIS2_L1': 'tsis2_L1_<date>.zip',
-        'TSIS2_SIM_CAL': 'tsis2_sim_cal_v01.zip',
-        'TSIS2_TIM_CAL': 'tsis2_tim_cal_v01.zip',
-        'TSIS2_SIM_L2': 'tsis2_sim_L2_v01_<date>.zip',
-        'TSIS2_TIM_L2': 'tsis2_tim_L2_v01_<date>.zip',
-        'TSIS2_SC_L2': 'tsis2_sc_L2_v01_<date>_<date2>.zip',
-        'TSIS2_SSI_L3_12HR_TXT': 'tsis2_ssi_L3_c12h_v01_<date>_<date2>.txt',
-        'TSIS2_SSI_L3_24HR_TXT': 'tsis2_ssi_L3_c24h_v01_<date>_<date2>.txt',
-        'TSIS2_TSI_L3_06HR_TXT': 'tsis2_tsi_L3_c06h_v01_<date>_<date2>.txt',
-        'TSIS2_TSI_L3_24HR_TXT': 'tsis2_tsi_L3_c24h_v01_<date>_<date2>.txt',
-        'TSIS2_SSI_L3_12HR_NC': 'tsis2_ssi_L3_c12h_v01_<date>_<date2>.nc',
-        'TSIS2_SSI_L3_24HR_NC': 'tsis2_ssi_L3_c12h_v01_<date>_<date2>.nc',
-        'TSIS2_TSI_L3_06HR_NC': 'tsis2_tsi_L3_c06h_v01_<date>_<date2>.nc',
-        'TSIS2_TSI_L3_24HR_NC': 'tsis2_tsi_L3_c24h_v01_<date>_<date2>.nc'
-    }
-
-    for shortname in filename_structures:
+    for shortname in TSIS2_FILENAME_STRUCTURES:
 
         # Create files for five different days
         dates = ['20220101', '20220102', '20220103', '20220104', '20220105']
         for date in dates:
-            base_filename = filename_structures[shortname]
+            base_filename = TSIS2_FILENAME_STRUCTURES[shortname]
             base_filename = base_filename.replace('<date>', date)
             if '<date2>' in base_filename:
                 next_day = datetime.datetime.strftime(datetime.datetime.strptime(date, '%Y%m%d') + datetime.timedelta(days=1), '%Y%m%d')
@@ -172,6 +156,7 @@ def filter_for_subscriber_tags(data, tags, request):
         data = [item for item in data if filter_name in item['tags'] and item['tags'][filter_name] == filter_value]
 
     return data
+
 
 def get_checksum() -> str:
     """Return a randomly generated checksum.  Currently, only supports the
@@ -255,7 +240,7 @@ def get_subscriber_tags_and_extras(stream):
                 extra,
                 subscriber_config['streams'][stream]['extras'][extra]['default'],
                 eval(subscriber_config['streams'][stream]['extras'][extra]['type'])
-        ))
+            ))
 
     return subscriber_tags, subscriber_extras
 

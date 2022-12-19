@@ -169,6 +169,7 @@ def test_set_unavailable():
     results = db.session.query(db.Files).filter(db.Files.fileid == 23456).all()
     assert results[0].available == False
 
+
 def test_validate_access():
     """Tests the ``validate_access`` function"""
 

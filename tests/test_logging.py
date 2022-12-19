@@ -15,17 +15,15 @@ import logging
 from pathlib import Path
 from pathlib import PosixPath
 
-from lasp_sdtp.utils.logging import _get_log_config
 from lasp_sdtp.utils.logging import _get_log_file
 from lasp_sdtp.utils.logging import configure_logging
+from lasp_sdtp.utils.properties import LOG_CONFIG
 
 
-def test_get_log_config():
-    """Tests the ``_get_log_config`` function"""
+def test_log_config():
+    """Tests the ``log_config`` property"""
 
-    log_config = _get_log_config(Path.cwd())
-
-    assert isinstance(log_config, dict)
+    assert isinstance(LOG_CONFIG, dict)
 
 
 def test_get_log_file():

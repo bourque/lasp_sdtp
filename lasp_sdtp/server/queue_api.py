@@ -24,14 +24,11 @@ Use
         FLASK_APP=queue_api.py FLASK_ENV=development flask run --port 8001
 """
 
-import datetime
 import logging
-import shutil
 from pathlib import Path
 
 from flask import abort
 from flask import Flask
-from sqlalchemy.exc import IntegrityError
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config

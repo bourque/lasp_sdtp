@@ -15,7 +15,6 @@ import datetime
 from collections import namedtuple
 
 import pytest
-import sqlalchemy as sa
 
 from lasp_sdtp.database.database_controller import db
 

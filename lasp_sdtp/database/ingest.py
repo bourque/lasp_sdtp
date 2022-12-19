@@ -16,6 +16,8 @@ Use
         from lasp_sdtp.database.ingest import Ingest
         i = Ingest(filelist, 'prod', 'v01')
         i.ingest()
+
+TODO: Make script be able to handle ingesting the same file twice
 """
 
 import datetime

@@ -30,63 +30,7 @@ import time
 from pathlib import Path
 from typing import Optional
 
-
-def _get_log_config(log_file: str) -> dict:
-    """Define and return the logging configuration.
-
-    Parameters
-    ----------
-    log_file : str
-        The path to the log file
-
-    Returns
-    -------
-    log_config : dict
-        The logging configuration
-    """
-
-    log_config = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'formatters': {
-            'simple': {
-                'class': 'logging.Formatter',
-                'format': '[%(asctime)s] %(message)s',
-                'datefmt': '%Y-%m-%dT%H:%M:%S'
-            },
-            'detailed': {
-                'class': 'logging.Formatter',
-                'format': '[%(asctime)s %(name)s.%(funcName)s:%(lineno)i %(levelname)s] %(message)s',
-                'datefmt': '%Y-%m-%dT%H:%M:%S'
-            }
-        },
-        'handlers': {
-            'console': {
-                'level': 'DEBUG',
-                'class': 'logging.StreamHandler',
-                'formatter': 'simple',
-                'stream': 'ext://sys.stdout'
-            },
-            'file': {
-                'class': 'logging.FileHandler',
-                'level': 'DEBUG',
-                'formatter': 'detailed',
-                'filename': str(log_file),
-                'mode': 'a'
-            }
-        },
-        'loggers': {
-            'lasp_sdtp': {
-                'level': 'DEBUG'
-            },
-        },
-        'root': {
-            'level': 'DEBUG',
-            'handlers': ['console', 'file']
-        }
-    }
-
-    return log_config
+from lasp_sdtp.utils.properties import LOG_CONFIG
 
 
 def _get_log_file(log_file_loc: str) -> str:
@@ -167,15 +111,13 @@ def configure_logging(log_file_loc: str, verbose: Optional[bool] = True) -> str:
 
     # Define where the log file will be stored
     log_file = _get_log_file(log_file_loc)
-
-    # Define the log configuration
-    log_config = _get_log_config(log_file)
+    LOG_CONFIG['handlers']['file']['filename'] = str(log_file)
 
     # Configure the log
     logging.Formatter.converter = time.gmtime  # Timestamps are in UTC
-    logging.config.dictConfig(log_config)
+    logging.config.dictConfig(LOG_CONFIG)
     if verbose:
-        print('Log file initialized to {}'.format(log_file))
+        print('Log file initialized to {}'.format(str(log_file)))
 
     # Log system configuration/environment
     _log_system_environment()

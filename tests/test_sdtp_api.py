@@ -109,7 +109,7 @@ def test_register(client: FlaskClient):
 
     # Register the test account
     request_url = '/register'
-    headers = {'content-type': 'application/json', 'Cert-UID': f'test_account_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': 'test_account_cert'}
     response = client.put(request_url, headers=headers)
 
     # Make sure the response is correct
@@ -188,7 +188,7 @@ def test_get_filelist_filter_by_tag(client: FlaskClient):
     """Tests that the ``GET /files`` request works as expected when filtering
     results with subscriber-provided tags"""
 
-    request_url = f'/files?observation_date=some_value'
+    request_url = '/files?observation_date=some_value'
 
     # Send a test request and get the response
     headers = {'content-type': 'application/json', 'Cert-UID': 'test_account_cert'}
