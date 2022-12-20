@@ -95,16 +95,11 @@ class DatabaseController():
         Update the `Transactions`` table to mark the GET request transaction
         corresponding to the given ``fileid`` as complete by adding the
         ``end_time``
-    query_for_account(username)
-        Return account information for the given ``username``
-    query_for_filelist(tags)
-        Return a list of files (and their metadata) based on user-provided
-        tags.
-    query_for_file_metadata(fileid)
-        Return the metadata associated with the given ``fileid``
-    query_for_queue_entries(fileid)
-        Return a list of queue database table entries that exist for the
-        given ``fileid``
+    update_mission_account_mapping()
+        Update the ``MissionAccountMapping`` table with missions that the
+        subscriber is subscribed to
+    update_registration()
+        Update the ``Accounts`` table with registration information
     update_transactions_table(request, fileid=None)
         Insert information for a new transaction in the ``Transactions``
         table
@@ -157,7 +152,7 @@ class DatabaseController():
         return session, base, engine, meta
 
     def delete_file_from_queue(self, fileid: int):
-        """Remove the ``file_queue`` database entry for the given ``fileid``
+        """Remove the ``FileQueue`` database entry for the given ``fileid``
 
         Parameters
         ----------
@@ -170,7 +165,7 @@ class DatabaseController():
         logger.info('Deleted %s from file queue' % fileid)
 
     def insert_data(self, data: list[object]):
-        """Inserts the given data into the given table
+        """Inserts the given data into the appropriate table
 
         Parameters
         ----------

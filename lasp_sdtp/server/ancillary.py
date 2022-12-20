@@ -3,7 +3,7 @@
 These functions are not necessarily tied to a specific API and thus they are
 grouped together in this module.  Most of the functions within serve as
 request handlers and thus are automatically invoked (depending on the request)
-and therefor do not need to be imported in the APIs.
+and therefore do not need to be imported in the APIs.
 
 Authors
 -------

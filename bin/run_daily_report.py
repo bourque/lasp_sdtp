@@ -12,6 +12,8 @@ Use
     This module is intended to be executed via the command line as such:
     ::
         python daily_report.py
+
+TODO: Fix generate_daily_report to actually send an email
 """
 
 from lasp_sdtp.utils.reporting import generate_daily_report

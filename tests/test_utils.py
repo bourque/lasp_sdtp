@@ -99,20 +99,6 @@ def test_combine_metadata():
     assert result == expected_result
 
 
-def test_create_test_filesystem():
-    """Tests the ``create_test_filesystem`` function"""
-
-    utils.create_test_filesystem()
-
-    # Check that the filesystem directory exists
-    test_directory = Path(admin_config['filesystem_loc']) / 'prod'
-    assert test_directory.exists
-
-    # Check that there are test files
-    test_files = list(test_directory.glob('*'))
-    assert len(test_files) > 0
-
-
 def test_get_checksum():
     """Tests the ``get_checksum`` function"""
 

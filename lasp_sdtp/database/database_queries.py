@@ -1,4 +1,4 @@
-"""This module houses functions to perform various queries on the database.
+"""This module contains functions to perform various queries on the database.
 
 Authors
 -------

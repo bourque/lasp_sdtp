@@ -14,7 +14,7 @@ Use
     ``ingest`` method to perform the ingest, e.g.:
     ::
         from lasp_sdtp.database.ingest import Ingest
-        i = Ingest(filelist, 'prod', 'v01')
+        i = Ingest(filelist, 'prod', '01')
         i.ingest()
 
 TODO: Make script be able to handle ingesting the same file twice
@@ -47,7 +47,7 @@ class Ingest():
     stream : str
         The stream associated with the files and ingestion (e.g. ``prod``).
     version : str
-        The version associated with the files and ingestion (e.g. ``v01``).
+        The version associated with the files and ingestion (e.g. ``01``).
 
     Methods
     -------
