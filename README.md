@@ -1,7 +1,7 @@
 # The LASP SDTP Application
 
 
-The Laboratory for Atmospheric and Space Physics (LASP) Standard Data Transfer Protocol (SDTP) Application is used to transfer LASP-based data products to the Goddard Earth Sciences Data Information Services (GES DISC).
+The Laboratory for Atmospheric and Space Physics (LASP) Science Data Transfer Protocol (SDTP) Application is used to transfer LASP-based data products to the Goddard Earth Sciences Data Information Services (GES DISC).
 
 This README covers the installation and usage of the application.  More information about the design and implementation of the application can be found here: https://confluence.lasp.colorado.edu/pages/viewpage.action?pageId=86215664
 
@@ -36,11 +36,12 @@ git clone ssh://git@bitbucket.lasp.colorado.edu:2222/sds/lasp_sdtp.git
 
 ### Environment Installation
 
-Install the `lasp-sdtp` `conda` environment via the `environment.yml` file, which contains all of the dependencies needed for the application:
+Install and activate the `lasp-sdtp` `conda` environment via the `environment.yml` file, which contains all of the dependencies needed for the application:
 
 ```
 cd lasp_sdtp/
 conda env create -f environment.yml
+conda activate lasp-sdtp
 ```
 
 
@@ -54,12 +55,18 @@ Fill out the ``admin_config.json`` and ``subscriber_config.json`` files appropri
 
 ```python
 {
-	"db_connection_string": "oracle://server:username@database:port/?service_name=service",  # Connection string to Oracle database
-	"email_address": "email@example.com",  # Email address from which daily reports are sent
-	"email_password": "password",  # Email address password
-	"endpoint": "0.0.0.0",  # Endpoint from which the server is hosted
-	"filesystem_loc": "path/to/filesystem",  # Path to the parent directory of LAN filesystem
-	"data_cache_loc": "path/to/data_cache/"  # Path to parent directory of data cache
+    "api_endpoint": "http://127.0.0.1",  # URL for main enpoint of application
+    "certificate_authority": "sample_certificate",  #  Certificate authority for authorization
+    "data_cache_loc": "path/to/data_cache/",  # Path to parent directory of data cache
+    "db_connection_string": "oracle://server:username@database:port/?service_name=service",  # Connection string to Oracle database
+    "email_address": "email@example.com",  # Email address from which daily reports are sent
+    "email_password": "password",  # Email address password
+    "email_port": 123,  # Email port number
+    "email_server": "smtp.email.com",  # Email server
+    "filesystem_loc": "/path/to/filesystem/",  # Path to where files can be ingested,
+    "queue_api_port": 123,  # Port for queue API endpoint
+    "request_api_port": 123,  # Port for request API endpoint
+    "sdtp_api_port": 123  # Port for SDTP API endpoint
 }
 ```
 
@@ -68,29 +75,63 @@ Fill out the ``admin_config.json`` and ``subscriber_config.json`` files appropri
 
 ```python
 {
-	"account_expiration_period": 1800,  # Subscriber account expiration period (in days)
-	"checksum_type": "sha256",  # Checksum type
-	"expiration_period": 180,  # Expiration period for files in data cache (in days)
-	"max_num_files": 10000,  # Maximum number of files to return in GET /files request
-	"num_download_threads": 5,  # Maximum number of simultaneous downloads
-	"username": "username"  # Subscriber username
+    "account_expiration_period": 1800,  # Subscriber account expiration period (in days)
+    "checksum_type": "sha256",  # Checksum type
+    "distinguished_name": "",  # Distinguished name for subscriber authentication
+    "expiration_period": 180,  # Expiration period for files in data cache (in days)
+    "max_num_files": 10000,  # Maximum number of files to return in GET /files request
+    "missions": ['TSIS', 'TSIS2'],  # List of missions that subscriber is subscribed to
+    "num_download_threads": 5,  # Maximum number of simultaneous downloads
+    "username": "username",  # Subscriber username
+    "streams": {  # Individual streams, with their supported tags & extras and their data types & default values
+        "prod": {
+            "extras": {
+                "aperture": {
+                    "type": "str",
+                    "default": ""
+                }
+            },
+            "tags": {
+                "observation_date": {
+                    "type": "str",
+                    "default": ""
+                }
+            }
+        },
+        "dev": {
+            "extras": {
+                "was_extrapolated": {
+                    "type": "bool",
+                    "default": ""
+                }
+            },
+            "tags": {
+                "irradiance": {
+                    "type": "float",
+                    "default": ""
+                }
+            }
+        }
+    }
 }
 ```
 
 ## Usage
 
-To start the server:
+To start the necessary servers:
 
 ```
-cd lasp_sdtp/server/
-python run_server.py
+cd bin/
+python run_sdtp_service.py
+python run_request_service.py
+python run_queue_service.py
 ```
 
-or, to start the server in development mode:
+or, to start a particular server in development mode:
 
 ```
-cd lasp_sdtp/server/
-FLASK_APP=run_server.py FLASK_ENV=development flask run --port 8000
+cd bin/
+FLASK_APP=run_sdtp_service.py FLASK_ENV=development flask run --port 8000
 ```
 
 When the server is started, a log file is initialized (the path to which is printed to the terminal).  This log file records various environment information and server activity.
@@ -100,7 +141,7 @@ When the server is started, a log file is initialized (the path to which is prin
 To insert some testing data into the database, run:
 
 ```
-cd tests/
+cd bin/
 python insert_test_data.py
 ```
 
@@ -108,7 +149,7 @@ Once the server is running and test data have been added, one can send requests 
 
 ```bash
 curl -X GET "http://localhost:8000/files" -H "Accept: application/json" -H "Cert-UID: ges_disc_cert"
-curl -X GET "http://localhost:8000/files?stream=prod&ShortName=TSIS2_L1" -H "Accept: application/json" -H "Cert-UID: ges_disc_cert"
+curl -X GET "http://localhost:8000/files?stream=prod&shortname=TSIS2_L1" -H "Accept: application/json" -H "Cert-UID: ges_disc_cert"
 curl -X GET "http://localhost:8000/files/{fileid}" -H "Accept: application/json" -H "Cert-UID: ges_disc_cert"
 curl -X DELETE "http://localhost:8000/files/{fileid}" -H "Accept: application/json" -H "Cert-UID: ges_disc_cert"
 curl -X DELETE "http://localhost:8000/files/{fileid_start}-{fileid_end}" -H "Accept: application/json" -H "Cert-UID: ges_disc_cert"

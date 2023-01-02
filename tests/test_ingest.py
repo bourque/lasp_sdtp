@@ -18,6 +18,25 @@ from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.database.ingest import Ingest
 
 
+def test_ingest_not_subscribed_file():
+    """Tests the ``ingest`` method with files that have no subscribers"""
+
+    test_filename = 'not_subscribed.txt'
+    test_filelist = [test_filename]
+
+    Path(test_filename).touch(exist_ok=True)
+
+    test_ingest = Ingest(test_filelist, 'prod', '01')
+    test_ingest.ingest()
+
+    # Check that the file wasn't actually ingested
+    files = db.session.query(db.Files).filter(db.Files.name == test_filename).all()
+    assert len(files) == 0
+
+    # Remove the file that were just created
+    Path(test_filename).unlink()
+
+
 def test_ingest_subscribed_file():
     """Tests the ``ingest`` method with files that are subscribed to"""
 
@@ -42,22 +61,3 @@ def test_ingest_subscribed_file():
 
         # Remove the file that were just created
         Path(test_file).unlink()
-
-
-def test_ingest_not_subscribed_file():
-    """Tests the ``ingest`` method with files that have no subscribers"""
-
-    test_filename = 'not_subscribed.txt'
-    test_filelist = [test_filename]
-
-    Path(test_filename).touch(exist_ok=True)
-
-    test_ingest = Ingest(test_filelist, 'prod', '01')
-    test_ingest.ingest()
-
-    # Check that the file wasn't actually ingested
-    files = db.session.query(db.Files).filter(db.Files.name == test_filename).all()
-    assert len(files) == 0
-
-    # Remove the file that were just created
-    Path(test_filename).unlink()

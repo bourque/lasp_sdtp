@@ -54,7 +54,11 @@ def _check_transaction(headers: Headers):
     assert 'SDTP-TransactionID' in headers
 
     # Check that there is a record in the transactions table
-    results = db.session.query(db.Transactions).filter(db.Transactions.transactionid == headers['SDTP-TransactionID']).all()
+    results = db.session.query(
+                  db.Transactions
+              ).filter(
+                  db.Transactions.transactionid == headers['SDTP-TransactionID']
+              ).all()
     assert len(results) == 1  # There should only be one entry
 
 

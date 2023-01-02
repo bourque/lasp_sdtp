@@ -23,8 +23,8 @@ TODO: Make script be able to handle ingesting the same file twice
 import datetime
 import logging
 import os
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config

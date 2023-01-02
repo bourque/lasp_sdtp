@@ -9,21 +9,19 @@ Use
     To run these tests use:
     ::
         pytest -s test_utils.py
+
+TODO: Add test for filter_for_subscriber_tags (requires mock request)
+TODO: Add test for parse_api_response (requires mock request)
+TODO: Add test for parse_request_parameters (requires mock request)
+TODO: Add test for register_admin (requires database manipulation)
 """
 
-# TODO: Add test for filter_for_subscriber_tags (requires mock request)
-# TODO: Add test for parse_api_response (requires mock request)
-# TODO: Add test for parse_request_parameters (requires mock request)
-# TODO: Add test for register_admin (requires database manipulation)
-
 import datetime
-from pathlib import Path
 import pytest
 
-from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_account
+from lasp_sdtp.database.database_queries import query_for_account_by_username
 from lasp_sdtp.utils import utils
 
 
@@ -143,7 +141,7 @@ def test_register_admin():
     utils.register_admin()
 
     # Check that there is an account entry
-    account = query_for_account('lasp_admin')
+    account = query_for_account_by_username('lasp_admin')
     assert account
 
 

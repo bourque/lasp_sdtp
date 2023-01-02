@@ -20,22 +20,6 @@ from lasp_sdtp.utils.logging import configure_logging
 from lasp_sdtp.utils.properties import LOG_CONFIG
 
 
-def test_log_config():
-    """Tests the ``log_config`` property"""
-
-    assert isinstance(LOG_CONFIG, dict)
-
-
-def test_get_log_file():
-    """Tests the ``_get_log_file`` function"""
-
-    log_file = _get_log_file(Path.cwd())
-
-    assert isinstance(log_file, PosixPath)
-    assert str(Path.cwd()) in str(log_file)
-    assert str(log_file).endswith('.log')
-
-
 def test_configure_logging():
     """Tests the ``configure_logging`` function"""
 
@@ -61,3 +45,19 @@ def test_configure_logging():
 
     # Remove the log file
     Path.unlink(log_file)
+
+
+def test_get_log_file():
+    """Tests the ``_get_log_file`` function"""
+
+    log_file = _get_log_file(Path.cwd())
+
+    assert isinstance(log_file, PosixPath)
+    assert str(Path.cwd()) in str(log_file)
+    assert str(log_file).endswith('.log')
+
+
+def test_log_config():
+    """Tests the ``log_config`` property"""
+
+    assert isinstance(LOG_CONFIG, dict)

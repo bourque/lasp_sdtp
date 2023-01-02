@@ -26,6 +26,7 @@ dependencies:
   - cx_oracle
   - flask
   - jinja2
+  - jsonschema
   - pandas
   - pip
   - pytest

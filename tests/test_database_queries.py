@@ -11,16 +11,16 @@ Use
         pytest -s test_database_queries.py
 """
 
-from lasp_sdtp.database.database_queries import query_for_account
-from lasp_sdtp.database.database_queries import query_for_filelist
+from lasp_sdtp.database.database_queries import query_for_account_by_username
 from lasp_sdtp.database.database_queries import query_for_file
+from lasp_sdtp.database.database_queries import query_for_filelist
 from lasp_sdtp.database.database_queries import query_for_queue_entries
 
 
 def test_query_for_account():
     """Tests the ``query_for_account`` method"""
 
-    account = query_for_account('test_account')
+    account = query_for_account_by_username('test_account')
     assert account['username'] == 'test_account'
 
 

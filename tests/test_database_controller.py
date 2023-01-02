@@ -38,27 +38,6 @@ def test_delete_file_from_queue():
     assert len(results) == 0
 
 
-def test_insert_data():
-    """Tests the ``insert_data`` method"""
-
-    data = [db.Files(
-        fileid=98765,
-        name='insert_data.txt',
-        checksum='hash',
-        size=1,
-        expires=datetime.datetime.utcnow().date(),
-        stream='prod',
-        shortname='TSIS2_L1',
-        version='01',
-        ingest_date=datetime.datetime.utcnow().date(),
-        available=True
-    )]
-    db.insert_data(data)
-
-    results = db.session.query(db.Files).filter(db.Files.fileid == 98765).all()
-    assert len(results) == 1  # There should only be one entry
-
-
 def test_fileid_boundary():
     """Tests that the ``fileid`` cannot exceed 15 digits"""
 
@@ -80,6 +59,27 @@ def test_fileid_boundary():
         db.insert_data(data)
     assert 'ORA-01438' in str(error.value)  # ORA-01438: value larger than specified precision allowed
     db.session.rollback()
+
+
+def test_insert_data():
+    """Tests the ``insert_data`` method"""
+
+    data = [db.Files(
+        fileid=98765,
+        name='insert_data.txt',
+        checksum='hash',
+        size=1,
+        expires=datetime.datetime.utcnow().date(),
+        stream='prod',
+        shortname='TSIS2_L1',
+        version='01',
+        ingest_date=datetime.datetime.utcnow().date(),
+        available=True
+    )]
+    db.insert_data(data)
+
+    results = db.session.query(db.Files).filter(db.Files.fileid == 98765).all()
+    assert len(results) == 1  # There should only be one entry
 
 
 def test_update_transactions_table():

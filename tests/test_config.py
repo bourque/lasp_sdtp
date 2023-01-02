@@ -53,19 +53,6 @@ def test_get_subscriber_config():
     assert config['checksum_type'] in ['sha256']
 
 
-def test_validate_valid_config():
-    """Test the ``validate`` method with a valid config"""
-
-    # Create a valid config instance to test with
-    valid_config = SubscriberConfig()
-    valid_config.username = 'admin'
-    valid_config.distinguished_name = 'some_string'
-    valid_config.streams = {}
-
-    # Try to validate the config
-    config.validate(valid_config.__dict__)
-
-
 def test_validate_invalid_configs():
     """Test the ``validate`` method with an invalid config"""
 
@@ -77,3 +64,16 @@ def test_validate_invalid_configs():
     with pytest.raises(Exception) as error:
         config.validate(invalid_config.__dict__)
     assert 'ValidationError' in str(error)
+
+
+def test_validate_valid_config():
+    """Test the ``validate`` method with a valid config"""
+
+    # Create a valid config instance to test with
+    valid_config = SubscriberConfig()
+    valid_config.username = 'admin'
+    valid_config.distinguished_name = 'some_string'
+    valid_config.streams = {}
+
+    # Try to validate the config
+    config.validate(valid_config.__dict__)

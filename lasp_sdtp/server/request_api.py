@@ -33,19 +33,13 @@ from flask import request
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_account
+from lasp_sdtp.database.database_queries import query_for_account_by_username
 from lasp_sdtp.database.database_queries import query_for_filelist
 from lasp_sdtp.database.database_queries import query_for_tags_and_extras
-from lasp_sdtp.utils.utils import combine_metadata
-from lasp_sdtp.utils.utils import CustomJSONEncoder
-from lasp_sdtp.utils.utils import filter_for_subscriber_tags
-from lasp_sdtp.utils.utils import parse_request_parameters
-from lasp_sdtp.utils.utils import validate_access
-from lasp_sdtp.utils.utils import validate_fileid
-from lasp_sdtp.utils.utils import validate_tags
+from lasp_sdtp.utils import utils
 
 request_app = Flask(__name__)
-request_app.json_encoder = CustomJSONEncoder
+request_app.json_encoder = utils.CustomJSONEncoder
 logger = logging.getLogger(__name__)
 
 
@@ -66,14 +60,16 @@ def delete_file(fileid: int) -> dict:
         The response object containing appropriate headers and content.
     """
 
+    logger.info('Request to delete file %s' % fileid)
+
     # Make sure the fileid is valid
-    valid = validate_fileid(fileid)
+    valid = utils.validate_fileid(fileid)
     if not valid:
         abort(400)
 
     # Make sure the subscriber has access to the file
     try:
-        access = validate_access(fileid)
+        access = utils.validate_access(fileid)
     except IndexError:  # If an IndexError is raised, it means the file doesn't exist in available_files
         abort(404)
     if not access:
@@ -108,14 +104,16 @@ def get_file(fileid: int) -> dict:
         The response object containing appropriate headers and content.
     """
 
+    logger.info('Request for file %s' % fileid)
+
     # Make sure the fileid is valid
-    valid = validate_fileid(fileid)
+    valid = utils.validate_fileid(fileid)
     if not valid:
         abort(400)
 
     # Make sure the subscriber has access to the file
     try:
-        access = validate_access(fileid)
+        access = utils.validate_access(fileid)
     except IndexError:  # If an IndexError is raised, it means the file doesn't exist in available_files
         abort(404)
     if not access:
@@ -146,10 +144,12 @@ def get_filelist() -> dict:
     transactionid = db.update_transactions_table(request)
 
     # Parse parameters from the request
-    tags = parse_request_parameters(request)
+    tags = utils.parse_request_parameters(request)
+
+    logger.info('Request for filelist with parameters %s' % tags)
 
     # Make sure the tags are valid
-    valid = validate_tags(tags)
+    valid = utils.validate_tags(tags)
     if not valid:
         abort(400)
 
@@ -161,10 +161,10 @@ def get_filelist() -> dict:
     tags_and_extras = query_for_tags_and_extras(fileids)
 
     # Structure the file metadata, tags, and extras together into one dictionary to comply with the ICD
-    data = combine_metadata(filelist, tags_and_extras)
+    data = utils.combine_metadata(filelist, tags_and_extras)
 
     # Apply filter for subscriber-provided tags
-    data = filter_for_subscriber_tags(data, tags, request)
+    data = utils.filter_for_subscriber_tags(data, tags, request)
 
     # Apply startfileid filter
     data = [item for item in data if item['fileid'] >= tags['startfileid']]
@@ -197,8 +197,10 @@ def register_subscriber() -> dict:
         The response object containing the appropriate content.
     """
 
+    logger.info('Request to register subscriber %s' % subscriber_config['username'])
+
     # Check to see if the account is open for registration
-    account = query_for_account(subscriber_config['username'])
+    account = query_for_account_by_username(subscriber_config['username'])
     registration_open = account['registration_open']
 
     if registration_open:

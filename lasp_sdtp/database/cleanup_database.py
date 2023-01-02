@@ -67,7 +67,12 @@ def cleanup_files():
 
     # Identify any expired files in the Files table
     today = datetime.datetime.utcnow().date()
-    expired_files = db.session.query(db.Files.fileid).filter(db.Files.available == True).filter(db.Files.expires <= today).all()
+    expired_files = db.session.query(
+                        db.Files.fileid
+                    ).filter(
+                        db.Files.available == True,
+                        db.Files.expires <= today
+                    ).all()
     expired_files = [item[0] for item in expired_files]
 
     for expired_file in expired_files:

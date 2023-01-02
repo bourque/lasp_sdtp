@@ -23,31 +23,6 @@ from lasp_sdtp.config import subscriber_config
 logger = logging.getLogger(__name__)
 
 
-def query_for_account(username: str) -> dict:
-    """Return account information for the given ``username``
-
-    Parameters
-    ----------
-    username : str
-        The username of interest
-
-    Returns
-    -------
-    account : dict
-        The account information
-    """
-
-    logger.info('Querying accounts database table for %s account' % username)
-
-    results = db.session.query(db.Accounts).filter(db.Accounts.username == username).all()
-    if results:
-        account = results[0].__dict__
-    else:
-        account = None
-
-    return account
-
-
 def query_for_accounts_by_mission(mission: str) -> list:
     """Return the accounts associated with the given ``mission``
 
@@ -62,10 +37,37 @@ def query_for_accounts_by_mission(mission: str) -> list:
         The account(s) that are subscribed to the given ``mission``
     """
 
+    logger.info('Querying for accounts for mission %s' % mission)
+
     results = db.session.query(db.MissionAccountMapping).filter(db.MissionAccountMapping.mission == mission).all()
     accounts = [item.account for item in results]
 
     return accounts
+
+
+def query_for_account_by_username(username: str) -> dict:
+    """Return account information for the given ``username``
+
+    Parameters
+    ----------
+    username : str
+        The username of interest
+
+    Returns
+    -------
+    account : dict
+        The account information
+    """
+
+    logger.info('Querying for accounts for user %s' % username)
+
+    results = db.session.query(db.Accounts).filter(db.Accounts.username == username).all()
+    if results:
+        account = results[0].__dict__
+    else:
+        account = None
+
+    return account
 
 
 def query_for_filelist(tags: dict) -> list:
@@ -83,7 +85,7 @@ def query_for_filelist(tags: dict) -> list:
         A list of database entries returned by the query
     """
 
-    logger.info('Querying available_files database table for files with parameters %s' % str(tags))
+    logger.info('Querying for files with parameters %s' % str(tags))
 
     # Build the query
     query = db.session.query(db.Files)  # base query
@@ -107,11 +109,19 @@ def query_for_filelist(tags: dict) -> list:
 
     # Only return files that the user has access to
     # Get missions associated with account
-    missions = db.session.query(db.MissionAccountMapping).filter(db.MissionAccountMapping.account == subscriber_config['username']).all()
+    missions = db.session.query(
+                   db.MissionAccountMapping
+               ).filter(
+                   db.MissionAccountMapping.account == subscriber_config['username']
+               ).all()
     missions = [item.mission for item in missions]
 
     # Get shortnames associated with missions
-    shortnames = db.session.query(db.MissionShortnameMapping).filter(db.MissionShortnameMapping.mission.in_(missions)).all()
+    shortnames = db.session.query(
+                     db.MissionShortnameMapping
+                 ).filter(
+                     db.MissionShortnameMapping.mission.in_(missions)
+                 ).all()
     shortnames = [item.shortname for item in shortnames]
 
     # Filter out the shortnames
@@ -134,7 +144,7 @@ def query_for_file(fileid: int) -> object:
         The file metadata associated with the given ``fileid``
     """
 
-    logger.info('Querying available_files database table for file %s' % str(fileid))
+    logger.info('Querying for fileid %s' % str(fileid))
 
     files = db.session.query(db.Files).filter(db.Files.fileid == fileid).all()
     file_metadata = files[0]  # There should only be one entry
@@ -156,7 +166,13 @@ def query_for_mission_by_shortname(shortname: str) -> str:
         The mission associated with the shortname (e.g. ``TSIS2``)
     """
 
-    results = db.session.query(db.MissionShortnameMapping).filter(db.MissionShortnameMapping.shortname == shortname).all()
+    logger.info('Querying for mission(s) associated with shortname %s' % shortname)
+
+    results = db.session.query(
+                  db.MissionShortnameMapping
+              ).filter(
+                  db.MissionShortnameMapping.shortname == shortname
+              ).all()
     mission = results[0].mission
 
     return mission
@@ -178,7 +194,7 @@ def query_for_queue_entries(fileid: int) -> list:
         ``fileid``
     """
 
-    logger.info('Querying FileQueue database table for file %s' % str(fileid))
+    logger.info('Querying file queue for fileid %s' % str(fileid))
 
     queue_entries = db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).all()
     queue_entries = [item.__dict__ for item in queue_entries]
@@ -200,6 +216,8 @@ def query_for_tags_and_extras(fileids: list) -> list:
     tags_and_extras: list
         A list of tag/extra values for the given ``fileids``.
     """
+
+    logger.info('Querying for tags and extras for fileids %s' % fileids)
 
     tags_and_extras = []
 

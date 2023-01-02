@@ -18,8 +18,8 @@ Use
 import datetime
 import glob
 import os
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 import pytest
 

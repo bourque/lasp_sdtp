@@ -28,7 +28,11 @@ def test_cleanup_accounts():
     cleanup_accounts()
 
     # Check that there are no expired accounts
-    results = db.session.query(db.Accounts).filter(db.Accounts.registration_expires <= datetime.datetime.utcnow().date()).all()
+    results = db.session.query(
+                  db.Accounts
+              ).filter(
+                  db.Accounts.registration_expires <= datetime.datetime.utcnow().date()
+              ).all()
     assert len(results) == 0
 
     # Check that there are no FileQueue entries associated with the expired accounts
@@ -48,7 +52,11 @@ def test_cleanup_files():
     cleanup_files()
 
     # Check that there are no expired files in the file queue
-    results = db.session.query(db.FileQueue.fileid).filter(db.FileQueue.expires <= datetime.datetime.utcnow().date()).all()
+    results = db.session.query(
+                  db.FileQueue.fileid
+              ).filter(
+                  db.FileQueue.expires <= datetime.datetime.utcnow().date()
+              ).all()
     assert len(results) == 0
 
     # Check that the expired file was removed from the queue storage

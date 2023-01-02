@@ -22,6 +22,7 @@ from pathlib import Path
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.utils.properties import TSIS2_FILENAME_STRUCTURES
 
+
 def create_test_filesystem():
     """Create a small, local filesystem of files used for testing purposes.
 

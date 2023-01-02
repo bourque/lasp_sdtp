@@ -20,8 +20,8 @@ Use
 
 from pathlib import Path
 
-from lasp_sdtp.server.sdtp_api import sdtp_api_app
 from lasp_sdtp.config import admin_config
+from lasp_sdtp.server.sdtp_api import sdtp_api_app
 from lasp_sdtp.utils.logging import configure_logging
 from lasp_sdtp.utils.utils import register_admin
 

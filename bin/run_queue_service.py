@@ -11,8 +11,8 @@ Use
         python run_queue_service.py
 """
 
-from lasp_sdtp.server.queue_api import queue_app
 from lasp_sdtp.config import admin_config
+from lasp_sdtp.server.queue_api import queue_app
 
 
 if __name__ == '__main__':

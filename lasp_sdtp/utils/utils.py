@@ -21,18 +21,15 @@ import logging
 import random
 import re
 import string
-from pathlib import Path
 
 from flask import abort
 from flask.json import JSONEncoder
 from flask.wrappers import Response
 
-from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.database_queries import query_for_account_by_username
 from lasp_sdtp.database.database_queries import query_for_file
-from lasp_sdtp.database.database_queries import query_for_account
-from lasp_sdtp.utils.properties import TSIS2_FILENAME_STRUCTURES
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +112,23 @@ def combine_metadata(filelist: list, tags_and_extras: list) -> list:
 
 
 def filter_for_subscriber_tags(data, tags, request):
-    """Filters the given filelist for subscriber tag values"""
+    """Filters the given filelist for subscriber tag values
+
+    Parameters
+    ----------
+    data : list
+        A list of dictionaries containing file metadata, tags, and extras.
+    tags : list
+        A dictionary of key/value pairs for the request tags
+    request : obj
+        The request containing the subscriber tag arguments (e.g.
+        ``GET /files?subscriber_tag=some_value``)
+
+    Returns
+    -------
+    data : list
+        The list of files that that match the given subscriber tag criteria
+    """
 
     subscriber_tags, _ = get_subscriber_tags_and_extras(tags['stream'])
     subscriber_tags = [tag[0] for tag in subscriber_tags]  # Only care about the tag name here
@@ -182,12 +195,23 @@ def get_shortname(filename: str) -> str:
     return matched_shortname
 
 
-def get_subscriber_tags_and_extras(stream):
-    """
+def get_subscriber_tags_and_extras(stream: str) -> tuple[list, list]:
+    """Returns a list of the subscriber-provided tags and extras for the given
+    stream.
+
+    Parameters
+    ----------
+    stream : str
+        The stream of interest (e.g. ``prod``)
 
     Returns
     -------
-
+    subscriber_tags : list of tuples
+        The subscriber tags and associated metadata in the form of a tuple
+        (i.e. ``(tag_name, default_value, data_type)``)
+    subscriber_extras : list of tuples
+        The subscriber extras and associated metadata in the form of a tuple
+        (i.e. ``(extras_name, default_value, data_type)``)
     """
 
     # Store the tags and extras in a list
@@ -318,7 +342,7 @@ def register_admin():
     """Registers an ``admin`` account if it doesn't already exist"""
 
     # Check if an admin account already exists
-    account = query_for_account('lasp_admin')
+    account = query_for_account_by_username('lasp_admin')
 
     # If it doesn't, create one
     if not account:
@@ -333,7 +357,13 @@ def register_admin():
 
 
 def set_as_unavailable(fileid: str):
-    """Set the given file as unavailable in the Files table"""
+    """Set the given file as unavailable in the Files table
+
+    Parameters
+    ----------
+    fileid : str
+        The ``fileid`` to set as unavailable
+    """
 
     db.session.query(db.Files).filter(db.Files.fileid == fileid).update({'available': False})
     db.session.commit()
@@ -361,11 +391,19 @@ def validate_access(fileid: str) -> bool:
 
     # Check to see the subscriber has access to the shortname
     # Get missions associated with account
-    missions = db.session.query(db.MissionAccountMapping).filter(db.MissionAccountMapping.account == subscriber_config['username']).all()
+    missions = db.session.query(
+                   db.MissionAccountMapping
+               ).filter(
+                   db.MissionAccountMapping.account == subscriber_config['username']
+               ).all()
     missions = [item.mission for item in missions]
 
     # Get shortnames associated with missions
-    allowed_shortnames = db.session.query(db.MissionShortnameMapping).filter(db.MissionShortnameMapping.mission.in_(missions)).all()
+    allowed_shortnames = db.session.query(
+                             db.MissionShortnameMapping
+                         ).filter(
+                             db.MissionShortnameMapping.mission.in_(missions)
+                         ).all()
     allowed_shortnames = [item.shortname for item in allowed_shortnames]
 
     if shortname in allowed_shortnames:
