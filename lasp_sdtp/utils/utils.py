@@ -305,6 +305,11 @@ def parse_request_parameters(request: object) -> dict:
         A dictionary of key/value pairs for the request tags
     """
 
+    # Convert the request arguments to mutable dict and make all keys lowercase,
+    # to avoid case sensitivity issues
+    request_args = request.args.to_dict()
+    request_args = {key.lower(): value for key, value in request_args.items()}
+
     # Define the default supported tags
     default_tag_list = [
         ('stream', 'prod', str),
@@ -314,8 +319,8 @@ def parse_request_parameters(request: object) -> dict:
         ('startfileid', 1, int)]
 
     # Determine the stream of the request
-    if 'stream' in request.args.keys():
-        stream = request.args['stream']
+    if 'stream' in request_args.keys():
+        stream = request_args['stream']
     else:
         stream = 'prod'  # If no stream is given, assume prod
 
@@ -326,14 +331,17 @@ def parse_request_parameters(request: object) -> dict:
     supported_tags_and_extras = default_tag_list + subscriber_tags + subscriber_extras
 
     # Check to see if any of the provided tags in the request are not supported
-    for item in request.args.keys():
-        if item.lower() not in [item[0] for item in supported_tags_and_extras]:
+    for item in request_args.keys():
+        if item not in [item[0] for item in supported_tags_and_extras]:
             abort(400)
 
     # Store tags from request in a dictionary
     tags = {}
-    for item in supported_tags_and_extras:
-        tags[item[0].lower()] = request.args.get(item[0], default=item[1], type=item[2])
+    for tag_name, default_value, data_type in supported_tags_and_extras:
+        if tag_name in request_args:
+            tags[tag_name] = data_type(request_args[tag_name])
+        else:
+            tags[tag_name] = data_type(default_value)
 
     return tags
 
