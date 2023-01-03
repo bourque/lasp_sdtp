@@ -41,7 +41,7 @@ def test_ingest_subscribed_file():
     """Tests the ``ingest`` method with files that are subscribed to"""
 
     # Create some files to test with
-    test_filelist = ['tsis2_L1_19840404.zip', 'tsis2_sim_cal_v01.zip', 'tsis2_sc_L2_v01_19840404_19840405.zip']
+    test_filelist = ['tsis2_L1_19840404.zip', 'tsis2_sc_L2_v01_19840404_19840405.zip']
     for test_file in test_filelist:
         Path(test_file).touch(exist_ok=True)
 
@@ -60,4 +60,41 @@ def test_ingest_subscribed_file():
         assert queue_loc.exists()
 
         # Remove the file that were just created
+        Path(test_file).unlink()
+
+
+def test_ingest_duplicate():
+    """Tests that the ``ingest`` method is able to ingest a file that already
+    exists in the system.  The original file should be removed (i.e. marked as
+    unavailable in the Files table, and removed from the FileQueue table."""
+
+    # Use the same test_filelist from the previous test that was just ingested
+    test_filelist = ['tsis2_L1_19840404.zip', 'tsis2_sc_L2_v01_19840404_19840405.zip']
+    for test_file in test_filelist:
+        Path(test_file).touch(exist_ok=True)
+
+    # Get the fileids of the files from the previous ingestion
+    results = db.session.query(
+                  db.Files
+              ).filter(
+                  db.Files.name.in_(test_filelist),
+                  db.Files.stream == 'prod'
+              ).all()
+    fileids = [result.fileid for result in results]
+
+    # Ingest the files (again)
+    test_ingest = Ingest(test_filelist, 'prod', '01')
+    test_ingest.ingest()
+
+    # Make sure the original fileids are marked as unavailable (i.e. they were deleted)
+    results = db.session.query(db.Files).filter(db.Files.fileid.in_(fileids)).all()
+    for result in results:
+        assert result.available == False
+
+    # Make sure the original fileids are no longer in the FileQueue
+    results = db.session.query(db.FileQueue).filter(db.FileQueue.fileid.in_(fileids)).all()
+    assert len(results) == 0
+
+    # Remove the file that were just created
+    for test_file in test_filelist:
         Path(test_file).unlink()

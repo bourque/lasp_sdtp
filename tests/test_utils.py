@@ -145,13 +145,14 @@ def test_register_admin():
     assert account
 
 
-def test_set_unavailable():
-    """Tests the ``set_as_unavailable`` function"""
+def test_mark_as_deleted():
+    """Tests the ``mark_as_deleted`` function"""
 
-    utils.set_as_unavailable(23456)
+    utils.mark_as_deleted(23456)
 
     results = db.session.query(db.Files).filter(db.Files.fileid == 23456).all()
     assert results[0].available == False
+    assert results[0].deletion_date is not None
 
 
 def test_validate_access():

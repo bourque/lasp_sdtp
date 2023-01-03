@@ -12,7 +12,7 @@ Use
         from lasp_sdtp.utils.utils import get_checksum
 
 TODO: Move functions closer to their parent, where it makes sense
-TODO: Update docstrings
+TODO: Do something better with get_tag_value
 """
 
 import datetime
@@ -261,6 +261,27 @@ def get_tag_value(filename: str, field_name: str) -> object:
     return 'some_value'
 
 
+def mark_as_deleted(fileid: str):
+    """Set the given file as unavailable in the Files table
+
+    Parameters
+    ----------
+    fileid : str
+        The ``fileid`` to set as unavailable
+    """
+
+    db.session.query(
+        db.Files
+    ).filter(
+        db.Files.fileid == fileid
+    ).update(
+        {'available': False,
+         'deletion_date': datetime.datetime.utcnow().date()}
+    )
+    db.session.commit()
+    logger.info('Updated Files table to indicate %s is no longer available' % fileid)
+
+
 def parse_api_response(api: str, response: Response) -> dict:
     """Parse a response from the given API.
 
@@ -362,20 +383,6 @@ def register_admin():
             registration_date=datetime.datetime.utcnow().date())]
         db.insert_data(data)
         logger.info('Registered admin account')
-
-
-def set_as_unavailable(fileid: str):
-    """Set the given file as unavailable in the Files table
-
-    Parameters
-    ----------
-    fileid : str
-        The ``fileid`` to set as unavailable
-    """
-
-    db.session.query(db.Files).filter(db.Files.fileid == fileid).update({'available': False})
-    db.session.commit()
-    logger.info('Updated Files table to indicate %s is no longer available' % fileid)
 
 
 def validate_access(fileid: str) -> bool:

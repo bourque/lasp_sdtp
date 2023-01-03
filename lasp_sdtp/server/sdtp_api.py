@@ -34,6 +34,8 @@ TODO: Implement parallelization for file transfers
 TODO: Implement 429 errors (Too many requests)
 TODO: Implement support for grouping files together
 TODO: Make diagram of how a file flows through the system
+TODO: Make sure GET /files request is reading the FileQueue, not the Files table
+TODO: Upon ingestion, validate file against shortname.  If not valid, report it as a problem file
 """
 
 import logging

@@ -203,7 +203,7 @@ def test_get_filelist_filter_by_tag(client: FlaskClient):
     assert response.status_code == 200
 
     # Make sure the results are as expected
-    assert len(data['files']) == 3
+    assert len(data['files']) == 4
     for file in data['files']:
         assert 'observation_date' in file['tags']
 

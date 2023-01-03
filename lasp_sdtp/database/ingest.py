@@ -1,6 +1,11 @@
 """This module ingests a list of files (and their metadata) into the database.
 The ``Files`` and ``TagsAndExtras`` tables are updated accordingly.
 
+If a file already exists in the system (i.e. it is in one or more subscriber
+queues and is marked as available in the ``Files`` table), the file is 'purged'
+from the system (i.e. it is removed from subscriber queue spaces and marked as
+unavailable/deleted in the ``Files`` table)
+
 Authors
 -------
 
@@ -16,8 +21,6 @@ Use
         from lasp_sdtp.database.ingest import Ingest
         i = Ingest(filelist, 'prod', '01')
         i.ingest()
-
-TODO: Make script be able to handle ingesting the same file twice
 """
 
 import datetime
@@ -61,67 +64,176 @@ class Ingest():
         self.stream = stream
         self.version = version
 
+    def _copy_to_subscriber_queue(self, file: str, account: str):
+        """Copy the given file to the appropriate subscriber queue space
+
+        Parameters
+        ----------
+        file : str
+            The path to the file to copy
+        account : str
+            The account associated with the subscriber queue space to copy the
+            file to (e.g. ``ges_disc``)
+        """
+
+        # Copy file to subscriber queue
+        dst = Path(admin_config['data_cache_loc']) / account / self.stream / Path(file).name
+        shutil.copyfile(file, dst)
+        logger.info('Copied %s to subscriber queue: %s' % (file, dst))
+
+    def _insert_into_filequeue(self, fileid: int, account: str):
+        """Insert the given file into the ``FileQueue`` table for the given
+        ``account``.
+
+        Parameters
+        ----------
+        fileid : int
+            The ``fileid`` of the file to put in the queue
+        account : str
+            The username of the account for the subscriber queue of interest
+            (e.g. ``ges_disc``)
+        """
+
+        data = [db.FileQueue(
+            username=account,
+            fileid=fileid,
+            entry_date=datetime.datetime.utcnow().date(),
+            expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period'])
+        )]
+        db.insert_data(data)
+        logger.info('Inserted file %s into FileQueue for account %s' % (fileid, account))
+
+    def _insert_into_files(self, file: str, shortname: str) -> int:
+        """Insert data associated with the given file into the ``Files`` table.
+
+        Parameters
+        ----------
+        file : str
+            The path to the file of interest
+        shortname
+            The ``shortname`` for the file (e.g. ``TSIS2_L1``)
+
+        Returns
+        -------
+        fileid : int
+            The ``fileid`` that was used when inserting an entry into the
+            ``Files`` table.
+        """
+
+        data = db.Files(
+            name=Path(file).name,
+            checksum=utils.get_checksum(),
+            size=os.path.getsize(file),
+            expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period']),
+            stream=self.stream,
+            shortname=shortname,
+            version=self.version,
+            ingest_date=datetime.datetime.utcnow().date(),
+            available=True
+        )
+        db.session.add(data)
+        db.session.flush()  # Necessary in order to get back the fileid
+        fileid = data.fileid
+        db.session.commit()
+
+        logger.info('Inserted file %s into Files table' % file)
+
+        return fileid
+
+    def _insert_into_tagsandextras(self, file: str, fileid: str):
+        """Insert subscriber tags and extras associated with the given ``file``
+        into the ``TagsAndExtras`` table
+
+        Parameters
+        ----------
+        file : str
+            The path to the file of interest
+        fileid
+            The ``fileid`` of the given ``file``
+        """
+
+        for field_type in ['tags', 'extras']:
+            field_list = subscriber_config['streams'][self.stream][field_type]
+            for field_name in field_list:
+                value = utils.get_tag_value(file, field_name)
+                data = [db.TagsAndExtras(
+                    fileid=fileid,
+                    field_name=field_name,
+                    field_type=field_type[:-1],  # Remove the 's'
+                    value=value
+                )]
+                db.insert_data(data)
+
+        logger.info('Inserted tags and extras metadata for file %s into TagsAndExtras table' % file)
+
+    def _purge_file(self, fileid, filename: str, accounts: list[str]):
+        """Purges the given file from the system for the provided accounts.
+        The file is removed from the accounts queue space, removed from the
+        ``FileQueue`` table, and marked as unavailable in the ``Files`` table.
+
+        Parameters
+        ----------
+        filename : str
+            The name of the file to purge (e.g. ``tsis2_sim_cal_v01.zip``)
+        accounts : list of str
+            A list of account usernames to purge the file from
+        """
+
+        # Remove file from subscriber queue spaces
+        for account in accounts:
+            filepath = Path(admin_config['data_cache_loc']) / account / self.stream / filename
+            filepath.unlink()
+            logger.info('Removed file %s from queue space for account %s' % (filepath, account))
+
+        # Remove the file from FileQueue table
+        db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).delete()
+
+        # Mark the file as deleted in the Files table
+        utils.mark_as_deleted(fileid)
+
+        logger.info('Purged file %s' % fileid)
+
     def ingest(self):
         """Perform the ingest operation.  See module docstrings for further
         details.
         """
 
-        for i, filename in enumerate(self.filelist):
+        for file in self.filelist:
 
-            logger.info('Ingesting %s for stream %s version %s' % (Path(filename).name, self.stream, self.version))
+            filename = Path(file).name
+
+            print('Ingesting %s for stream %s version %s' % (filename, self.stream, self.version))
+            logger.info('Ingesting %s for stream %s version %s' % (filename, self.stream, self.version))
 
             # Gather some metadata for the file
-            shortname = utils.get_shortname(Path(filename).name)
+            shortname = utils.get_shortname(filename)
             mission = query_for_mission_by_shortname(shortname)
             subscribed_accounts = query_for_accounts_by_mission(mission)
 
             # If there are subscribed accounts, proceed with the ingest process
             if subscribed_accounts:
 
+                # Check to see if the file already exists (and is available in the system)
+                # If it is, then purge the existing file so that it can be replaced with the new one
+                existing_file = db.session.query(
+                    db.Files
+                ).filter(
+                    db.Files.name == filename,
+                    db.Files.available == True,
+                    db.Files.stream == self.stream
+                ).all()
+                if existing_file:
+                    fileid_to_purge = existing_file[0].fileid  # There should only be one result
+                    self._purge_file(fileid_to_purge, filename, subscribed_accounts)
+
                 # Insert data into the Files table
-                data = db.Files(
-                    name=Path(filename).name,
-                    checksum=utils.get_checksum(),
-                    size=os.path.getsize(filename),
-                    expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period']),
-                    stream=self.stream,
-                    shortname=shortname,
-                    version=self.version,
-                    ingest_date=datetime.datetime(2022, 1, 1).date() + datetime.timedelta(days=i - 1),
-                    available=True
-                )
-                db.session.add(data)
-                db.session.flush()  # Necessary in order to get back the fileid
-                fileid = data.fileid
-                db.session.commit()
+                fileid = self._insert_into_files(file, shortname)
 
                 # Insert data into the TagsAndExtras table
-                for field_type in ['tags', 'extras']:
-                    field_list = subscriber_config['streams'][self.stream][field_type]
-                    for field_name in field_list:
-                        value = utils.get_tag_value(filename, field_name)
-                        data = [db.TagsAndExtras(
-                            fileid=fileid,
-                            field_name=field_name,
-                            field_type=field_type[:-1],  # Remove the 's'
-                            value=value
-                        )]
-                        db.insert_data(data)
+                self._insert_into_tagsandextras(file, fileid)
 
-                # Copy the files into subscriber queues who are subscribed to the data
+                # Copy the file into subscriber queues who are subscribed to the data
                 # and add appropriate entries to the FileQueue table
                 for account in subscribed_accounts:
-
-                    # Add entry to FileQueue table
-                    data = [db.FileQueue(
-                        username=account,
-                        fileid=fileid,
-                        entry_date=datetime.datetime.utcnow().date(),
-                        expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period'])
-                    )]
-                    db.insert_data(data)
-
-                    # Copy file to subscriber queue
-                    dst = Path(admin_config['data_cache_loc']) / account / self.stream / Path(filename).name
-                    shutil.copyfile(filename, dst)
-                    logger.info('Copied %s to subscriber queue: %s' % (filename, dst))
+                    self._insert_into_filequeue(fileid, account)
+                    self._copy_to_subscriber_queue(file, account)
