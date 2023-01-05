@@ -11,7 +11,6 @@ Use
     ::
         from lasp_sdtp.utils.utils import get_checksum
 
-TODO: Move functions closer to their parent, where it makes sense
 TODO: Do something better with get_tag_value
 """
 
@@ -23,32 +22,59 @@ import re
 import string
 
 from flask import abort
-from flask.json import JSONEncoder
 from flask.wrappers import Response
 
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_account_by_username
 from lasp_sdtp.database.database_queries import query_for_file
 
 logger = logging.getLogger(__name__)
 
 
-class CustomJSONEncoder(JSONEncoder):
-    """Defines a custom JSON encoder that allows responses from requests sent
-    via ``curl`` to contain datetime formats of ``YYYY-MM-DD`` instead of the
-    default timestamp format (e.g. ``Thu, 06 Jan 2022 00:00:00 GMT``).
+def _get_subscriber_tags_and_extras(stream: str) -> tuple[list, list]:
+    """Returns a list of the subscriber-provided tags and extras for the given
+    stream.
+
+    Parameters
+    ----------
+    stream : str
+        The stream of interest (e.g. ``prod``)
+
+    Returns
+    -------
+    subscriber_tags : list of tuples
+        The subscriber tags and associated metadata in the form of a tuple
+        (i.e. ``(tag_name, default_value, data_type)``)
+    subscriber_extras : list of tuples
+        The subscriber extras and associated metadata in the form of a tuple
+        (i.e. ``(extras_name, default_value, data_type)``)
     """
-    def default(self, obj):
-        try:
-            if isinstance(obj, datetime.date):
-                return obj.isoformat().split('T')[0]
-            iterable = iter(obj)
-        except TypeError:
-            pass
-        else:
-            return list(iterable)
-        return JSONEncoder.default(self, obj)
+
+    # Store the tags and extras in a list
+    # Values are stored as tuples, e.g. ('tag_name', 'default_value', 'type')
+    subscriber_tags, subscriber_extras = [], []
+
+    # Make sure the stream is in the subscriber configuration
+    # If it isn't, then no data will be returned
+    if stream in list(subscriber_config['streams'].keys()):
+
+        # Get the tags
+        for tag in subscriber_config['streams'][stream]['tags']:
+            subscriber_tags.append((
+                tag,
+                subscriber_config['streams'][stream]['tags'][tag]['default'],
+                eval(subscriber_config['streams'][stream]['tags'][tag]['type'])
+            ))
+
+        # Get the extras
+        for extra in subscriber_config['streams'][stream]['extras']:
+            subscriber_extras.append((
+                extra,
+                subscriber_config['streams'][stream]['extras'][extra]['default'],
+                eval(subscriber_config['streams'][stream]['extras'][extra]['type'])
+            ))
+
+    return subscriber_tags, subscriber_extras
 
 
 def combine_metadata(filelist: list, tags_and_extras: list) -> list:
@@ -130,7 +156,7 @@ def filter_for_subscriber_tags(data, tags, request):
         The list of files that that match the given subscriber tag criteria
     """
 
-    subscriber_tags, _ = get_subscriber_tags_and_extras(tags['stream'])
+    subscriber_tags, _ = _get_subscriber_tags_and_extras(tags['stream'])
     subscriber_tags = [tag[0] for tag in subscriber_tags]  # Only care about the tag name here
     filter_criteria = []
     for arg in request.args.keys():
@@ -196,52 +222,6 @@ def get_shortname(filename: str) -> str:
         raise TypeError(f'No matching shortname for {filename}')
 
     return matched_shortname
-
-
-def get_subscriber_tags_and_extras(stream: str) -> tuple[list, list]:
-    """Returns a list of the subscriber-provided tags and extras for the given
-    stream.
-
-    Parameters
-    ----------
-    stream : str
-        The stream of interest (e.g. ``prod``)
-
-    Returns
-    -------
-    subscriber_tags : list of tuples
-        The subscriber tags and associated metadata in the form of a tuple
-        (i.e. ``(tag_name, default_value, data_type)``)
-    subscriber_extras : list of tuples
-        The subscriber extras and associated metadata in the form of a tuple
-        (i.e. ``(extras_name, default_value, data_type)``)
-    """
-
-    # Store the tags and extras in a list
-    # Values are stored as tuples, e.g. ('tag_name', 'default_value', 'type')
-    subscriber_tags, subscriber_extras = [], []
-
-    # Make sure the stream is in the subscriber configuration
-    # If it isn't, then no data will be returned
-    if stream in list(subscriber_config['streams'].keys()):
-
-        # Get the tags
-        for tag in subscriber_config['streams'][stream]['tags']:
-            subscriber_tags.append((
-                tag,
-                subscriber_config['streams'][stream]['tags'][tag]['default'],
-                eval(subscriber_config['streams'][stream]['tags'][tag]['type'])
-            ))
-
-        # Get the extras
-        for extra in subscriber_config['streams'][stream]['extras']:
-            subscriber_extras.append((
-                extra,
-                subscriber_config['streams'][stream]['extras'][extra]['default'],
-                eval(subscriber_config['streams'][stream]['extras'][extra]['type'])
-            ))
-
-    return subscriber_tags, subscriber_extras
 
 
 def get_tag_value(filename: str, field_name: str) -> object:
@@ -349,7 +329,7 @@ def parse_request_parameters(request: object) -> dict:
         stream = 'prod'  # If no stream is given, assume prod
 
     # Get the subscriber tags and extras for the stream
-    subscriber_tags, subscriber_extras = get_subscriber_tags_and_extras(stream)
+    subscriber_tags, subscriber_extras = _get_subscriber_tags_and_extras(stream)
 
     # Supported tags is an aggregation of the default + subscriber-defined tags
     supported_tags_and_extras = default_tag_list + subscriber_tags + subscriber_extras
@@ -368,24 +348,6 @@ def parse_request_parameters(request: object) -> dict:
             tags[tag_name] = data_type(default_value)
 
     return tags
-
-
-def register_admin():
-    """Registers an ``admin`` account if it doesn't already exist"""
-
-    # Check if an admin account already exists
-    account = query_for_account_by_username('lasp_admin')
-
-    # If it doesn't, create one
-    if not account:
-        data = [db.Accounts(
-            username='lasp_admin',
-            role='admin',
-            registration_open=False,
-            certuid='admin_cert',
-            registration_date=datetime.datetime.utcnow().date())]
-        db.insert_data(data)
-        logger.info('Registered admin account')
 
 
 def validate_access(fileid: str) -> bool:

@@ -21,7 +21,6 @@ import pytest
 
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_account_by_username
 from lasp_sdtp.utils import utils
 
 
@@ -119,7 +118,7 @@ def test_get_shortname(shortname: str, expected_result: str):
 def test_get_subscriber_tags_and_extras():
     """Tests the ``get_subscriber_tags_and_extras`` function"""
 
-    subscriber_tags, subscriber_extras = utils.get_subscriber_tags_and_extras('prod')
+    subscriber_tags, subscriber_extras = utils._get_subscriber_tags_and_extras('prod')
 
     for tag in subscriber_tags:
         assert tag[0] in str(subscriber_config['streams']['prod']['tags'])
@@ -133,16 +132,6 @@ def test_get_tag_value():
 
     value = utils.get_tag_value('test_filename.txt', 'aperture')
     assert value == 'some_value'
-
-
-def test_register_admin():
-    """Tests the ``register_admin`` function"""
-
-    utils.register_admin()
-
-    # Check that there is an account entry
-    account = query_for_account_by_username('lasp_admin')
-    assert account
 
 
 def test_mark_as_deleted():

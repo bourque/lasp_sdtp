@@ -36,10 +36,11 @@ from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.database.database_queries import query_for_account_by_username
 from lasp_sdtp.database.database_queries import query_for_filelist
 from lasp_sdtp.database.database_queries import query_for_tags_and_extras
+from lasp_sdtp.server.ancillary import CustomJSONEncoder
 from lasp_sdtp.utils import utils
 
 request_app = Flask(__name__)
-request_app.json_encoder = utils.CustomJSONEncoder
+request_app.json_encoder = CustomJSONEncoder
 logger = logging.getLogger(__name__)
 
 

@@ -10,14 +10,39 @@ Authors
     Matthew Bourque
 """
 
+import datetime
+import logging
+
 from flask import abort
 from flask import Flask
+from flask.json import JSONEncoder
 from flask import make_response
 from flask import request
 from flask.wrappers import Response
 from werkzeug import exceptions
 
 from lasp_sdtp.server.sdtp_api import sdtp_api_app
+from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.database_queries import query_for_account_by_username
+
+logger = logging.getLogger(__name__)
+
+
+class CustomJSONEncoder(JSONEncoder):
+    """Defines a custom JSON encoder that allows responses from requests sent
+    via ``curl`` to contain datetime formats of ``YYYY-MM-DD`` instead of the
+    default timestamp format (e.g. ``Thu, 06 Jan 2022 00:00:00 GMT``).
+    """
+    def default(self, obj):
+        try:
+            if isinstance(obj, datetime.date):
+                return obj.isoformat().split('T')[0]
+            iterable = iter(obj)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+        return JSONEncoder.default(self, obj)
 
 
 @sdtp_api_app.before_request
@@ -87,3 +112,21 @@ def get_app() -> Flask:
     """
 
     return sdtp_api_app
+
+
+def register_admin():
+    """Registers an ``admin`` account if it doesn't already exist"""
+
+    # Check if an admin account already exists
+    account = query_for_account_by_username('lasp_admin')
+
+    # If it doesn't, create one
+    if not account:
+        data = [db.Accounts(
+            username='lasp_admin',
+            role='admin',
+            registration_open=False,
+            certuid='admin_cert',
+            registration_date=datetime.datetime.utcnow().date())]
+        db.insert_data(data)
+        logger.info('Registered admin account')

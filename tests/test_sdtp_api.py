@@ -10,7 +10,7 @@ Use
     ::
         pytest -s test_api_gateway.py
 
-TODO: Find a better way to define ignore_files
+TODO: Add test for parse_api_response (requires mock request)
 """
 
 import datetime
@@ -26,7 +26,10 @@ from werkzeug.datastructures import Headers
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.database_queries import query_for_account_by_username
+from lasp_sdtp.utils.properties import TEST_FILES_TO_IGNORE
 from lasp_sdtp.server.ancillary import get_app
+from lasp_sdtp.server.ancillary import register_admin
 
 
 TEST_URLS = [
@@ -131,6 +134,16 @@ def test_register(client: FlaskClient):
     _check_transaction(response.headers)
 
 
+def test_register_admin():
+    """Tests the ``register_admin`` function"""
+
+    register_admin()
+
+    # Check that there is an account entry
+    account = query_for_account_by_username('lasp_admin')
+    assert account
+
+
 def test_authorize(client: FlaskClient):
     """Tests the ``authorize`` function
 
@@ -180,13 +193,9 @@ def test_get_filelist(client: FlaskClient, request_url: str):
 
     # Check if the returned files are in the filesystem
     test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
-    ignore_files = ['test_cleanup_db.txt', 'test_cleanup_db2.txt', 'test_reporting.txt', 'test_db_controller.txt',
-                    'tsis2_L1_19840404.zip', 'tsis2_sim_cal_v01.zip', 'tsis2_sc_L2_v01_19840404_19840405.zip', 'insert_data.txt',
-                    'test_pagination_99990.txt', 'test_pagination_99991.txt', 'test_pagination_99992.txt',
-                    'test_pagination_99993.txt', 'test_pagination_99994.txt', 'test_pagination_99995.txt']  # ignore files used in other tests
     for entry in data['files']:
         filename = Path(admin_config['filesystem_loc']) / 'prod' / entry['name']
-        if filename.name not in ignore_files:
+        if filename.name not in TEST_FILES_TO_IGNORE:
             assert str(filename) in test_files
 
     _check_transaction(response.headers)
