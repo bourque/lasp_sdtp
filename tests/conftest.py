@@ -17,16 +17,13 @@ Use
 
 import datetime
 import glob
-import os
-import shutil
 from pathlib import Path
 
 import pytest
 
 from lasp_sdtp.config import admin_config
-from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.utils import utils
+from lasp_sdtp.database.ingest import Ingest
 
 TEST_SHORTNAME_MAPPING = {
     'TSIS2_L1': r'tsis2_L1_(?P<date>\d{8}).zip',
@@ -132,40 +129,20 @@ def _add_file_queue_entries():
         expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
     ))
 
+    # Add files to test pagination
+    for fileid in [99990, 99991, 99992, 99993, 99994, 99995]:
+        data_to_insert.append(db.FileQueue(
+            username='test_account',
+            fileid=fileid,
+            entry_date=datetime.datetime.utcnow().date(),
+            expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
+        ))
+
     db.insert_data(data_to_insert)
 
 
 def _add_files_entries():
     """Add ``Files`` table entries used for testing"""
-
-    # Locate files in test filesystem
-    test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
-
-    # Create a queue space for the test account
-    queue_path = Path(admin_config['data_cache_loc']) / 'test_account' / 'prod'
-    queue_path.mkdir(parents=True, exist_ok=True)
-
-    # Copy files to test subscriber queue
-    for test_file in test_files:
-        dst = queue_path / Path(test_file).name
-        shutil.copyfile(test_file, dst)
-
-    # Insert test file data (mostly used for test_run_server)
-    data_to_insert = []
-    for i, test_file in enumerate(test_files):
-        data = db.Files(
-            name=Path(test_file).name,
-            checksum=utils.get_checksum(),
-            size=os.path.getsize(test_file),
-            expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period']),
-            stream='prod',
-            shortname=utils.get_shortname(Path(test_file).name),
-            version='01',
-            ingest_date=datetime.datetime(2022, 1, 1).date() + datetime.timedelta(days=i - 1),
-            available=True,
-        )
-        data_to_insert.append(data)
-    db.insert_data(data_to_insert)
 
     # Add entries to satisfy integrity constraint for test_cleanup_database
     data_to_insert = [db.Files(
@@ -234,6 +211,21 @@ def _add_files_entries():
         ingest_date=datetime.datetime.utcnow().date(),
         available=True
     ))
+
+    # Add files to test pagination
+    for fileid in [99990, 99991, 99992, 99993, 99994, 99995]:
+        data_to_insert.append(db.Files(
+            fileid=fileid,
+            name=f'test_pagination_{fileid}.txt',
+            checksum=f'checksum_{fileid}',
+            size=1,
+            expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
+            stream='prod',
+            shortname='TSIS2_L1',
+            version='01',
+            ingest_date=datetime.datetime.utcnow().date(),
+            available=True
+        ))
 
     # A separate call to insert data is needed so that the correct fileids are inserted
     db.insert_data(data_to_insert)
@@ -337,11 +329,21 @@ def setup(request: object):
     db.session.commit()
 
     # Add entries to database tables to support tests
+    # The following are tables that have parent keys needed for the Files table
     _add_missions_entries()
     _add_accounts_entries()
     _add_mission_account_mapping_entries()
     _add_shortnames_entries()
     _add_mission_shortname_mapping_entries()
+
+    # Ingest test filesystem (thus adding entries to Files and FileQueue)
+    filelist = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
+    production = Ingest(filelist, 'prod', '01')  # Ingest a 'production' stream of the data
+    production.ingest()
+    development = Ingest(filelist, 'dev', '01')      # Ingest a 'development' stream of the data
+    development.ingest()
+
+    # Add additional entries to database tables to support tests
     _add_files_entries()
     _add_file_queue_entries()
     _add_transactions_entries()
@@ -352,15 +354,15 @@ def setup(request: object):
 
 def teardown():
     """Teardown function"""
-    pass
+
     # Clean out the database
-    # db.session.query(db.FileQueue).delete()
-    # db.session.query(db.Transactions).delete()
-    # db.session.query(db.TagsAndExtras).delete()
-    # db.session.query(db.Files).delete()
-    # db.session.query(db.MissionShortnameMapping).delete()
-    # db.session.query(db.Shortnames).delete()
-    # db.session.query(db.MissionAccountMapping).delete()
-    # db.session.query(db.Missions).delete()
-    # db.session.query(db.Accounts).delete()
-    # db.session.commit()
+    db.session.query(db.FileQueue).delete()
+    db.session.query(db.Transactions).delete()
+    db.session.query(db.TagsAndExtras).delete()
+    db.session.query(db.Files).delete()
+    db.session.query(db.MissionShortnameMapping).delete()
+    db.session.query(db.Shortnames).delete()
+    db.session.query(db.MissionAccountMapping).delete()
+    db.session.query(db.Missions).delete()
+    db.session.query(db.Accounts).delete()
+    db.session.commit()

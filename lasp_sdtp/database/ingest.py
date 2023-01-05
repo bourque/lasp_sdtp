@@ -21,6 +21,8 @@ Use
         from lasp_sdtp.database.ingest import Ingest
         i = Ingest(filelist, 'prod', '01')
         i.ingest()
+
+TODO: Send an email to report invalid shortnames?
 """
 
 import datetime
@@ -206,7 +208,13 @@ class Ingest():
             logger.info('Ingesting %s for stream %s version %s' % (filename, self.stream, self.version))
 
             # Gather some metadata for the file
-            shortname = utils.get_shortname(filename)
+            try:
+                shortname = utils.get_shortname(filename)
+            except TypeError:
+                logger.warning('No matching shortname found for %s' % filename)
+                Path(file).unlink()
+                logger.info('Deleted file %s' % file)
+                continue
             mission = query_for_mission_by_shortname(shortname)
             subscribed_accounts = query_for_accounts_by_mission(mission)
 
@@ -237,3 +245,8 @@ class Ingest():
                 for account in subscribed_accounts:
                     self._insert_into_filequeue(fileid, account)
                     self._copy_to_subscriber_queue(file, account)
+
+            else:
+                logger.warning('No subscribed accounts for %s' % file)
+                Path(file).unlink()
+                logger.info('Deleted file %s' % file)

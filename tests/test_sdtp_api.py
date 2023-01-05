@@ -9,6 +9,8 @@ Use
     To run these tests use:
     ::
         pytest -s test_api_gateway.py
+
+TODO: Find a better way to define ignore_files
 """
 
 import datetime
@@ -179,7 +181,9 @@ def test_get_filelist(client: FlaskClient, request_url: str):
     # Check if the returned files are in the filesystem
     test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
     ignore_files = ['test_cleanup_db.txt', 'test_cleanup_db2.txt', 'test_reporting.txt', 'test_db_controller.txt',
-                    'tsis2_L1_19840404.zip', 'tsis2_sim_cal_v01.zip', 'tsis2_sc_L2_v01_19840404_19840405.zip', 'insert_data.txt']  # ignore files used in other tests
+                    'tsis2_L1_19840404.zip', 'tsis2_sim_cal_v01.zip', 'tsis2_sc_L2_v01_19840404_19840405.zip', 'insert_data.txt',
+                    'test_pagination_99990.txt', 'test_pagination_99991.txt', 'test_pagination_99992.txt',
+                    'test_pagination_99993.txt', 'test_pagination_99994.txt', 'test_pagination_99995.txt']  # ignore files used in other tests
     for entry in data['files']:
         filename = Path(admin_config['filesystem_loc']) / 'prod' / entry['name']
         if filename.name not in ignore_files:
@@ -203,7 +207,7 @@ def test_get_filelist_filter_by_tag(client: FlaskClient):
     assert response.status_code == 200
 
     # Make sure the results are as expected
-    assert len(data['files']) == 4
+    assert len(data['files']) == 59
     for file in data['files']:
         assert 'observation_date' in file['tags']
 

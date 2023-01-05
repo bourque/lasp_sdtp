@@ -178,7 +178,7 @@ def get_shortname(filename: str) -> str:
 
     Returns
     -------
-    matched_shortname : str
+    matched_shortname : str or None
         The ``shortname`` that matches the given filename (e.g.
         ``TSIS2_TIM_L2``)
     """
@@ -191,6 +191,9 @@ def get_shortname(filename: str) -> str:
         if match:
             matched_shortname = shortname.shortname
             break
+
+    if not matched_shortname:
+        raise TypeError(f'No matching shortname for {filename}')
 
     return matched_shortname
 

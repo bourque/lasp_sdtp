@@ -107,6 +107,11 @@ def query_for_filelist(tags: dict) -> list:
     for item in results:
         del item['_sa_instance_state']
 
+    # Only return files that are in the queue
+    queue_files = db.session.query(db.FileQueue).filter(db.FileQueue.username == subscriber_config['username']).all()
+    queue_fileids = [item.fileid for item in queue_files]
+    results = [result for result in results if result['fileid'] in queue_fileids]
+
     # Only return files that the user has access to
     # Get missions associated with account
     missions = db.session.query(

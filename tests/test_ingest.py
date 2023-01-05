@@ -33,9 +33,6 @@ def test_ingest_not_subscribed_file():
     files = db.session.query(db.Files).filter(db.Files.name == test_filename).all()
     assert len(files) == 0
 
-    # Remove the file that were just created
-    Path(test_filename).unlink()
-
 
 def test_ingest_subscribed_file():
     """Tests the ``ingest`` method with files that are subscribed to"""
