@@ -14,7 +14,7 @@ Use
         from lasp_sdtp.utils.reporting import generate_daily_report
         generate_daily_report()
 
-TODO: Update email server to avoid using gmail
+TODO[TIMDS-1997]: Update email server to avoid using gmail
 """
 
 import datetime
