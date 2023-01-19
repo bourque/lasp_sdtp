@@ -3,8 +3,8 @@ The ``Files`` and ``TagsAndExtras`` tables are updated accordingly.
 
 If a file already exists in the system (i.e. it is in one or more subscriber
 queues and is marked as available in the ``Files`` table), the file is 'purged'
-from the system (i.e. it is removed from subscriber queue spaces and marked as
-unavailable/deleted in the ``Files`` table)
+from the system (i.e. it is removed from subscriber queue staging area and
+marked as unavailable/deleted in the ``Files`` table)
 
 Authors
 -------
@@ -67,7 +67,7 @@ class Ingest():
         self.version = version
 
     def _copy_to_subscriber_queue(self, file: str, account: str):
-        """Copy the given file to the appropriate subscriber queue space
+        """Copy the given file to the appropriate subscriber queue staging area
 
         Parameters
         ----------
@@ -79,7 +79,7 @@ class Ingest():
         """
 
         # Copy file to subscriber queue
-        dst = Path(admin_config['data_cache_loc']) / account / self.stream / Path(file).name
+        dst = Path(admin_config['staging_loc']) / account / self.stream / Path(file).name
         shutil.copyfile(file, dst)
         logger.info('Copied %s to subscriber queue: %s' % (file, dst))
 
@@ -181,11 +181,11 @@ class Ingest():
             A list of account usernames to purge the file from
         """
 
-        # Remove file from subscriber queue spaces
+        # Remove file from subscriber queue staging area
         for account in accounts:
-            filepath = Path(admin_config['data_cache_loc']) / account / self.stream / filename
+            filepath = Path(admin_config['staging_loc']) / account / self.stream / filename
             filepath.unlink()
-            logger.info('Removed file %s from queue space for account %s' % (filepath, account))
+            logger.info('Removed file %s from subscriber queue stating area for account %s' % (filepath, account))
 
         # Remove the file from FileQueue table
         db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).delete()

@@ -264,8 +264,8 @@ def test_get_file(client: FlaskClient):
     # Make sure the response status is 200
     assert response.status_code == 200
 
-    # Check if the file is in the queue space
-    filepath = Path(admin_config['data_cache_loc']) / 'test_account' / 'prod' / data['filename']
+    # Check if the file is in the subscriber queue staging area
+    filepath = Path(admin_config['staging_loc']) / 'test_account' / 'prod' / data['filename']
     assert filepath.exists()
 
     _check_transaction(response.headers)

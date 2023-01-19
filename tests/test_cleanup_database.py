@@ -39,8 +39,8 @@ def test_cleanup_accounts():
     results = db.session.query(db.FileQueue).filter(db.FileQueue.username == 'expired_account').all()
     assert len(results) == 0
 
-    # Check that there are no files in the queue associated with expired accounts
-    queue_space = Path(admin_config['data_cache_loc']) / 'expired_account'
+    # Check that there are no files in the subscriber queue staging area associated with expired accounts
+    queue_space = Path(admin_config['staging_loc']) / 'expired_account'
     files = list(queue_space.glob('*/*'))
     assert len(files) == 0
 
@@ -59,6 +59,6 @@ def test_cleanup_files():
               ).all()
     assert len(results) == 0
 
-    # Check that the expired file was removed from the queue storage
-    filepath = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / 'prod' / 'test_cleanup_db2.txt'
+    # Check that the expired file was removed from the subscriber queue staging area
+    filepath = Path(admin_config['staging_loc']) / subscriber_config['username'] / 'prod' / 'test_cleanup_db2.txt'
     assert not filepath.exists()

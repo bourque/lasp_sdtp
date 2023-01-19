@@ -50,7 +50,7 @@ def cleanup_accounts():
         logger.info('Removed FileQueue entries for %s account' % expired_account)
 
         # Remove any files in the data cache related to the account
-        account_cache = Path(admin_config['data_cache_loc']) / expired_account
+        account_cache = Path(admin_config['staging_loc']) / expired_account
         account_files = account_cache.glob('*/*')
         for filename in account_files:
             filename.unlink(missing_ok=True)
@@ -85,9 +85,9 @@ def cleanup_files():
         # Update Files table to indicate that the file is no longer available
         mark_as_deleted(expired_file)
 
-        # Remove file from the file queue storage
+        # Remove file from the file queue staging area
         filename = db.session.query(db.Files.name).filter(db.Files.fileid == expired_file).all()
         filename = filename[0][0]
-        file_path = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / 'prod' / filename
+        file_path = Path(admin_config['staging_loc']) / subscriber_config['username'] / 'prod' / filename
         file_path.unlink(missing_ok=True)
-        logger.info(f'Removed {expired_file} from queue storage')
+        logger.info(f'Removed {expired_file} from subscriber queue staging area')

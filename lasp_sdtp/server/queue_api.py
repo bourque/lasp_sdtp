@@ -68,8 +68,8 @@ def delete_file(fileid: int) -> dict:
     except IndexError:  # No results, send a 404
         abort(404)
 
-    # Determine where the file exists in the queue
-    file_loc = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / metadata.stream / metadata.name
+    # Determine where the file exists in the subscriber queue staging area
+    file_loc = Path(admin_config['staging_loc']) / subscriber_config['username'] / metadata.stream / metadata.name
 
     # Check to see if the file is in the queue for another subscriber
     queue_entries = query_for_queue_entries(fileid)
@@ -79,7 +79,7 @@ def delete_file(fileid: int) -> dict:
             file_needed = True
             logger.info('File %s is needed for another subscriber and will not be deleted' % fileid)
 
-    # If not, delete the file from the queue if it is still there
+    # If not, delete the file from the subscriber queue staging area if it is still there
     if not file_needed:
         if file_loc.exists:
             file_loc.unlink(missing_ok=True)
@@ -115,9 +115,9 @@ def get_file(fileid: int) -> dict:
 
     logger.info('Retrieving file contents for file %s' % fileid)
 
-    # Determine where the file exists in the queue
+    # Determine where the file exists in the subscriber queue staging area
     metadata = query_for_file(fileid)
-    file_loc = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / metadata.stream / metadata.name
+    file_loc = Path(admin_config['staging_loc']) / subscriber_config['username'] / metadata.stream / metadata.name
 
     # Get the file contents
     with open(file_loc, 'r') as f:

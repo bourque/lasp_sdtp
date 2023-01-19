@@ -277,7 +277,7 @@ class DatabaseController():
                 start_time=datetime.datetime.utcnow(),
                 fileid=fileid,
                 source=admin_config['filesystem_loc'],
-                destination=admin_config['data_cache_loc'])
+                destination=admin_config['staging_loc'])
 
         # For DELETE /files/<fileid>
         elif request.method == 'DELETE':

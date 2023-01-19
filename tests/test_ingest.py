@@ -52,8 +52,8 @@ def test_ingest_subscribed_file():
     for test_file in test_filelist:
         assert test_file in files
 
-        # Check that the file got copied to the subscriber queue
-        queue_loc = Path(admin_config['data_cache_loc']) / 'test_account' / 'prod' / test_file
+        # Check that the file got copied to the subscriber queue staging area
+        queue_loc = Path(admin_config['staging_loc']) / 'test_account' / 'prod' / test_file
         assert queue_loc.exists()
 
         # Remove the file that were just created

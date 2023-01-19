@@ -35,6 +35,7 @@ TODO[TIMDS-1992]: Implement 429 errors (Too many requests)
 TODO[TIMDS-1993]: Implement support for grouping files together
 TODO[TIMDS-1994]: Make diagram of how a file flows through the system
 TODO[TIMDS-1995]: Add logic to update transactions.responseStatus field
+TODO: Add 'finally' clause where it makes sense
 """
 
 import logging
@@ -165,9 +166,9 @@ def get_file(fileid: int) -> Response:
     If the supplied ``fileid`` is not a valid positive integer, a 400 error is
     returned.  Also, if the file does not exist, a 404 error is returned.
 
-    A successful request will result in the file being copied to the file
-    queue, an entry being added the ``file_queue`` database table, and a
-    response of 200 along with the contents of the file.
+    A successful request will result in the file being copied to the subscriber
+    queue staging area, an entry being added the ``file_queue`` database table,
+    and a response of 200 along with the contents of the file.
 
     Parameters
     ----------

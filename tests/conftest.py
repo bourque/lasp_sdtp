@@ -101,16 +101,16 @@ def _add_file_queue_entries():
         expires=datetime.datetime.utcnow().date() - datetime.timedelta(days=10)
     ))
 
-    # Create a queue space for the expired account (used in test_cleanup_database)
-    queue_path = Path(admin_config['data_cache_loc']) / 'expired_account' / 'prod'
+    # Create a subscriber queue staging area for the expired account (used in test_cleanup_database)
+    queue_path = Path(admin_config['staging_loc']) / 'expired_account' / 'prod'
     queue_path.mkdir(parents=True, exist_ok=True)
 
     # Add a file associated with expired account (used in test_cleanup_database)
     with open(queue_path / 'test_cleanup_db.txt', 'w') as f:
         f.write('')
 
-    # Add an expired file to the file queue storage associated with non-expired account (for test_cleanup_database)
-    with open(Path(admin_config['data_cache_loc']) / 'test_account' / 'prod' / 'test_cleanup_db2.txt', 'w') as f:
+    # Add an expired file to the subscriber queue staging area associated with non-expired account (for test_cleanup_database)
+    with open(Path(admin_config['staging_loc']) / 'test_account' / 'prod' / 'test_cleanup_db2.txt', 'w') as f:
         f.write('')
 
     # Add an entry used for test_reporting

@@ -42,7 +42,7 @@ def _get_admin_config() -> dict:
 
     # Prepend necessary directory to filesystem and subscriber queues
     config['filesystem_loc'] = str(Path.home() / config['filesystem_loc'])
-    config['data_cache_loc'] = str(Path.home() / config['data_cache_loc'])
+    config['staging_loc'] = str(Path.home() / config['staging_loc'])
 
     return config
 

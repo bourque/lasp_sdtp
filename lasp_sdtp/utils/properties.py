@@ -56,7 +56,7 @@ LOG_CONFIG = {
 REQUIRED_ADMIN_CONFIG_KEYS = {
     'api_endpoint': str,
     'certificate_authority': str,
-    'data_cache_loc': str,
+    'staging_loc': str,
     'db_connection_string': str,
     'email_address': str,
     'email_password': str,

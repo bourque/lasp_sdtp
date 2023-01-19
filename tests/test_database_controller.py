@@ -33,7 +33,7 @@ def test_delete_file_from_queue():
     fileid = 78901
     db.delete_file_from_queue(fileid)
 
-    # Check that there is no record in the file_queue table
+    # Check that there is no record in the FileQueue table
     results = db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).all()
     assert len(results) == 0
 

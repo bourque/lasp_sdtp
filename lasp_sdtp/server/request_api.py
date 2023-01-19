@@ -71,7 +71,7 @@ def delete_file(fileid: int) -> dict:
     # Make sure the subscriber has access to the file
     try:
         access = utils.validate_access(fileid)
-    except IndexError:  # If an IndexError is raised, it means the file doesn't exist in available_files
+    except IndexError:  # If an IndexError is raised, it means the file doesn't exist in Files table
         abort(404)
     if not access:
         abort(403)
@@ -115,7 +115,7 @@ def get_file(fileid: int) -> dict:
     # Make sure the subscriber has access to the file
     try:
         access = utils.validate_access(fileid)
-    except IndexError:  # If an IndexError is raised, it means the file doesn't exist in available_files
+    except IndexError:  # If an IndexError is raised, it means the file doesn't exist in File table
         abort(404)
     if not access:
         abort(403)
@@ -212,9 +212,9 @@ def register_subscriber() -> dict:
         # Update the MissionAccountMapping with which mission(s) the subscriber is subscribed to
         db.update_mission_account_mapping()
 
-        # Create a queue space in cache for each stream
+        # Create a subscriber queue staging area for each stream
         for stream in subscriber_config['streams']:
-            queue_path = Path(admin_config['data_cache_loc']) / subscriber_config['username'] / stream
+            queue_path = Path(admin_config['staging_loc']) / subscriber_config['username'] / stream
             queue_path.mkdir(parents=True, exist_ok=True)
 
     else:
