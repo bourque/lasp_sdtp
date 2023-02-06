@@ -8,10 +8,10 @@ Authors
 Use
 ---
 
-    The ``flask`` server is intended to be run from the
-    ``run_request_service.py`` script.  Once the server is running, the
-    ``flask`` app will respond to requests to the ``endpoint`` and
-    ``request_api_port`` defined  in the ``admin_config.json`` file.
+    The ``flask`` server can be started from the ``run_request_service.py``
+    script.  Once the server is running, the ``flask`` app will respond to
+    requests to the ``endpoint`` and ``request_api_port`` defined  in the
+    ``admin_config.json`` file.
 
     The functions within this module are intended to be called from the
     ``sdtp_api`` server, e.g.:
@@ -36,7 +36,7 @@ from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.database.database_queries import query_for_account_by_username
 from lasp_sdtp.database.database_queries import query_for_filelist
 from lasp_sdtp.database.database_queries import query_for_tags_and_extras
-from lasp_sdtp.server.ancillary import CustomJSONEncoder
+from lasp_sdtp.server.api_utils import CustomJSONEncoder
 from lasp_sdtp.utils import utils
 
 request_app = Flask(__name__)

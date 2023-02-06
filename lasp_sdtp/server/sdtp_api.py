@@ -6,7 +6,7 @@ points (i.e. ``PUT /register``, ``GET /files``, ``GET /files/<fileid>``, and
 ``DELETE /files/<fileid>``.  This API serves as a gateway for the ``queue_api``
 (which handles the transferring of files and necessary bookkeeping) and the
 ``request_api`` (which records transactions, and parses, validates, and executes
-requests.
+requests).
 
 Authors
 -------
@@ -15,10 +15,10 @@ Authors
 Use
 ---
 
-    The ``flask`` server is intended to be run from the ``run_sdtp_service.py``
-    script.  Once the server is running, the ``flask`` app will respond to
-    requests to the ``endpoint`` and ``sdtp_api_port`` defined  in the
-    ``admin_config.json`` file.
+    The ``flask`` server can be started from the ``run_sdtp_service.py`` script.
+    Once the server is running, the ``flask`` app will respond to requests to
+    the ``endpoint`` and ``sdtp_api_port`` defined  in the ``admin_config.json``
+    file.
 
     To run a local server for development or testing purposes, use:
     ::
@@ -36,6 +36,10 @@ TODO[TIMDS-1993]: Implement support for grouping files together
 TODO[TIMDS-1994]: Make diagram of how a file flows through the system
 TODO[TIMDS-1995]: Add logic to update transactions.responseStatus field
 TODO: Add 'finally' clause where it makes sense
+TODO: Create on script to run all servers (if necessary; which it might not be
+      depending on how the docker containers are set up
+TODO: Use poetry instead of conda for environment setup (currently not working
+      with Mac M1)
 """
 
 import logging

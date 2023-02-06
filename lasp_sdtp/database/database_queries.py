@@ -15,12 +15,91 @@ Use
         data = query_for_files(fileid)
 """
 
+import datetime
 import logging
 
 from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.config import subscriber_config
 
 logger = logging.getLogger(__name__)
+
+
+def get_report_queries() -> list:
+    """Return a list of queries used to generate content for the report email
+
+    Returns
+    -------
+    queries : list of ``sqlalchemy.orm.query.Query`` objects
+    """
+
+    # List to hold the queries
+    queries = []
+
+    # Active accounts
+    queries.append((
+        'Active Subscribers',
+        db.session.query(
+            db.Accounts.username, db.Accounts.registration_date, db.Accounts.registration_expires
+        ).filter(
+            db.Accounts.role == 'subscriber',
+            db.Accounts.registration_expires >= datetime.datetime.utcnow().date())))
+
+    # Recent transactions
+    queries.append((
+        'Recent Transactions',
+        db.session.query(
+            db.Transactions.transactionid, db.Transactions.action, db.Transactions.username, db.Files.name,
+            db.Transactions.start_time, db.Transactions.end_time, db.Transactions.source, db.Transactions.destination
+        ).join(
+            db.Transactions, db.Files.fileid == db.Transactions.fileid)))
+
+    # File queue contents
+    queries.append((
+        'File Queue Contents',
+        db.session.query(
+            db.FileQueue.fileid, db.Files.name, db.FileQueue.username, db.FileQueue.entry_date, db.FileQueue.expires
+        ).select_from(
+            db.Files
+        ).join(
+            db.FileQueue, db.Files.fileid == db.FileQueue.fileid
+        ).filter(
+            db.FileQueue.expires >= datetime.datetime.utcnow().date())))
+
+    # Files that are taking too long
+    queries.append((
+        'Long Transfers',
+        db.session.query(
+            db.Transactions.transactionid, db.Transactions.action, db.Transactions.username, db.Files.name,
+            db.Transactions.start_time, db.Transactions.end_time, db.Transactions.source, db.Transactions.destination
+        ).join(
+            db.Transactions, db.Files.fileid == db.Transactions.fileid
+        ).filter(
+            db.Transactions.end_time == None,
+            db.Transactions.start_time <= datetime.datetime.utcnow() - datetime.timedelta(hours=24))))
+
+    # Expiring files
+    queries.append((
+        'Expiring Files',
+        db.session.query(
+            db.FileQueue.fileid, db.Files.name, db.FileQueue.username, db.FileQueue.entry_date, db.FileQueue.expires
+        ).select_from(
+            db.Files
+        ).join(
+            db.FileQueue, db.Files.fileid == db.FileQueue.fileid
+        ).filter(
+            db.FileQueue.expires <= datetime.datetime.utcnow().date() + datetime.timedelta(days=7))))
+
+    # Expiring accounts
+    queries.append((
+        'Expiring Accounts',
+        db.session.query(
+            db.Accounts.username, db.Accounts.registration_date, db.Accounts.registration_expires
+        ).filter(
+            db.Accounts.role == 'subscriber'
+        ).filter(
+            db.Accounts.registration_expires <= datetime.datetime.utcnow().date() + datetime.timedelta(days=30))))
+
+    return queries
 
 
 def query_for_accounts_by_mission(mission: str) -> list:

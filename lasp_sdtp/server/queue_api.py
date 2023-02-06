@@ -9,10 +9,10 @@ Authors
 Use
 ---
 
-    The ``flask`` server is intended to be run from the
-    ``run_queue_service.py`` script.  Once the server is running, the
-    ``flask`` app will respond to requests to the ``endpoint`` and
-    ``queue_api_port`` defined  in the ``admin_config.json`` file.
+    The ``flask`` server can be be started from the ``run_queue_service.py``
+    script.  Once the server is running, the ``flask`` app will respond to
+    requests to the ``endpoint`` and ``queue_api_port`` defined  in the
+    ``admin_config.json`` file.
 
     The functions within this module are intended to be called from the
     ``sdtp_api`` server, e.g.:
@@ -84,6 +84,8 @@ def delete_file(fileid: int) -> dict:
         if file_loc.exists:
             file_loc.unlink(missing_ok=True)
             logger.info('Removed %s from queue' % file_loc)
+        else:
+            logger.warning('Could not access %s, though it is expected to exist' % file_loc)
 
         # Remove entry from the FileQueue table
         db.delete_file_from_queue(fileid)
@@ -118,6 +120,10 @@ def get_file(fileid: int) -> dict:
     # Determine where the file exists in the subscriber queue staging area
     metadata = query_for_file(fileid)
     file_loc = Path(admin_config['staging_loc']) / subscriber_config['username'] / metadata.stream / metadata.name
+
+    # If the file doesn't exist, raise a 404 error
+    if not file_loc.exists():
+        abort(404)
 
     # Get the file contents
     with open(file_loc, 'r') as f:

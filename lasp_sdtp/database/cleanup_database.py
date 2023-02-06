@@ -19,6 +19,10 @@ Use
     ::
         from lasp_sdtp.database import cleanup_database
         cleanup_database.cleanup_accounts()
+
+    The functions within are also used by
+    ``server.ancillary.remove_expired_data`` to invoke cleanup before every
+    API request to ensure there is no access to expired data
 """
 
 import datetime
@@ -49,7 +53,7 @@ def cleanup_accounts():
         db.session.commit()
         logger.info('Removed FileQueue entries for %s account' % expired_account)
 
-        # Remove any files in the data cache related to the account
+        # Remove any files in the subscriber queue staging area related to the account
         account_cache = Path(admin_config['staging_loc']) / expired_account
         account_files = account_cache.glob('*/*')
         for filename in account_files:

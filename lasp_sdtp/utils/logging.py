@@ -19,15 +19,15 @@ References
 """
 
 import datetime
-import getpass
-import importlib
 import logging
 import logging.config
-import socket
 import subprocess
 import sys
 import time
+from getpass import getuser
+from importlib import import_module
 from pathlib import Path
+from socket import gethostname
 from typing import Optional
 
 from lasp_sdtp.utils.properties import LOG_CONFIG
@@ -60,8 +60,8 @@ def _log_system_environment():
 
     # Log system information
     python_version = sys.version.replace("\n", "")
-    logging.debug(f'User: {getpass.getuser()}')
-    logging.debug(f'System: {socket.gethostname()}')
+    logging.debug(f'User: {getuser()}')
+    logging.debug(f'System: {gethostname()}')
     logging.debug(f'Python Version: {python_version}')
     logging.debug(f'Python Executable Path: {sys.executable}')
 
@@ -80,17 +80,17 @@ def _log_system_environment():
     # Log dependency versions and paths
     for dependency in dependencies:
         try:
-            mod = importlib.import_module(dependency)
+            mod = import_module(dependency)
             logging.debug(f'{dependency} Version: {mod.__version__}')
             logging.debug(f'{dependency} Path: {mod.__path__[0]}')
         except (ImportError, AttributeError) as error:
             logging.warning(error)
 
-    # Log environment information
-    environment = subprocess.check_output(['conda', 'env', 'export'], universal_newlines=True)
-    logging.debug('Conda Environment:')
-    for line in environment.split('\n'):
-        logging.debug(f'\t{line}')
+    # # Log environment information
+    # environment = subprocess.check_output(['conda', 'env', 'export'], universal_newlines=True)
+    # logging.debug('Conda Environment:')
+    # for line in environment.split('\n'):
+    #     logging.debug(f'\t{line}')
 
 
 def configure_logging(log_file_loc: str, verbose: Optional[bool] = True) -> str:

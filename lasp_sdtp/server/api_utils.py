@@ -1,4 +1,4 @@
-"""Ancillary functions needed for the application servers.
+"""Various non-API-specific functions needed to support the application servers.
 
 These functions are not necessarily tied to a specific API and thus they are
 grouped together in this module.  Most of the functions within serve as
@@ -22,6 +22,8 @@ from flask.wrappers import Response
 from werkzeug import exceptions
 
 from lasp_sdtp.server.sdtp_api import sdtp_api_app
+from lasp_sdtp.database.cleanup_database import cleanup_accounts
+from lasp_sdtp.database.cleanup_database import cleanup_files
 from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.database.database_queries import query_for_account_by_username
 
@@ -130,3 +132,13 @@ def register_admin():
             registration_date=datetime.datetime.utcnow().date())]
         db.insert_data(data)
         logger.info('Registered admin account')
+
+
+@sdtp_api_app.before_request
+def remove_expired_data():
+    """Remove expired accounts and/or files from the database prior to
+    processing a request in order to avoid allowing inadvertent access.
+    """
+
+    cleanup_files()
+    cleanup_accounts()

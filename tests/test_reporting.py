@@ -11,7 +11,10 @@ Use
         pytest -s test_reporting.py
 """
 
-from lasp_sdtp.utils.reporting import generate_daily_report
+import sys
+sys.path.append('../bin')
+
+from run_daily_report import generate_daily_report
 
 
 def test_generate_daily_report():
