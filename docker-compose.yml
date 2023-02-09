@@ -1,0 +1,21 @@
+services:
+  sdtp_api:
+    platform: linux/x86_64
+    build:
+      dockerfile: ./Dockerfile
+    container_name: sdtp_api
+
+  request_api:
+    platform: linux/x86_64
+    build:
+      dockerfile: ./Dockerfile
+    container_name: request_api
+
+  queue_api:
+    platform: linux/x86_64
+    build:
+      dockerfile: ./Dockerfile
+    container_name: queue_api
+
+volumes:
+  sdtp:
