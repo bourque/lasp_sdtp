@@ -2,11 +2,13 @@ services:
   sdtp_api:
     platform: linux/x86_64
     build:
-      dockerfile: ./Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: base
     ports:
       - "8000:8000"
     container_name: sdtp_api
-    command: /root/.local/pipx/venvs/poetry/bin/poetry run python bin/run_sdtp_service.py
+    command: poetry run python bin/run_sdtp_service.py
     healthcheck:
       test: curl http://localhost:8000 || exit 1
       interval: 5s
@@ -16,27 +18,33 @@ services:
   request_api:
     platform: linux/x86_64
     build:
-      dockerfile: ./Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: base
     ports:
       - "8002:8002"
     container_name: request_api
-    command: /root/.local/pipx/venvs/poetry/bin/poetry run python bin/run_request_service.py
+    command: poetry run python bin/run_request_service.py
 
   queue_api:
     platform: linux/x86_64
     build:
-      dockerfile: ./Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: base
     ports:
       - "8001:8001"
     container_name: queue_api
-    command: /root/.local/pipx/venvs/poetry/bin/poetry run python bin/run_queue_service.py
+    command: poetry run python bin/run_queue_service.py
 
   test:
     platform: linux/x86_64
     build:
-      dockerfile: ./Dockerfile-test
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: test
     container_name: test
     depends_on:
       sdtp_api:
         condition: service_healthy
-    command: /root/.local/pipx/venvs/poetry/bin/poetry run pytest -s tests/
+    command: poetry run pytest -s tests/
