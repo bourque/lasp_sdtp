@@ -1,7 +1,7 @@
 FROM python:3.9-alpine
 
 RUN apk update
-RUN apk add --no-cache curl gcc g++ musl-dev gcompat libc6-compat libaio py3-numpy
+RUN apk add --no-cache gcc g++ musl-dev gcompat libc6-compat libaio py3-numpy
 
 # Needed to use system install of numpy
 ENV PYTHONPATH=/usr/lib/python3.9/site-packages
@@ -12,11 +12,11 @@ ENV SQLALCHEMY_SILENCE_UBER_WARNING=1
 WORKDIR /root
 COPY . .
 
-## Set up directories for testing  (Move to test container?)
-#RUN mkdir test_subscriber_queues/
-#RUN mkdir test_subscriber_queues/test_account/
-#RUN mkdir test_subscriber_queues/test_account/prod/
-#RUN mkdir test_subscriber_queues/test_account/dev/
+# Set up directories for testing
+RUN mkdir test_subscriber_queues/
+RUN mkdir test_subscriber_queues/test_account/
+RUN mkdir test_subscriber_queues/test_account/prod/
+RUN mkdir test_subscriber_queues/test_account/dev/
 
 # Install Oracle instantclient
 RUN wget https://download.oracle.com/otn_software/linux/instantclient/193000/instantclient-basic-linux.x64-19.3.0.0.0dbru.zip
@@ -32,5 +32,8 @@ RUN pip install --upgrade pip
 RUN pip install pipx
 RUN pipx install poetry
 RUN /root/.local/pipx/venvs/poetry/bin/poetry install
+
+# Create a test filesystem
+RUN /root/.local/pipx/venvs/poetry/bin/poetry run python bin/create_test_filesystem.py
 
 CMD ["sleep", "6000"]
