@@ -5,3 +5,5 @@
 *.key
 .idea/
 .ipynb_checkpoints/
+*.tar
+*.dylib

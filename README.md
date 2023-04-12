@@ -36,14 +36,12 @@ git clone ssh://git@bitbucket.lasp.colorado.edu:2222/sds/lasp_sdtp.git
 
 ### Environment Installation
 
-Install and activate the `lasp-sdtp` `conda` environment via the `environment.yml` file, which contains all of the dependencies needed for the application:
+Install and activate the `lasp-sdtp` `poetry` environment via the `pyproject.toml` file, which contains all of the dependencies needed for the application:
 
 ```
 cd lasp_sdtp/
-conda env create -f environment.yml
-conda activate lasp-sdtp
+poetry install
 ```
-
 
 ### Configuration Files
 
@@ -122,16 +120,14 @@ To start the necessary servers:
 
 ```
 cd bin/
-python run_sdtp_service.py
-python run_request_service.py
-python run_queue_service.py
+python run_sdtp_servers.py
 ```
 
 or, to start a particular server in development mode:
 
 ```
 cd bin/
-FLASK_APP=run_sdtp_service.py FLASK_ENV=development flask run --port 8000
+FLASK_APP=run_sdtp_servers.py FLASK_ENV=development flask run --port 8000
 ```
 
 When the server is started, a log file is initialized (the path to which is printed to the terminal).  This log file records various environment information and server activity.

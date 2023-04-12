@@ -31,7 +31,6 @@ CREATE TABLE Files
     ingestDate   DATE          NOT NULL,
     available    NUMBER(1)     NOT NULL,
     deletionDate DATE,
-    CONSTRAINT files_uc UNIQUE (name, checksum),
     CONSTRAINT fileid_constraint CHECK (fileid > 0),
     CONSTRAINT available_constraint CHECK (available IN (0, 1)),
     FOREIGN KEY (shortname) REFERENCES Shortnames (shortname),
