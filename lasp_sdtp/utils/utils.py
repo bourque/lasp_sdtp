@@ -14,12 +14,10 @@ Use
 TODO: Do something better with get_tag_value
 """
 
-import datetime
+import hashlib
 import json
 import logging
-import random
 import re
-import string
 
 from flask import abort
 from flask.wrappers import Response
@@ -31,7 +29,7 @@ from lasp_sdtp.database.database_queries import query_for_file
 logger = logging.getLogger(__name__)
 
 
-def _get_subscriber_tags_and_extras(stream: str) -> tuple[list, list]:
+def _get_subscriber_tags_and_extras(stream: str):
     """Returns a list of the subscriber-provided tags and extras for the given
     stream.
 
@@ -56,7 +54,7 @@ def _get_subscriber_tags_and_extras(stream: str) -> tuple[list, list]:
 
     # Make sure the stream is in the subscriber configuration
     # If it isn't, then no data will be returned
-    if stream in list(subscriber_config['streams'].keys()):
+    if stream in subscriber_config['streams']:
 
         # Get the tags
         for tag in subscriber_config['streams'][stream]['tags']:
@@ -162,16 +160,21 @@ def filter_for_subscriber_tags(data, tags, request):
     for arg in request.args.keys():
         if arg in subscriber_tags:
             filter_criteria.append((arg, request.args[arg]))
-    for filter in filter_criteria:
-        filter_name, filter_value = filter
+    for item in filter_criteria:
+        filter_name, filter_value = item
         data = [item for item in data if filter_name in item['tags'] and item['tags'][filter_name] == filter_value]
 
     return data
 
 
-def get_checksum() -> str:
+def get_checksum(file) -> str:
     """Return a randomly generated checksum.  Currently, only supports the
     ``sha256`` checksum type.
+
+    Parameters
+    ----------
+    filename : str
+        The path to the file to generate the checksum for
 
     Returns
     -------
@@ -187,8 +190,9 @@ def get_checksum() -> str:
         raise NotImplementedError(f'Checksum type {checksum_type} is currently not supported')
 
     # Create checksum
-    checksum_string = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(64))
-    checksum = f'{checksum_type}:{checksum_string}'
+    with open(file, 'rb') as f:
+        bytes = f.read()
+        checksum = f'sha256:{hashlib.sha256(bytes).hexdigest()}'
 
     return checksum
 
@@ -213,13 +217,10 @@ def get_shortname(filename: str) -> str:
 
     matched_shortname = None
     for shortname in shortnames:
-        match = re.compile(shortname.filename_pattern).match(filename)
+        match = re.match(shortname.filename_pattern, filename)
         if match:
             matched_shortname = shortname.shortname
             break
-
-    if not matched_shortname:
-        raise TypeError(f'No matching shortname for {filename}')
 
     return matched_shortname
 
@@ -242,27 +243,6 @@ def get_tag_value(filename: str, field_name: str) -> object:
 
     logger.info('Retrieving %s from %s' % (field_name, filename))
     return 'some_value'
-
-
-def mark_as_deleted(fileid: str):
-    """Set the given file as unavailable in the Files table
-
-    Parameters
-    ----------
-    fileid : str
-        The ``fileid`` to set as unavailable
-    """
-
-    db.session.query(
-        db.Files
-    ).filter(
-        db.Files.fileid == fileid
-    ).update(
-        {'available': False,
-         'deletion_date': datetime.datetime.utcnow().date()}
-    )
-    db.session.commit()
-    logger.info('Updated Files table to indicate %s is no longer available' % fileid)
 
 
 def parse_api_response(api: str, response: Response) -> dict:

@@ -86,11 +86,17 @@ def _log_system_environment():
         except (ImportError, AttributeError) as error:
             logging.warning(error)
 
-    # # Log environment information
-    # environment = subprocess.check_output(['conda', 'env', 'export'], universal_newlines=True)
-    # logging.debug('Conda Environment:')
-    # for line in environment.split('\n'):
-    #     logging.debug(f'\t{line}')
+    # Log poetry environment information
+    logging.debug('Poetry Environment:')
+    poetry_environment = subprocess.check_output(['poetry', 'env', 'info'], universal_newlines=True)
+    for line in poetry_environment.split('\n'):
+        logging.debug(f'\t{line}')
+
+    # Log poetry environment dependencies
+    logging.debug('Poetry Dependencies:')
+    poetry_dependencies = subprocess.check_output(['poetry', 'show'], universal_newlines=True)
+    for line in poetry_dependencies.split('\n'):
+        logging.debug(f'\t{line}')
 
 
 def configure_logging(log_file_loc: str, verbose: Optional[bool] = True) -> str:

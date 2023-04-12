@@ -39,7 +39,7 @@ def test_configure_logging():
     with open(log_file, 'r') as f:
         data = f.readlines()
     data = str([line.strip() for line in data])
-    testable_content = ['User:', 'System:', 'Python Executable Path:', 'Conda Environment:', 'DEBUG', 'INFO', 'WARNING', 'CRITICAL']
+    testable_content = ['User:', 'System:', 'Python Executable Path:', 'Poetry Environment:', 'Poetry Dependencies', 'DEBUG', 'INFO', 'WARNING', 'CRITICAL']
     for item in testable_content:
         assert item in data
 

@@ -22,7 +22,7 @@ from lasp_sdtp.database.database_controller import db
 def test_connect():
     """Tests the ``load_connection`` method"""
 
-    _session, _base, _engine, _meta = db._connect()
+    _session, _engine = db._connect()
     assert 'oracle://' in str(_session.bind.url)
 
 
@@ -80,6 +80,16 @@ def test_insert_data():
 
     results = db.session.query(db.Files).filter(db.Files.fileid == 98765).all()
     assert len(results) == 1  # There should only be one entry
+
+
+def test_mark_as_deleted():
+    """Tests the ``mark_as_deleted`` function"""
+
+    db.mark_as_deleted(23456)
+
+    results = db.session.query(db.Files).filter(db.Files.fileid == 23456).all()
+    assert results[0].available == False
+    assert results[0].deletion_date is not None
 
 
 def test_update_transactions_table():

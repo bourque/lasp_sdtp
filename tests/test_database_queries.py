@@ -15,6 +15,7 @@ from lasp_sdtp.database.database_queries import query_for_account_by_username
 from lasp_sdtp.database.database_queries import query_for_file
 from lasp_sdtp.database.database_queries import query_for_filelist
 from lasp_sdtp.database.database_queries import query_for_queue_entries
+from lasp_sdtp.database.database_queries import validate_access
 
 
 def test_query_for_account():
@@ -47,3 +48,9 @@ def test_query_for_queue_entries():
 
     queue_entries = query_for_queue_entries(67890)
     assert len(queue_entries) > 0
+
+def test_validate_access():
+    """Tests the ``validate_access`` function"""
+
+    assert validate_access(12345) is True  # This is a tsis2 data product which the 'ges_disc' user has access to
+    assert validate_access(23456) is False  # This is a 'restricted' data product

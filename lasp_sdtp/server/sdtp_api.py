@@ -36,10 +36,6 @@ TODO[TIMDS-1993]: Implement support for grouping files together
 TODO[TIMDS-1994]: Make diagram of how a file flows through the system
 TODO[TIMDS-1995]: Add logic to update transactions.responseStatus field
 TODO: Add 'finally' clause where it makes sense
-TODO: Create on script to run all servers (if necessary; which it might not be
-      depending on how the docker containers are set up
-TODO: Use poetry instead of conda for environment setup (currently not working
-      with Mac M1)
 """
 
 import logging
@@ -56,13 +52,13 @@ from lasp_sdtp.utils.utils import parse_api_response
 from lasp_sdtp.utils.utils import validate_fileid_range
 
 logger = logging.getLogger(__name__)
-sdtp_api_app = Flask(__name__)
+sdtp_app = Flask(__name__)
 
 REQUEST_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["request_api_port"]}'
 QUEUE_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["queue_api_port"]}'
 
 
-@sdtp_api_app.route('/files/<fileid>', methods=['DELETE'])
+@sdtp_app.route('/files/<fileid>', methods=['DELETE'])
 def delete_file(fileid: int) -> Response:
     """Deletes the given file from the file queue, if applicable.
 
@@ -116,7 +112,7 @@ def delete_file(fileid: int) -> Response:
     return response
 
 
-@sdtp_api_app.route('/files/<fileid_start>-<fileid_end>', methods=['DELETE'])
+@sdtp_app.route('/files/<fileid_start>-<fileid_end>', methods=['DELETE'])
 def delete_files(fileid_start: int, fileid_end: int) -> Response:
     """For a range of files, deletes those that are no longer needed from the
     file queue.
@@ -163,7 +159,7 @@ def delete_files(fileid_start: int, fileid_end: int) -> Response:
     return response
 
 
-@sdtp_api_app.route('/files/<fileid>', methods=['GET'])
+@sdtp_app.route('/files/<fileid>', methods=['GET'])
 def get_file(fileid: int) -> Response:
     """Returns the contents of a given file.
 
@@ -212,7 +208,7 @@ def get_file(fileid: int) -> Response:
     return response
 
 
-@sdtp_api_app.route('/files', methods=['GET'])
+@sdtp_app.route('/files', methods=['GET'])
 def get_filelist() -> Response:
     """Returns a list of files available to the subscriber for file transfer.
 
@@ -260,7 +256,7 @@ def get_filelist() -> Response:
     return response
 
 
-@sdtp_api_app.route('/register', methods=['PUT'])
+@sdtp_app.route('/register', methods=['PUT'])
 def register() -> Response:
     """Registers a subscriber (if the subscriber's registration window is open).
 

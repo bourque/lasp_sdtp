@@ -17,10 +17,10 @@ TODO[TIMDS-1998]: Add test for register_admin (requires database manipulation)
 """
 
 import datetime
+from pathlib import Path
 import pytest
 
 from lasp_sdtp.config import subscriber_config
-from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.utils import utils
 
 
@@ -99,7 +99,11 @@ def test_combine_metadata():
 def test_get_checksum():
     """Tests the ``get_checksum`` function"""
 
-    checksum = utils.get_checksum()
+    # Create a file to test with
+    open('test_file.txt', 'a').close()
+
+    # Get the checksum
+    checksum = utils.get_checksum('test_file.txt')
 
     # Check that the checksum type is correct
     assert checksum.split(':')[0] == subscriber_config['checksum_type']
@@ -107,6 +111,8 @@ def test_get_checksum():
     # Check that the checksum is of proper length
     assert len(checksum.split(':')[-1]) == 64
 
+    # Remove testing file
+    Path('test_file.txt').unlink()
 
 @pytest.mark.parametrize('shortname, expected_result', TEST_SHORTNAMES)
 def test_get_shortname(shortname: str, expected_result: str):
@@ -132,23 +138,6 @@ def test_get_tag_value():
 
     value = utils.get_tag_value('test_filename.txt', 'aperture')
     assert value == 'some_value'
-
-
-def test_mark_as_deleted():
-    """Tests the ``mark_as_deleted`` function"""
-
-    utils.mark_as_deleted(23456)
-
-    results = db.session.query(db.Files).filter(db.Files.fileid == 23456).all()
-    assert results[0].available == False
-    assert results[0].deletion_date is not None
-
-
-def test_validate_access():
-    """Tests the ``validate_access`` function"""
-
-    assert utils.validate_access(12345) is True  # This is a tsis2 data product which the 'ges_disc' user has access to
-    assert utils.validate_access(23456) is False  # This is a 'restricted' data product
 
 
 @pytest.mark.parametrize('fileid, expected_result', [(1, True), (-1, False), ('foo', False), (9999999999999999, False)])

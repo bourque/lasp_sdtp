@@ -21,7 +21,7 @@ from flask import request
 from flask.wrappers import Response
 from werkzeug import exceptions
 
-from lasp_sdtp.server.sdtp_api import sdtp_api_app
+from lasp_sdtp.server.sdtp_api import sdtp_app
 from lasp_sdtp.database.cleanup_database import cleanup_accounts
 from lasp_sdtp.database.cleanup_database import cleanup_files
 from lasp_sdtp.database.database_controller import db
@@ -47,7 +47,7 @@ class CustomJSONEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 
-@sdtp_api_app.before_request
+@sdtp_app.before_request
 def authorize():
     """Authorize a request.
 
@@ -69,13 +69,13 @@ def authorize():
         abort(401)
 
 
-@sdtp_api_app.errorhandler(400)
+@sdtp_app.errorhandler(400)
 def custom400(error: exceptions.BadRequest) -> Response:
     """Returns a custom 400 response"""
     return make_response({'message': 'The request is incorrect'}, 400)
 
 
-@sdtp_api_app.errorhandler(401)
+@sdtp_app.errorhandler(401)
 def custom401(error: exceptions.Unauthorized) -> Response:
     """Returns a custom 401 response"""
 
@@ -86,19 +86,19 @@ def custom401(error: exceptions.Unauthorized) -> Response:
         return make_response({'message': 'Request is not authenticated'}, 401)
 
 
-@sdtp_api_app.errorhandler(403)
+@sdtp_app.errorhandler(403)
 def custom403(error: exceptions.Forbidden) -> Response:
     """Returns a custom 403 response"""
     return make_response({'message': 'Request is authenticated but user is forbidden from accessing resource'}, 403)
 
 
-@sdtp_api_app.errorhandler(404)
+@sdtp_app.errorhandler(404)
 def custom404(error: exceptions.NotFound) -> Response:
     """Returns a custom 400 response"""
     return make_response({'message': 'The requested resource does not exist'}, 404)
 
 
-@sdtp_api_app.errorhandler(500)
+@sdtp_app.errorhandler(500)
 def custom500(error: exceptions.InternalServerError) -> Response:
     """Returns a custom 500 response"""
     return make_response({'message': 'Internal Server Error'}, 500)
@@ -113,7 +113,7 @@ def get_app() -> Flask:
         An instance of the ``sdtp_api`` ``flask`` application
     """
 
-    return sdtp_api_app
+    return sdtp_app
 
 
 def register_admin():
@@ -134,7 +134,7 @@ def register_admin():
         logger.info('Registered admin account')
 
 
-@sdtp_api_app.before_request
+@sdtp_app.before_request
 def remove_expired_data():
     """Remove expired accounts and/or files from the database prior to
     processing a request in order to avoid allowing inadvertent access.

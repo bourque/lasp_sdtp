@@ -96,11 +96,17 @@ class Ingest():
             (e.g. ``ges_disc``)
         """
 
+        # The file shall expire just before UTC midnight
+        expires = datetime.datetime.combine(
+            datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period']),
+            datetime.time(11, 59, 59)
+        )
+
         data = [db.FileQueue(
             username=account,
             fileid=fileid,
             entry_date=datetime.datetime.utcnow().date(),
-            expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period'])
+            expires=expires
         )]
         db.insert_data(data)
         logger.info('Inserted file %s into FileQueue for account %s' % (fileid, account))
@@ -122,11 +128,17 @@ class Ingest():
             ``Files`` table.
         """
 
+        # The file shall expire just before UTC midnight
+        expires = datetime.datetime.combine(
+            datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period']),
+            datetime.time(11, 59, 59)
+        )
+
         data = db.Files(
             name=Path(file).name,
-            checksum=utils.get_checksum(),
+            checksum=utils.get_checksum(file),
             size=os.path.getsize(file),
-            expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=subscriber_config['expiration_period']),
+            expires=expires,
             stream=self.stream,
             shortname=shortname,
             version=self.version,
@@ -168,7 +180,7 @@ class Ingest():
 
         logger.info('Inserted tags and extras metadata for file %s into TagsAndExtras table' % file)
 
-    def _purge_file(self, fileid, filename: str, accounts: list[str]):
+    def _purge_file(self, fileid, filename: str, accounts: list):
         """Purges the given file from the system for the provided accounts.
         The file is removed from the accounts queue space, removed from the
         ``FileQueue`` table, and marked as unavailable in the ``Files`` table.
@@ -191,7 +203,7 @@ class Ingest():
         db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).delete()
 
         # Mark the file as deleted in the Files table
-        utils.mark_as_deleted(fileid)
+        db.mark_as_deleted(fileid)
 
         logger.info('Purged file %s' % fileid)
 

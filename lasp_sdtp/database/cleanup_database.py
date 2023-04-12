@@ -32,7 +32,6 @@ from pathlib import Path
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.utils.utils import mark_as_deleted
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +86,7 @@ def cleanup_files():
         logger.info(f'Removed file queue database entry for {expired_file}')
 
         # Update Files table to indicate that the file is no longer available
-        mark_as_deleted(expired_file)
+        db.mark_as_deleted(expired_file)
 
         # Remove file from the file queue staging area
         filename = db.session.query(db.Files.name).filter(db.Files.fileid == expired_file).all()

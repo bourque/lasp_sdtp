@@ -21,7 +21,7 @@ Use
 
 import sqlalchemy as sa
 
-Base = sa.ext.declarative.declarative_base()
+Base = sa.orm.declarative_base()
 
 
 class Accounts(Base):

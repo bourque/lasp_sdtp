@@ -107,7 +107,7 @@ class DatabaseController():
 
     def __init__(self):
 
-        self.session, self.base, self.engine, self.meta = self._connect()
+        self.session, self.engine = self._connect()
         self.Accounts = database_interface.Accounts
         self.FileQueue = database_interface.FileQueue
         self.Files = database_interface.Files
@@ -123,33 +123,26 @@ class DatabaseController():
         for connecting to the ``last_sdtp`` database.
 
         Create an ``engine`` using a given ``connection_string``. Create a
-        ``base`` class and ``session`` class from the ``engine``. Create an
-        instance of the ``session`` class. Return the ``session``, ``base``, and
-        ``engine`` instances.
+        ``session`` class from the ``engine``. Create an instance of the
+        ``session`` class. Return the ``session``,  and ``engine`` instances.
 
         Returns
         -------
         session : ``sqlalchemy.orm.session.Session`` object
             Provides a holding zone for all objects loaded or associated with
             the database.
-        base : ``sqlalchemy.orm.decl_api.DeclarativeMeta`` object
-            Provides a base class for declarative class definitions.
         engine : ``sqlalchemy.engine.base.Engine`` object
             Provides a source of database connectivity and behavior.
-        meta: ``sqlalchemy.sql.schema.MetaData`` object
-            The connection metadata
         """
 
         connection_string = admin_config['db_connection_string']
         engine = sa.create_engine(connection_string, echo=False)
-        base = declarative_base(engine)
         Session = sessionmaker(bind=engine)
         session = Session()
-        meta = MetaData(engine)
 
         logger.info('Connected to database %s' % admin_config["db_connection_string"])
 
-        return session, base, engine, meta
+        return session, engine
 
     def delete_file_from_queue(self, fileid: int):
         """Remove the ``FileQueue`` database entry for the given ``fileid``
@@ -164,7 +157,7 @@ class DatabaseController():
         self.session.commit()
         logger.info('Deleted %s from file queue' % fileid)
 
-    def insert_data(self, data: list[object]):
+    def insert_data(self, data):
         """Inserts the given data into the appropriate table
 
         Parameters
@@ -178,6 +171,26 @@ class DatabaseController():
 
         for row in data:
             logger.info('Inserted the following into the database: %s' % row.__dict__)
+
+    def mark_as_deleted(self, fileid: str):
+        """Set the given file as unavailable in the ``Files`` table
+
+        Parameters
+        ----------
+        fileid : str
+            The ``fileid`` to set as unavailable
+        """
+
+        db.session.query(
+            db.Files
+        ).filter(
+            db.Files.fileid == fileid
+        ).update(
+            {'available': False,
+             'deletion_date': datetime.datetime.utcnow().date()}
+        )
+        db.session.commit()
+        logger.info('Updated Files table to indicate %s is no longer available' % fileid)
 
     def mark_transaction_complete(self, fileid: int):
         """Update the ``Transactions`` table to mark the GET request transaction
