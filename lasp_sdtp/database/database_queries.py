@@ -13,6 +13,15 @@ Use
     ::
         from lasp_sdtp.database.database_queries import query_for_files
         data = query_for_files(fileid)
+
+Notes
+-----
+
+    The ``_sa_instance_state`` is removed in order to avoid sending the user the
+    value of this amongst the other (relevant) metadata. The
+    ``_sa_instance_state`` is a non-database-persisted value used by SQLAlchemy
+    internally. For more information, see
+    https://docs.sqlalchemy.org/en/20/orm/session_state_management.html
 """
 
 import datetime
@@ -140,9 +149,9 @@ def query_for_account_by_username(username: str) -> dict:
 
     logger.info('Querying for accounts for user %s' % username)
 
-    results = db.session.query(db.Accounts).filter(db.Accounts.username == username).all()
-    if results:
-        account = results[0].__dict__
+    result = db.session.query(db.Accounts).filter(db.Accounts.username == username).one_or_none()
+    if result:
+        account = result.__dict__
     else:
         account = None
 
@@ -184,7 +193,7 @@ def query_for_filelist(tags: dict) -> list:
     # Parse the query results
     results = [item.__dict__ for item in results]
     for item in results:
-        del item['_sa_instance_state']
+        del item['_sa_instance_state']  # See note on _sa_instance_state above
 
     # Only return files that are in the queue
     queue_files = db.session.query(db.FileQueue).filter(db.FileQueue.username == subscriber_config['username']).all()
@@ -230,8 +239,7 @@ def query_for_file(fileid: int) -> object:
 
     logger.info('Querying for fileid %s' % str(fileid))
 
-    files = db.session.query(db.Files).filter(db.Files.fileid == fileid).all()
-    file_metadata = files[0]  # There should only be one entry
+    file_metadata = db.session.query(db.Files).filter(db.Files.fileid == fileid).one()
 
     return file_metadata
 
@@ -252,12 +260,12 @@ def query_for_mission_by_shortname(shortname: str) -> str:
 
     logger.info('Querying for mission(s) associated with shortname %s' % shortname)
 
-    results = db.session.query(
+    result = db.session.query(
                   db.MissionShortnameMapping
               ).filter(
                   db.MissionShortnameMapping.shortname == shortname
-              ).all()
-    mission = results[0].mission
+              ).one()
+    mission = result.mission
 
     return mission
 
@@ -304,13 +312,54 @@ def query_for_tags_and_extras(fileids: list) -> list:
     logger.info('Querying for tags and extras for fileids %s' % fileids)
 
     tags_and_extras = []
-
     for fileid in fileids:
 
         result = db.session.query(db.TagsAndExtras).filter(db.TagsAndExtras.fileid == fileid).all()
         result = [item.__dict__ for item in result]
         for item in result:
-            del item['_sa_instance_state']
+            del item['_sa_instance_state']  # See note on _sa_instance_state above
         tags_and_extras.append(result)
 
     return tags_and_extras
+
+
+def validate_access(fileid: str) -> bool:
+    """Check that the subscriber has access to the provided file (indicated by
+    the ``fileid``).
+
+    Parameters
+    ----------
+    fileid : str
+        The ``fileid`` given in the request
+
+    Returns
+    -------
+    bool
+        True/False for if the subscriber has/doesn't have access to the file
+    """
+
+    # Get the shortname for the file
+    file_metadata = query_for_file(fileid)
+    shortname = file_metadata.shortname
+
+    # Check to see the subscriber has access to the shortname
+    # Get missions associated with account
+    missions = db.session.query(
+        db.MissionAccountMapping
+    ).filter(
+        db.MissionAccountMapping.account == subscriber_config['username']
+    ).all()
+    missions = [item.mission for item in missions]
+
+    # Get shortnames associated with missions
+    allowed_shortnames = db.session.query(
+        db.MissionShortnameMapping
+    ).filter(
+        db.MissionShortnameMapping.mission.in_(missions)
+    ).all()
+    allowed_shortnames = [item.shortname for item in allowed_shortnames]
+
+    if shortname in allowed_shortnames:
+        return True
+    else:
+        return False

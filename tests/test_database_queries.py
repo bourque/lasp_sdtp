@@ -49,6 +49,7 @@ def test_query_for_queue_entries():
     queue_entries = query_for_queue_entries(67890)
     assert len(queue_entries) > 0
 
+
 def test_validate_access():
     """Tests the ``validate_access`` function"""
 

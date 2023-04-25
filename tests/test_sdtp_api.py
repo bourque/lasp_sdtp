@@ -281,8 +281,8 @@ def test_delete_file(client: FlaskClient):
     """
 
     # Get the lowest fileid that exists
-    available_files = db.session.query(db.Files).filter(db.Files.available == True).order_by(db.Files.fileid).all()
-    fileid = str(available_files[0].__dict__['fileid'])
+    result = db.session.query(db.Files).filter(db.Files.available == True).order_by(db.Files.fileid).first()
+    fileid = str(result.__dict__['fileid'])
 
     # Delete the file
     request_url = f'files/{fileid}'

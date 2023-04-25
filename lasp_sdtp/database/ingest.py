@@ -241,9 +241,9 @@ class Ingest():
                     db.Files.name == filename,
                     db.Files.available == True,
                     db.Files.stream == self.stream
-                ).all()
+                ).one_or_none()
                 if existing_file:
-                    fileid_to_purge = existing_file[0].fileid  # There should only be one result
+                    fileid_to_purge = existing_file.fileid
                     self._purge_file(fileid_to_purge, filename, subscribed_accounts)
 
                 # Insert data into the Files table

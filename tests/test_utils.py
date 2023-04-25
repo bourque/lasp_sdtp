@@ -114,6 +114,7 @@ def test_get_checksum():
     # Remove testing file
     Path('test_file.txt').unlink()
 
+
 @pytest.mark.parametrize('shortname, expected_result', TEST_SHORTNAMES)
 def test_get_shortname(shortname: str, expected_result: str):
     """Tests the ``get_shortname`` function"""

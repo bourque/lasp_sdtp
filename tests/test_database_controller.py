@@ -78,8 +78,8 @@ def test_insert_data():
     )]
     db.insert_data(data)
 
-    results = db.session.query(db.Files).filter(db.Files.fileid == 98765).all()
-    assert len(results) == 1  # There should only be one entry
+    results = db.session.query(db.Files).filter(db.Files.fileid == 98765).one()
+    assert results
 
 
 def test_mark_as_deleted():
@@ -87,17 +87,17 @@ def test_mark_as_deleted():
 
     db.mark_as_deleted(23456)
 
-    results = db.session.query(db.Files).filter(db.Files.fileid == 23456).all()
-    assert results[0].available == False
-    assert results[0].deletion_date is not None
+    result = db.session.query(db.Files).filter(db.Files.fileid == 23456).one()
+    assert result.available is False
+    assert result.deletion_date is not None
 
 
 def test_update_transactions_table():
     """Tests the ``update_transactions_table`` method"""
 
     # Get the lowest fileid that exists
-    files = db.session.query(db.Files).filter().order_by(db.Files.fileid).all()
-    test_fileid = str(files[0].__dict__['fileid'])
+    file = db.session.query(db.Files).filter().order_by(db.Files.fileid).first()
+    test_fileid = str(file.__dict__['fileid'])
 
     # Create dummy requests
     Request = namedtuple('request', ['method', 'url'])
@@ -112,6 +112,5 @@ def test_update_transactions_table():
         transactionid = db.update_transactions_table(request, fileid)
 
         # Check that there is a record in the transactions table
-        results = db.session.query(db.Transactions).filter(db.Transactions.transactionid == transactionid).all()
-        assert len(results) == 1  # There should only be one entry
-        assert request.url in results[0].__dict__['action']
+        result = db.session.query(db.Transactions).filter(db.Transactions.transactionid == transactionid).one()
+        assert request.url in result.__dict__['action']

@@ -89,8 +89,8 @@ def cleanup_files():
         db.mark_as_deleted(expired_file)
 
         # Remove file from the file queue staging area
-        filename = db.session.query(db.Files.name).filter(db.Files.fileid == expired_file).all()
-        filename = filename[0][0]
+        filename = db.session.query(db.Files.name).filter(db.Files.fileid == expired_file).one()
+        filename = filename[0]
         file_path = Path(admin_config['staging_loc']) / subscriber_config['username'] / 'prod' / filename
         file_path.unlink(missing_ok=True)
         logger.info(f'Removed {expired_file} from subscriber queue staging area')

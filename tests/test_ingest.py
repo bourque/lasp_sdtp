@@ -86,7 +86,7 @@ def test_ingest_duplicate():
     # Make sure the original fileids are marked as unavailable (i.e. they were deleted)
     results = db.session.query(db.Files).filter(db.Files.fileid.in_(fileids)).all()
     for result in results:
-        assert result.available == False
+        assert result.available is False
 
     # Make sure the original fileids are no longer in the FileQueue
     results = db.session.query(db.FileQueue).filter(db.FileQueue.fileid.in_(fileids)).all()

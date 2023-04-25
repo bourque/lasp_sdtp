@@ -36,7 +36,6 @@ from typing import Optional
 
 import sqlalchemy as sa
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.orm.session import Session

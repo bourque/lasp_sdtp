@@ -28,6 +28,7 @@ from sqlalchemy.orm.query import Query
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.database.database_queries import get_report_queries
 
+
 def _construct_content(header: str, query: Query) -> str:
     """Takes a query and turns it into an HTML table to render in the report
     email.

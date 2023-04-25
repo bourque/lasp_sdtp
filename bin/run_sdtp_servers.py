@@ -29,6 +29,7 @@ from lasp_sdtp.server.request_api import request_app
 from lasp_sdtp.server.sdtp_api import sdtp_app
 from lasp_sdtp.utils.logging import configure_logging
 
+
 def run_queue_app():
     queue_app.run(host=admin_config['endpoint'], port=admin_config['queue_api_port'], threaded=True)
 
