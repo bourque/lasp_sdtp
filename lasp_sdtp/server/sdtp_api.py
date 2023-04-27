@@ -84,25 +84,33 @@ def delete_file(fileid: int) -> Response:
         The response object containing appropriate headers and content.
     """
 
+    logger.info('Received request to delete file %s', fileid)
+
     # Send request to request API
+    logger.debug('Sending request to request API')
     request_api_response = requests.delete(f'{REQUEST_API_URI}/delete_file/{fileid}')
 
     # If the request failed, abort
     if request_api_response.status_code in [400, 403, 404]:
+        logger.critical('Request has failed with code %s', request_api_response.status_code)
         abort(request_api_response.status_code)
 
     # Parse the response contents
+    logger.debug('Parsing request API response')
     request_api_response = parse_api_response('request', request_api_response)
     transactionid = int(request_api_response['transactionid'])
 
     # Send request to queue API
+    logger.debug('Sending request to queue API')
     queue_api_response = requests.delete(f'{QUEUE_API_URI}/delete_file/{fileid}')
 
     # If the request failed, abort
     if queue_api_response.status_code == 404:
+        logger.critical('Request has failed with code 404')
         abort(404)
 
     # Construct the response
+    logger.debug('Constructing response')
     content = {'message': 'Success but no other response necessary'}
     status = 204
     response = make_response(content, status)
@@ -140,17 +148,23 @@ def delete_files(fileid_start: int, fileid_end: int) -> Response:
         The response object containing appropriate headers and content.
     """
 
+    logger.info('Received request to delete files %s-%s', fileid_start, fileid_end)
+
     # Make sure range of fileids are valid
+    logger.debug('Validating fileids')
     valid = validate_fileid_range(fileid_start, fileid_end)
     if not valid:
+        logger.critical('The given fileid range is not valid. Aborting with status code 400')
         abort(400)
 
     # Iterate through the files and delete them individually
     fileids = [fileid for fileid in range(int(fileid_start), int(fileid_end) + 1)]
     for fileid in fileids:
+        logger.debug('Deleting file %s', fileid)
         delete_file(fileid)
 
     # Construct the response
+    logger.debug('Constructing response')
     content = {'message': 'Success but no other response necessary'}
     status = 204
     response = make_response(content, status)
@@ -181,24 +195,32 @@ def get_file(fileid: int) -> Response:
         The response object containing appropriate headers and content.
     """
 
+    logger.info('Received request to get file %s', fileid)
+
     # Send request to request API
+    logger.debug('Sending request to request API')
     request_api_response = requests.get(f'{REQUEST_API_URI}/get_file/{fileid}')\
 
     # If the request failed, abort
     if request_api_response.status_code in [400, 403, 404]:
+        logger.critical('Request has failed with code %s', request_api_response.status_code)
         abort(request_api_response.status_code)
 
     # Parse the response contents
+    logger.debug('Parsing request API response')
     request_api_response = parse_api_response('request', request_api_response)
     transactionid = int(request_api_response['transactionid'])
 
     # Send request to queue API
+    logger.debug('Sending request to queue API')
     queue_api_response = requests.get(f'{QUEUE_API_URI}/get_file/{fileid}')
 
     # Parse the response contents
+    logger.debug('Parsing queue API response')
     queue_api_response = parse_api_response('queue', queue_api_response)
 
     # Construct the response
+    logger.debug('Constructing response')
     content = {'filename': queue_api_response['filename'], 'contents': queue_api_response['contents']}
     status = 200
     response = make_response(content, status)
@@ -228,6 +250,8 @@ def get_filelist() -> Response:
         The response object containing appropriate headers and content.
     """
 
+    logger.info('Received request to get filelist')
+
     # Parse the URL parameters
     params = request.query_string.decode('utf-8')
     request_api_url = f'{REQUEST_API_URI}/get_filelist'
@@ -235,18 +259,22 @@ def get_filelist() -> Response:
         request_api_url = f'{request_api_url}?{params}'
 
     # Send request to request API
+    logger.debug('Sending request to request API')
     request_api_response = requests.get(request_api_url)
 
     # If the request failed with 400, abort
     if request_api_response.status_code == 400:
+        logger.critical('Request has failed with code 400')
         abort(400)
 
     # Parse the response contents
+    logger.debug('Parsing request API response')
     request_api_response = parse_api_response('request', request_api_response)
     results = request_api_response['results']
     transactionid = int(request_api_response['transactionid'])
 
     # Construct the response
+    logger.debug('Constructing response')
     content = {'files': results}
     status = 200
     response = make_response(content, status)
@@ -282,18 +310,24 @@ def register() -> Response:
         The response object containing appropriate headers and content.
     """
 
+    logger.info('Received request to register subscriber')
+
     # Send request to request API
+    logger.debug('Sending request to request API')
     request_api_response = requests.put(f'{REQUEST_API_URI}/register_subscriber')
 
     # If the request failed with 401, abort
     if request_api_response.status_code == 401:
+        logger.critical('Request has failed with code 401')
         abort(401)
 
     # Parse the response contents
+    logger.debug('Parsing request API response')
     request_api_response = parse_api_response('request', request_api_response)
     transactionid = request_api_response['transactionid']
 
     # Construct the response
+    logger.debug('Constructing response')
     content = {'message': 'Success but no other response necessary'}
     status = 204
     response = make_response(content, status)

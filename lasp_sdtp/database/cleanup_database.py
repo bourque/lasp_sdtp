@@ -40,6 +40,8 @@ def cleanup_accounts():
     """Remove expired accounts (and their associated files) from the database
     (and the queue space)"""
 
+    logging.info('Toggling off expired accounts')
+
     # Identify any expired accounts
     today = datetime.datetime.utcnow().date()
     expired_accounts = db.session.query(db.Accounts.username).filter(db.Accounts.registration_expires <= today).all()
@@ -50,23 +52,25 @@ def cleanup_accounts():
         # Remove any FileQueue table entries related to the account
         db.session.query(db.FileQueue).filter(db.FileQueue.username == expired_account).delete()
         db.session.commit()
-        logger.info('Removed FileQueue entries for %s account' % expired_account)
+        logger.debug('Removed file queue entries for user %s', expired_account)
 
         # Remove any files in the subscriber queue staging area related to the account
         account_cache = Path(admin_config['staging_loc']) / expired_account
         account_files = account_cache.glob('*/*')
         for filename in account_files:
             filename.unlink(missing_ok=True)
-        logger.info('Removed files from %s queue space' % expired_account)
+        logger.debug('Removed files from queue space for user %s', expired_account)
 
         # Remove the expired account
         db.session.query(db.Accounts).filter(db.Accounts.username == expired_account).delete()
         db.session.commit()
-        logger.info(f'Removed {expired_account} account')
+        logger.debug('Removed account for user %s', expired_account)
 
 
 def cleanup_files():
     """Remove expired files from the database and queue space"""
+
+    logger.info('Removing expired files')
 
     # Identify any expired files in the Files table
     today = datetime.datetime.utcnow().date()
@@ -83,7 +87,7 @@ def cleanup_files():
         # Remove file from the FileQueue table
         db.session.query(db.FileQueue).filter(db.FileQueue.fileid == expired_file).delete()
         db.session.commit()
-        logger.info(f'Removed file queue database entry for {expired_file}')
+        logger.debug('Removed file queue database entry for file %s', expired_file)
 
         # Update Files table to indicate that the file is no longer available
         db.mark_as_deleted(expired_file)
@@ -93,4 +97,4 @@ def cleanup_files():
         filename = filename[0]
         file_path = Path(admin_config['staging_loc']) / subscriber_config['username'] / 'prod' / filename
         file_path.unlink(missing_ok=True)
-        logger.info(f'Removed {expired_file} from subscriber queue staging area')
+        logger.debug('Removed file %s from subscriber queue staging area', expired_file)

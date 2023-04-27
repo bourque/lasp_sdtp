@@ -139,7 +139,7 @@ class DatabaseController():
         Session = sessionmaker(bind=engine)
         session = Session()
 
-        logger.info('Connected to database %s' % admin_config["db_connection_string"])
+        logger.info('Connected to database %s', admin_config["db_connection_string"])
 
         return session, engine
 
@@ -154,7 +154,7 @@ class DatabaseController():
 
         self.session.query(self.FileQueue).filter(self.FileQueue.fileid == fileid).delete()
         self.session.commit()
-        logger.info('Deleted %s from file queue' % fileid)
+        logger.debug('Deleted file %s from file queue', fileid)
 
     def insert_data(self, data):
         """Inserts the given data into the appropriate table
@@ -169,7 +169,7 @@ class DatabaseController():
         db.session.commit()
 
         for row in data:
-            logger.info('Inserted the following into the database: %s' % row.__dict__)
+            logger.debug('Inserted the following into the database: %s', row.__dict__)
 
     def mark_as_deleted(self, fileid: str):
         """Set the given file as unavailable in the ``Files`` table
@@ -189,7 +189,7 @@ class DatabaseController():
              'deletion_date': datetime.datetime.utcnow().date()}
         )
         db.session.commit()
-        logger.info('Updated Files table to indicate %s is no longer available' % fileid)
+        logger.debug('Updated Files table to indicate file %s is no longer available', fileid)
 
     def mark_transaction_complete(self, fileid: int):
         """Update the ``Transactions`` table to mark the GET request transaction
@@ -211,7 +211,7 @@ class DatabaseController():
         ).update(
             {'end_time': end_time})
         self.session.commit()
-        logger.info('Transaction for %s for %s account marked complete' % (fileid, subscriber_config['username']))
+        logger.info('Transaction for file %s for %s account marked complete', fileid, subscriber_config['username'])
 
     def update_mission_account_mapping(self):
         """Update the ``MissionAccountMapping`` table with missions that the
@@ -225,7 +225,7 @@ class DatabaseController():
                 account=subscriber_config['username']
             ))
         self.insert_data(data_to_insert)
-        logger.info('Mapped the following missions to account %s' % data_to_insert)
+        logger.info('Mapped the following missions to account %s: %s', subscriber_config['username'], data_to_insert)
 
     def update_registration(self):
         """Update the ``Accounts`` table with registration information"""
@@ -247,7 +247,7 @@ class DatabaseController():
              'registration_expires': registration_expires})
 
         db.session.commit()
-        logger.info('Registered account for %s' % subscriber_config['username'])
+        logger.info('Registered account for user %s', subscriber_config['username'])
 
     def update_transactions_table(self, request: object, fileid: Optional[int] = None) -> int:
         """Insert information for a new transaction in the ``Transactions``
@@ -308,7 +308,7 @@ class DatabaseController():
         transactionid = data_to_insert.transactionid
         self.session.commit()
 
-        logger.info('Recorded transaction %s for request %s' % (str(transactionid), request))
+        logger.debug('Recorded transaction %s for request %s', str(transactionid), request)
 
         return transactionid
 

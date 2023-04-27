@@ -81,7 +81,7 @@ class Ingest():
         # Copy file to subscriber queue
         dst = Path(admin_config['staging_loc']) / account / self.stream / Path(file).name
         shutil.copyfile(file, dst)
-        logger.info('Copied %s to subscriber queue: %s' % (file, dst))
+        logger.info('Copied file %s to subscriber queue: %s',  (file, dst))
 
     def _insert_into_filequeue(self, fileid: int, account: str):
         """Insert the given file into the ``FileQueue`` table for the given
@@ -109,7 +109,7 @@ class Ingest():
             expires=expires
         )]
         db.insert_data(data)
-        logger.info('Inserted file %s into FileQueue for account %s' % (fileid, account))
+        logger.debug('Inserted file %s into FileQueue for account %s', (fileid, account))
 
     def _insert_into_files(self, file: str, shortname: str) -> int:
         """Insert data associated with the given file into the ``Files`` table.
@@ -150,7 +150,7 @@ class Ingest():
         fileid = data.fileid
         db.session.commit()
 
-        logger.info('Inserted file %s into Files table' % file)
+        logger.debug('Inserted file %s into Files table', file)
 
         return fileid
 
@@ -178,7 +178,7 @@ class Ingest():
                 )]
                 db.insert_data(data)
 
-        logger.info('Inserted tags and extras metadata for file %s into TagsAndExtras table' % file)
+        logger.debug('Inserted tags and extras metadata for file %s into TagsAndExtras table', file)
 
     def _purge_file(self, fileid, filename: str, accounts: list):
         """Purges the given file from the system for the provided accounts.
@@ -197,7 +197,7 @@ class Ingest():
         for account in accounts:
             filepath = Path(admin_config['staging_loc']) / account / self.stream / filename
             filepath.unlink()
-            logger.info('Removed file %s from subscriber queue stating area for account %s' % (filepath, account))
+            logger.debug('Removed file %s from subscriber queue staging area for account %s', (filepath, account))
 
         # Remove the file from FileQueue table
         db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).delete()
@@ -205,7 +205,7 @@ class Ingest():
         # Mark the file as deleted in the Files table
         db.mark_as_deleted(fileid)
 
-        logger.info('Purged file %s' % fileid)
+        logger.info('Purged file %s', fileid)
 
     def ingest(self):
         """Perform the ingest operation.  See module docstrings for further
@@ -216,16 +216,15 @@ class Ingest():
 
             filename = Path(file).name
 
-            print('Ingesting %s for stream %s version %s' % (filename, self.stream, self.version))
-            logger.info('Ingesting %s for stream %s version %s' % (filename, self.stream, self.version))
+            logger.info('Ingesting %s for stream %s version %s', (filename, self.stream, self.version))
 
             # Gather some metadata for the file
             try:
                 shortname = utils.get_shortname(filename)
             except TypeError:
-                logger.warning('No matching shortname found for %s' % filename)
+                logger.warning('No matching shortname found for %s', filename)
                 Path(file).unlink()
-                logger.info('Deleted file %s' % file)
+                logger.debug('Deleted file %s', file)
                 continue
             mission = query_for_mission_by_shortname(shortname)
             subscribed_accounts = query_for_accounts_by_mission(mission)
@@ -259,6 +258,6 @@ class Ingest():
                     self._copy_to_subscriber_queue(file, account)
 
             else:
-                logger.warning('No subscribed accounts for %s' % file)
+                logger.warning('No subscribed accounts for %s', file)
                 Path(file).unlink()
-                logger.info('Deleted file %s' % file)
+                logger.debug('Deleted file %s', file)

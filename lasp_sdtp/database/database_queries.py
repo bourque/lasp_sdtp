@@ -27,6 +27,8 @@ Notes
 import datetime
 import logging
 
+import sqlalchemy as sa
+
 from lasp_sdtp.database.database_controller import db
 from lasp_sdtp.config import subscriber_config
 
@@ -125,7 +127,7 @@ def query_for_accounts_by_mission(mission: str) -> list:
         The account(s) that are subscribed to the given ``mission``
     """
 
-    logger.info('Querying for accounts for mission %s' % mission)
+    logger.info('Querying for accounts for mission %s', mission)
 
     results = db.session.query(db.MissionAccountMapping).filter(db.MissionAccountMapping.mission == mission).all()
     accounts = [item.account for item in results]
@@ -147,7 +149,7 @@ def query_for_account_by_username(username: str) -> dict:
         The account information
     """
 
-    logger.info('Querying for accounts for user %s' % username)
+    logger.info('Querying for accounts for user %s', username)
 
     result = db.session.query(db.Accounts).filter(db.Accounts.username == username).one_or_none()
     if result:
@@ -173,7 +175,7 @@ def query_for_filelist(tags: dict) -> list:
         A list of database entries returned by the query
     """
 
-    logger.info('Querying for files with parameters %s' % str(tags))
+    logger.info('Querying for files with tags %s', str(tags))
 
     # Build the query
     query = db.session.query(db.Files)  # base query
@@ -237,9 +239,13 @@ def query_for_file(fileid: int) -> object:
         The file metadata associated with the given ``fileid``
     """
 
-    logger.info('Querying for fileid %s' % str(fileid))
+    logger.info('Querying for file %s', str(fileid))
 
-    file_metadata = db.session.query(db.Files).filter(db.Files.fileid == fileid).one()
+    try:
+        file_metadata = db.session.query(db.Files).filter(db.Files.fileid == fileid).one()
+    except sa.exc.NoResultFound:
+        logger.warning('File %s not found in Files table', str(fileid))
+        raise IndexError
 
     return file_metadata
 
@@ -258,7 +264,7 @@ def query_for_mission_by_shortname(shortname: str) -> str:
         The mission associated with the shortname (e.g. ``TSIS2``)
     """
 
-    logger.info('Querying for mission(s) associated with shortname %s' % shortname)
+    logger.debug('Querying for mission(s) associated with shortname %s', shortname)
 
     result = db.session.query(
                   db.MissionShortnameMapping
@@ -286,7 +292,7 @@ def query_for_queue_entries(fileid: int) -> list:
         ``fileid``
     """
 
-    logger.info('Querying file queue for fileid %s' % str(fileid))
+    logger.debug('Querying file queue for file %s', str(fileid))
 
     queue_entries = db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).all()
     queue_entries = [item.__dict__ for item in queue_entries]
@@ -309,7 +315,7 @@ def query_for_tags_and_extras(fileids: list) -> list:
         A list of tag/extra values for the given ``fileids``.
     """
 
-    logger.info('Querying for tags and extras for fileids %s' % fileids)
+    logger.debug('Querying for tags and extras for files %s', fileids)
 
     tags_and_extras = []
     for fileid in fileids:

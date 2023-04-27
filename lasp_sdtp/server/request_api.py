@@ -61,7 +61,7 @@ def delete_file(fileid: int) -> dict:
         The response object containing appropriate headers and content.
     """
 
-    logger.info('Request to delete file %s' % fileid)
+    logger.info('Request to delete file %s', fileid)
 
     # Make sure the fileid is valid
     valid = utils.validate_fileid(fileid)
@@ -105,7 +105,7 @@ def get_file(fileid: int) -> dict:
         The response object containing appropriate headers and content.
     """
 
-    logger.info('Request for file %s' % fileid)
+    logger.info('Request for file %s', fileid)
 
     # Make sure the fileid is valid
     valid = utils.validate_fileid(fileid)
@@ -147,7 +147,7 @@ def get_filelist() -> dict:
     # Parse parameters from the request
     tags = utils.parse_request_parameters(request)
 
-    logger.info('Request for filelist with parameters %s' % tags)
+    logger.info('Request for filelist with tags %s', tags)
 
     # Make sure the tags are valid
     valid = utils.validate_tags(tags)
@@ -198,7 +198,7 @@ def register_subscriber() -> dict:
         The response object containing the appropriate content.
     """
 
-    logger.info('Request to register subscriber %s' % subscriber_config['username'])
+    logger.info('Request to register subscriber %s', subscriber_config['username'])
 
     # Check to see if the account is open for registration
     account = query_for_account_by_username(subscriber_config['username'])
@@ -218,7 +218,7 @@ def register_subscriber() -> dict:
             queue_path.mkdir(parents=True, exist_ok=True)
 
     else:
-        logger.warning('Attempt to register account %s was made, but registration window is not open' % subscriber_config['username'])
+        logger.warning('Attempt to register account %s was made, but registration window is not open', subscriber_config['username'])
         abort(401)
 
     # Add a transactions database record

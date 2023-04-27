@@ -241,7 +241,7 @@ def get_tag_value(filename: str, field_name: str) -> object:
         The tag value
     """
 
-    logger.info('Retrieving %s from %s' % (field_name, filename))
+    #logger.info('Retrieving %s from %s', (field_name, filename))
     return 'some_value'
 
 
@@ -268,7 +268,7 @@ def parse_api_response(api: str, response: Response) -> dict:
     try:
         response = json.loads(response.content.decode('utf-8'))
     except json.JSONDecodeError:
-        logger.critical('Problem with response from %s API' % api)
+        logger.critical('Problem with response from %s API', api)
         abort(500)
 
     return response

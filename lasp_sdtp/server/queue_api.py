@@ -9,7 +9,7 @@ Authors
 Use
 ---
 
-    The ``flask`` server can be be started from the ``run_queue_service.py``
+    The ``flask`` server can be started from the ``run_queue_service.py``
     script.  Once the server is running, the ``flask`` app will respond to
     requests to the ``endpoint`` and ``queue_api_port`` defined  in the
     ``admin_config.json`` file.
@@ -59,7 +59,7 @@ def delete_file(fileid: int) -> dict:
         The response object containing appropriate headers and content.
     """
 
-    logger.info(f'Deleting file {fileid}')
+    logger.info('Deleting file %s', fileid)
 
     # Get the metadata for the file of interest
     try:
@@ -76,19 +76,19 @@ def delete_file(fileid: int) -> dict:
     for entry in queue_entries:
         if entry['username'] != subscriber_config['username']:
             file_needed = True
-            logger.info('File %s is needed for another subscriber and will not be deleted' % fileid)
+            logger.debug('File %s is needed for another subscriber and will not be deleted', fileid)
 
     # If not, delete the file from the subscriber queue staging area if it is still there
     if not file_needed:
         if file_loc.exists:
             file_loc.unlink(missing_ok=True)
-            logger.info('Removed %s from queue' % file_loc)
+            logger.debug('Removed %s from queue', file_loc)
         else:
-            logger.warning('Could not access %s, though it is expected to exist' % file_loc)
+            logger.warning('Could not access %s, though it is expected to exist', file_loc)
 
         # Remove entry from the FileQueue table
         db.delete_file_from_queue(fileid)
-        logger.info('Removed fileid %s from queue' % fileid)
+        logger.debug('Removed fileid %s from queue', fileid)
 
         # Update Files table to indicate that the file is no longer available
         db.mark_as_deleted(fileid)
@@ -114,7 +114,7 @@ def get_file(fileid: int) -> dict:
         The response object containing appropriate headers and content.
     """
 
-    logger.info('Retrieving file contents for file %s' % fileid)
+    logger.info('Retrieving file contents for file %s', fileid)
 
     # Determine where the file exists in the subscriber queue staging area
     metadata = query_for_file(fileid)
