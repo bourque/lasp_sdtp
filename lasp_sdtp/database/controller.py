@@ -23,9 +23,9 @@ Use
 ---
 
     To interact with the database, import the instantiated
-    ``DatabaseController`` class, e.g.:
+    ``Controller`` class, e.g.:
     ::
-        from lasp_sdtp.database.database_controller import db
+        from lasp_sdtp.database.controller import db
         db.delete_file_from_queue(1)
 """
 
@@ -43,12 +43,12 @@ from sqlalchemy.sql.schema import MetaData
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
-from lasp_sdtp.database import database_interface
+from lasp_sdtp.database import interface
 
 logger = logging.getLogger(__name__)
 
 
-class DatabaseController():
+class Controller():
     """A class for interacting with the database.
 
     Attributes
@@ -107,15 +107,15 @@ class DatabaseController():
     def __init__(self):
 
         self.session, self.engine = self._connect()
-        self.Accounts = database_interface.Accounts
-        self.FileQueue = database_interface.FileQueue
-        self.Files = database_interface.Files
-        self.MissionAccountMapping = database_interface.MissionAccountMapping
-        self.Missions = database_interface.Missions
-        self.MissionShortnameMapping = database_interface.MissionShortnameMapping
-        self.Shortnames = database_interface.Shortnames
-        self.TagsAndExtras = database_interface.TagsAndExtras
-        self.Transactions = database_interface.Transactions
+        self.Accounts = interface.Accounts
+        self.FileQueue = interface.FileQueue
+        self.Files = interface.Files
+        self.MissionAccountMapping = interface.MissionAccountMapping
+        self.Missions = interface.Missions
+        self.MissionShortnameMapping = interface.MissionShortnameMapping
+        self.Shortnames = interface.Shortnames
+        self.TagsAndExtras = interface.TagsAndExtras
+        self.Transactions = interface.Transactions
 
     def _connect(self) -> (Session, DeclarativeMeta, Engine, MetaData):
         """Return ``session``, ``base``, ``engine``, and ``metadata`` objects
@@ -314,4 +314,4 @@ class DatabaseController():
 
 
 # Create an importable instance of the database session
-db = DatabaseController()
+db = Controller()

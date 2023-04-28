@@ -32,10 +32,10 @@ from flask import request
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
-from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_account_by_username
-from lasp_sdtp.database.database_queries import query_for_filelist
-from lasp_sdtp.database.database_queries import query_for_tags_and_extras
+from lasp_sdtp.database.controller import db
+from lasp_sdtp.database.queries import query_for_account_by_username
+from lasp_sdtp.database.queries import query_for_filelist
+from lasp_sdtp.database.queries import query_for_tags_and_extras
 from lasp_sdtp.server.api_utils import CustomJSONEncoder
 from lasp_sdtp.utils import utils
 

@@ -15,14 +15,10 @@ Use
 ---
 
     This module is intended to be imported and used by
-    ``bin/run_cleanup_database.py``:
+    ``bin/run_database_cleanup.py``:
     ::
-        from lasp_sdtp.database import cleanup_database
-        cleanup_database.cleanup_accounts()
-
-    The functions within are also used by
-    ``server.ancillary.remove_expired_data`` to invoke cleanup before every
-    API request to ensure there is no access to expired data
+        from lasp_sdtp.database import cleanup
+        cleanup.cleanup_accounts()
 """
 
 import datetime
@@ -31,7 +27,7 @@ from pathlib import Path
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
-from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.controller import db
 
 logger = logging.getLogger(__name__)
 

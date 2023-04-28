@@ -1,4 +1,4 @@
-"""Tests for then ``cleanup_database.py`` module.
+"""Tests for then ``database.cleanup.py`` module.
 
 Authors
 -------
@@ -8,7 +8,7 @@ Use
 ---
     To run these tests use:
     ::
-        pytest -s test_cleanup_database.py
+        pytest -s test_database_cleanup.py
 """
 
 import datetime
@@ -16,9 +16,9 @@ from pathlib import Path
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
-from lasp_sdtp.database.cleanup_database import cleanup_accounts
-from lasp_sdtp.database.cleanup_database import cleanup_files
-from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.cleanup import cleanup_accounts
+from lasp_sdtp.database.cleanup import cleanup_files
+from lasp_sdtp.database.controller import db
 
 
 def test_cleanup_accounts():

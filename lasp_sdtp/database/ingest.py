@@ -33,9 +33,9 @@ from pathlib import Path
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
-from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_accounts_by_mission
-from lasp_sdtp.database.database_queries import query_for_mission_by_shortname
+from lasp_sdtp.database.controller import db
+from lasp_sdtp.database.queries import query_for_accounts_by_mission
+from lasp_sdtp.database.queries import query_for_mission_by_shortname
 from lasp_sdtp.utils import utils
 
 

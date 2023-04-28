@@ -14,7 +14,7 @@ Use
 from pathlib import Path
 
 from lasp_sdtp.config import admin_config
-from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.controller import db
 from lasp_sdtp.database.ingest import Ingest
 
 

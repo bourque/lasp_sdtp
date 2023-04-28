@@ -15,8 +15,8 @@ Use
     ``database_controller`` module, e.g.:
     ::
 
-        from lasp_sdtp.database import database_interface
-        database_interface.Accounts
+        from lasp_sdtp.database import interface
+        interface.Accounts
 """
 
 import sqlalchemy as sa

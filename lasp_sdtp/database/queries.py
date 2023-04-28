@@ -11,7 +11,7 @@ Use
     The functions within are intended to be imported and used by other modules,
     e.g.:
     ::
-        from lasp_sdtp.database.database_queries import query_for_files
+        from lasp_sdtp.database.queries import query_for_files
         data = query_for_files(fileid)
 
 Notes
@@ -29,7 +29,7 @@ import logging
 
 import sqlalchemy as sa
 
-from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.controller import db
 from lasp_sdtp.config import subscriber_config
 
 logger = logging.getLogger(__name__)

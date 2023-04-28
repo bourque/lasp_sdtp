@@ -22,10 +22,10 @@ from flask.wrappers import Response
 from werkzeug import exceptions
 
 from lasp_sdtp.server.sdtp_api import sdtp_app
-from lasp_sdtp.database.cleanup_database import cleanup_accounts
-from lasp_sdtp.database.cleanup_database import cleanup_files
-from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_account_by_username
+from lasp_sdtp.database.cleanup import cleanup_accounts
+from lasp_sdtp.database.cleanup import cleanup_files
+from lasp_sdtp.database.controller import db
+from lasp_sdtp.database.queries import query_for_account_by_username
 
 logger = logging.getLogger(__name__)
 

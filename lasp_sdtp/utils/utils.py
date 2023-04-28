@@ -23,8 +23,8 @@ from flask import abort
 from flask.wrappers import Response
 
 from lasp_sdtp.config import subscriber_config
-from lasp_sdtp.database.database_controller import db
-from lasp_sdtp.database.database_queries import query_for_file
+from lasp_sdtp.database.controller import db
+from lasp_sdtp.database.queries import query_for_file
 
 logger = logging.getLogger(__name__)
 

@@ -16,7 +16,7 @@ from collections import namedtuple
 
 import pytest
 
-from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.controller import db
 
 
 def test_connect():
