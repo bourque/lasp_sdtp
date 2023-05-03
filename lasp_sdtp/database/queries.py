@@ -5,11 +5,9 @@ Authors
 
     - Matthew Bourque
 
-Use
----
+Example
+-------
 
-    The functions within are intended to be imported and used by other modules,
-    e.g.:
     ::
         from lasp_sdtp.database.queries import query_for_files
         data = query_for_files(fileid)

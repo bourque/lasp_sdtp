@@ -19,8 +19,8 @@ Authors
 
     - Matthew Bourque
 
-Use
----
+Example
+-------
 
     To interact with the database, import the instantiated
     ``Controller`` class, e.g.:

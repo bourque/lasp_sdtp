@@ -10,15 +10,10 @@ requests).
 
 Authors
 -------
-    Matthew Bourque
+    - Matthew Bourque
 
-Use
----
-
-    The ``flask`` server can be started from the ``run_sdtp_service.py`` script.
-    Once the server is running, the ``flask`` app will respond to requests to
-    the ``endpoint`` and ``sdtp_api_port`` defined  in the ``admin_config.json``
-    file.
+Example
+-------
 
     To run a local server for development or testing purposes, use:
     ::

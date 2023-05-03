@@ -6,18 +6,8 @@ Authors
 -------
     - Matthew Bourque
 
-Use
----
-
-    The ``flask`` server can be started from the ``run_queue_service.py``
-    script.  Once the server is running, the ``flask`` app will respond to
-    requests to the ``endpoint`` and ``queue_api_port`` defined  in the
-    ``admin_config.json`` file.
-
-    The functions within this module are intended to be called from the
-    ``sdtp_api`` server, e.g.:
-    ::
-        requests.put('<endpoint>/delete_file/<fileid>')
+Example
+-------
 
     To run a local server for development or testing purposes, use:
     ::

@@ -4,10 +4,9 @@ Authors
 -------
     Matthew Bourque
 
-Use
----
-    Variables within this module are intended to be imported and used within
-    other modules, e.g.:
+Example
+-------
+
     ::
         from lasp_sdtp.utils.properties import TSIS2_SHORTNAMES
 """

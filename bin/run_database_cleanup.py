@@ -10,13 +10,13 @@ Use
 
     This module is intended to be executed via the command line as such:
     ::
-        python run_cleanup_database.py
+        python run_database_cleanup.py
 """
 
-from lasp_sdtp.database import cleanup_database
+from lasp_sdtp.database import cleanup
 
 
 if __name__ == '__main__':
 
-    cleanup_database.cleanup_file_queue()
-    cleanup_database.cleanup_accounts()
+    cleanup.cleanup_file_queue()
+    cleanup.cleanup_accounts()

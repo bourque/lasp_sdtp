@@ -11,11 +11,9 @@ Authors
 -------
     - Matthew Bourque
 
-Use
----
+Example
+-------
 
-    This module is intended to be imported and used by
-    ``bin/run_database_cleanup.py``:
     ::
         from lasp_sdtp.database import cleanup
         cleanup.cleanup_accounts()

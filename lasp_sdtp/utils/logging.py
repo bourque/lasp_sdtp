@@ -2,12 +2,11 @@
 
 Authors
 -------
-    Matthew Bourque
+    - Matthew Bourque
 
-Use
----
-    Functions within this module are intended to be imported and used within
-    the ``run_sdtp_service.py`` script:
+Example
+-------
+
     ::
         from lasp_sdtp.utils.logging import configure_logging
 

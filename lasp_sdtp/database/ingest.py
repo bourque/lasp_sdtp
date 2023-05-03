@@ -11,8 +11,8 @@ Authors
 
     - Matthew Bourque
 
-Use
----
+Example
+-------
 
     To ingest a list of files, import the ``Ingest`` class and instantiate it
     with the list of files, the stream name, and the version.  Use the

@@ -11,10 +11,9 @@ Authors
 -------
     Matthew Bourque
 
-Use
----
-    The config variables within this module are intended to be imported and
-    used from other modules, i.e.:
+Example
+-------
+
     ::
         from lasp_sdtp.config import admin_config
         from lasp_sdtp.config import subscriber_config

@@ -1,4 +1,5 @@
-"""This script creates a directory with files for testing purposes.
+"""This script creates a directory with (mostly empty) files for testing
+purposes.
 
 For each TSIS2 data product type, files are created for five different days and
 are placed in the ``filesystem_loc`` as defined in the ``admin_config.json``

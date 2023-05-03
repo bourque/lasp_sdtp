@@ -8,11 +8,9 @@ Authors
 -------
     - Matthew Bourque
 
-Use
----
+Example
+-------
 
-    The classes within are intended to be imported by the
-    ``database_controller`` module, e.g.:
     ::
 
         from lasp_sdtp.database import interface

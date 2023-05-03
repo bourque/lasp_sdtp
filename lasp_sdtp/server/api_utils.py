@@ -7,7 +7,7 @@ and therefore do not need to be imported in the APIs.
 
 Authors
 -------
-    Matthew Bourque
+    - Matthew Bourque
 """
 
 import datetime

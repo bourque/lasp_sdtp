@@ -6,4 +6,4 @@
 .idea/
 .ipynb_checkpoints/
 *.tar
-*.dylib
+*.dylib*

@@ -1,4 +1,4 @@
-"""This script performs system reporting for the  application.  When executed,
+"""This script performs system reporting for the application.  When executed,
 an email is constructed and sent to the email provided in the
 ``admin_config.json`` file.  The email contains a daily report of information
 about the system and its usage.
@@ -26,7 +26,7 @@ from jinja2 import Template
 from sqlalchemy.orm.query import Query
 
 from lasp_sdtp.config import admin_config
-from lasp_sdtp.database.database_queries import get_report_queries
+from lasp_sdtp.database.queries import get_report_queries
 
 
 def _construct_content(header: str, query: Query) -> str:
