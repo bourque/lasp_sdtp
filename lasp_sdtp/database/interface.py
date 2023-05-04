@@ -32,7 +32,6 @@ class Accounts(Base):
     registration_open = sa.Column('registrationopen', sa.Boolean, nullable=False)
     certuid = sa.Column('certuid', sa.String(20), unique=True)
     registration_date = sa.Column('registrationdate', sa.DateTime)
-    registration_expires = sa.Column('registrationexpires', sa.DateTime)
 
 
 class FileQueue(Base):

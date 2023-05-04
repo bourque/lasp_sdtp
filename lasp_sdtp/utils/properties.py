@@ -69,7 +69,6 @@ REQUIRED_ADMIN_CONFIG_KEYS = {
 }
 
 REQUIRED_SUBSCRIBER_CONFIG_KEYS = {
-    'account_expiration_period': int,
     'checksum_type': str,
     'distinguished_name': str,
     'expiration_period': int,

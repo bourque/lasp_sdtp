@@ -16,33 +16,8 @@ from pathlib import Path
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.config import subscriber_config
-from lasp_sdtp.database.cleanup import cleanup_accounts
 from lasp_sdtp.database.cleanup import cleanup_files
 from lasp_sdtp.database.controller import db
-
-
-def test_cleanup_accounts():
-    """Tests the ``cleanup_accounts`` function"""
-
-    # Perform the cleanup
-    cleanup_accounts()
-
-    # Check that there are no expired accounts
-    results = db.session.query(
-                  db.Accounts
-              ).filter(
-                  db.Accounts.registration_expires <= datetime.datetime.utcnow().date()
-              ).all()
-    assert len(results) == 0
-
-    # Check that there are no FileQueue entries associated with the expired accounts
-    results = db.session.query(db.FileQueue).filter(db.FileQueue.username == 'expired_account').all()
-    assert len(results) == 0
-
-    # Check that there are no files in the subscriber queue staging area associated with expired accounts
-    queue_space = Path(admin_config['staging_loc']) / 'expired_account'
-    files = list(queue_space.glob('*/*'))
-    assert len(files) == 0
 
 
 def test_cleanup_files():

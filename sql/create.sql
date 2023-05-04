@@ -5,7 +5,6 @@ CREATE TABLE Accounts
     registrationOpen    NUMBER(1)    NOT NULL,
     certUid             VARCHAR2(20),
     registrationDate    DATE,
-    registrationExpires DATE,
     CONSTRAINT registration_open_constraint CHECK (registrationOpen IN (0, 1)),
     CONSTRAINT role_constraint CHECK (role IN ('admin', 'subscriber')),
     PRIMARY KEY (username)
@@ -102,8 +101,8 @@ CREATE TABLE Transactions
 );
 
 -- Add data for currently supported missions
-INSERT INTO Accounts (username, role, registrationOpen, certUid, registrationDate, registrationExpires) VALUES ('lasp_admin', 'admin', 0, 'admin_cert', TO_DATE('2022/11/08', 'YYYY/MM/DD'), NULL);
-INSERT INTO Accounts (username, role, registrationOpen, certUid, registrationDate, registrationExpires) VALUES ('ges_disc', 'subscriber', 1, 'test_cert', NULL, NULL);
+INSERT INTO Accounts (username, role, registrationOpen, certUid, registrationDate) VALUES ('lasp_admin', 'admin', 0, 'admin_cert', TO_DATE('2022/11/08', 'YYYY/MM/DD'));
+INSERT INTO Accounts (username, role, registrationOpen, certUid, registrationDate) VALUES ('ges_disc', 'subscriber', 1, 'test_cert', NULL);
 
 INSERT INTO Missions (mission, ingestDirectory) VALUES ('TSIS2', '/path/to/tsis2/data/');
 

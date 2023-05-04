@@ -233,7 +233,6 @@ class Controller():
         # Define metadata for the entry
         certuid = f'{subscriber_config["username"]}_cert'
         registration_date = datetime.datetime.utcnow().date()
-        registration_expires = registration_date + datetime.timedelta(days=subscriber_config['account_expiration_period'])
 
         # Update ``accounts`` table
         self.session.query(
@@ -243,8 +242,7 @@ class Controller():
         ).update(
             {'registration_open': False,
              'certuid': certuid,
-             'registration_date': registration_date,
-             'registration_expires': registration_expires})
+             'registration_date': registration_date})
 
         db.session.commit()
         logger.info('Registered account for user %s', subscriber_config['username'])

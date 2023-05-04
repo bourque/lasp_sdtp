@@ -48,10 +48,9 @@ def get_report_queries() -> list:
     queries.append((
         'Active Subscribers',
         db.session.query(
-            db.Accounts.username, db.Accounts.registration_date, db.Accounts.registration_expires
+            db.Accounts.username, db.Accounts.registration_date
         ).filter(
-            db.Accounts.role == 'subscriber',
-            db.Accounts.registration_expires >= datetime.datetime.utcnow().date())))
+            db.Accounts.role == 'subscriber')))
 
     # Recent transactions
     queries.append((
@@ -97,16 +96,6 @@ def get_report_queries() -> list:
             db.FileQueue, db.Files.fileid == db.FileQueue.fileid
         ).filter(
             db.FileQueue.expires <= datetime.datetime.utcnow().date() + datetime.timedelta(days=7))))
-
-    # Expiring accounts
-    queries.append((
-        'Expiring Accounts',
-        db.session.query(
-            db.Accounts.username, db.Accounts.registration_date, db.Accounts.registration_expires
-        ).filter(
-            db.Accounts.role == 'subscriber'
-        ).filter(
-            db.Accounts.registration_expires <= datetime.datetime.utcnow().date() + datetime.timedelta(days=30))))
 
     return queries
 

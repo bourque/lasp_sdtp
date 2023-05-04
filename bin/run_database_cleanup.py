@@ -18,5 +18,4 @@ from lasp_sdtp.database import cleanup
 
 if __name__ == '__main__':
 
-    cleanup.cleanup_file_queue()
-    cleanup.cleanup_accounts()
+    cleanup.cleanup_files()

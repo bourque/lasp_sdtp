@@ -113,7 +113,7 @@ def test_register(client: FlaskClient):
     """
 
     # Clear out MissionAccountMapping to allow for the fields to be entered during registration
-    db.session.query(db.MissionAccountMapping).filter(db.MissionAccountMapping.account == 'test_account').delete()
+    db.session.query(db.MissionAccountMapping).filter(db.MissionAccountMapping.account == 'ges_disc').delete()
     db.session.commit()
 
     # Register the test account
@@ -125,7 +125,7 @@ def test_register(client: FlaskClient):
     assert response.status_code == 204
 
     # Check that a database entry was made for the Accounts table and that it has registered
-    results = db.session.query(db.Accounts).filter(db.Accounts.username == 'test_account').all()
+    results = db.session.query(db.Accounts).filter(db.Accounts.username == 'ges_disc').all()
     assert len(results) == 1  # There should only be one entry
     assert results[0].__dict__['username'] == subscriber_config['username']
     assert results[0].__dict__['registration_open'] == 0

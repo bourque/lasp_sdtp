@@ -138,8 +138,9 @@ if __name__ == '__main__':
     _ingest_files()
 
     # Get a fileid to test with
-    results = db.session.query(db.Files).first()
-    fileid = results.fileid
+    results = db.session.query(db.Files).all()
+    results = [item.fileid for item in results]
+    fileid = min(results)
 
     # Get filelist
     test_api('GET', 'http://127.0.0.1:8000/files', 200)

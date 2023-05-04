@@ -16,7 +16,7 @@ Example
 
     ::
         from lasp_sdtp.database import cleanup
-        cleanup.cleanup_accounts()
+        cleanup.cleanup_files()
 """
 
 import datetime
@@ -28,38 +28,6 @@ from lasp_sdtp.config import subscriber_config
 from lasp_sdtp.database.controller import db
 
 logger = logging.getLogger(__name__)
-
-
-def cleanup_accounts():
-    """Remove expired accounts (and their associated files) from the database
-    (and the queue space)"""
-
-    logging.info('Toggling off expired accounts')
-
-    # Identify any expired accounts
-    today = datetime.datetime.utcnow().date()
-    expired_accounts = db.session.query(db.Accounts.username).filter(db.Accounts.registration_expires <= today).all()
-    expired_accounts = [item[0] for item in expired_accounts]
-
-    for expired_account in expired_accounts:
-
-        # Remove any FileQueue table entries related to the account
-        db.session.query(db.FileQueue).filter(db.FileQueue.username == expired_account).delete()
-        db.session.commit()
-        logger.debug('Removed file queue entries for user %s', expired_account)
-
-        # Remove any files in the subscriber queue staging area related to the account
-        account_cache = Path(admin_config['staging_loc']) / expired_account
-        account_files = account_cache.glob('*/*')
-        for filename in account_files:
-            filename.unlink(missing_ok=True)
-        logger.debug('Removed files from queue space for user %s', expired_account)
-
-        # Remove the expired account
-        db.session.query(db.Accounts).filter(db.Accounts.username == expired_account).delete()
-        db.session.commit()
-        logger.debug('Removed account for user %s', expired_account)
-
 
 def cleanup_files():
     """Remove expired files from the database and queue space"""

@@ -21,8 +21,8 @@ from lasp_sdtp.database.queries import validate_access
 def test_query_for_account():
     """Tests the ``query_for_account`` method"""
 
-    account = query_for_account_by_username('test_account')
-    assert account['username'] == 'test_account'
+    account = query_for_account_by_username('ges_disc')
+    assert account['username'] == 'ges_disc'
 
 
 def test_query_for_file():

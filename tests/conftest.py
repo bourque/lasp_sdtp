@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from lasp_sdtp.config import admin_config
-from lasp_sdtp.database.database_controller import db
+from lasp_sdtp.database.controller import db
 from lasp_sdtp.database.ingest import Ingest
 
 TEST_SHORTNAME_MAPPING = {
@@ -46,31 +46,13 @@ TEST_SHORTNAME_MAPPING = {
 def _add_accounts_entries():
     """Add ``Accounts`` table entries used for testing"""
 
-    # Add nominal test account used for general testing
-    data_to_insert = [db.Accounts(
-        username='test_account',
-        role='subscriber',
-        registration_open=True,
-        certuid='test_cert',
-    )]
-
     # Add an account for the subscriber
-    data_to_insert.append(db.Accounts(
+    data_to_insert = [db.Accounts(
         username='ges_disc',
         role='subscriber',
         registration_open=True,
         certuid='test_cert'
-    ))
-
-    # Add an account that has expired (used for test_cleanup_database)
-    data_to_insert.append(db.Accounts(
-        username='expired_account',
-        role='subscriber',
-        registration_open=False,
-        certuid='test_cert',
-        registration_date=datetime.datetime.utcnow().date(),
-        registration_expires=datetime.datetime.utcnow().date() - datetime.timedelta(days=1)
-    ))
+    )]
 
     # Add an account that has not yet registered but has registration window closed
     data_to_insert.append(db.Accounts(
@@ -85,37 +67,21 @@ def _add_accounts_entries():
 def _add_file_queue_entries():
     """Add ``FileQueue`` table entries used for testing"""
 
-    # Add an entry associated with the expired account (for test_cleanup_database)
+    # Add an entry for expired file (for test_cleanup_database)
     data_to_insert = [db.FileQueue(
-        username='expired_account',
-        fileid=12345,
+        username='ges_disc',
+        fileid=12346,
         entry_date=datetime.datetime.utcnow().date(),
         expires=datetime.datetime.utcnow().date() - datetime.timedelta(days=10)
     )]
 
-    # Add an entry not associated with the expired account (for test_cleanup_database)
-    data_to_insert.append(db.FileQueue(
-        username='test_account',
-        fileid=12346,
-        entry_date=datetime.datetime.utcnow().date(),
-        expires=datetime.datetime.utcnow().date() - datetime.timedelta(days=10)
-    ))
-
-    # Create a subscriber queue staging area for the expired account (used in test_cleanup_database)
-    queue_path = Path(admin_config['staging_loc']) / 'expired_account' / 'prod'
-    queue_path.mkdir(parents=True, exist_ok=True)
-
-    # Add a file associated with expired account (used in test_cleanup_database)
-    with open(queue_path / 'test_cleanup_db.txt', 'w') as f:
-        f.write('')
-
-    # Add an expired file to the subscriber queue staging area associated with non-expired account (for test_cleanup_database)
-    with open(Path(admin_config['staging_loc']) / 'test_account' / 'prod' / 'test_cleanup_db2.txt', 'w') as f:
+    # Add an expired file to the subscriber queue staging area (for test_cleanup_database)
+    with open(Path(admin_config['staging_loc']) / 'ges_disc' / 'prod' / 'test_cleanup_db2.txt', 'w') as f:
         f.write('')
 
     # Add an entry used for test_reporting
     data_to_insert.append(db.FileQueue(
-        username='test_account',
+        username='ges_disc',
         fileid=67890,
         entry_date=datetime.datetime.utcnow().date(),
         expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
@@ -123,7 +89,7 @@ def _add_file_queue_entries():
 
     # Add an entry used for test_database_controller
     data_to_insert.append(db.FileQueue(
-        username='test_account',
+        username='ges_disc',
         fileid=78901,
         entry_date=datetime.datetime.utcnow().date(),
         expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
@@ -132,7 +98,7 @@ def _add_file_queue_entries():
     # Add files to test pagination
     for fileid in [99990, 99991, 99992, 99993, 99994, 99995]:
         data_to_insert.append(db.FileQueue(
-            username='test_account',
+            username='ges_disc',
             fileid=fileid,
             entry_date=datetime.datetime.utcnow().date(),
             expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
@@ -236,7 +202,7 @@ def _add_mission_account_mapping_entries():
 
     data_to_insert = [db.MissionAccountMapping(
         mission='TSIS2',
-        account='test_account'
+        account='ges_disc'
     )]
 
     db.insert_data(data_to_insert)
@@ -301,7 +267,7 @@ def _add_transactions_entries():
     data_to_insert = [db.Transactions(
         transactionid=999,
         action='GET /files/666',
-        username='test_account',
+        username='ges_disc',
         start_time=datetime.datetime.utcnow() - datetime.timedelta(hours=36),  # A "long" transfer
         fileid=67890,
         source='/some/starting/location/',
@@ -329,7 +295,6 @@ def setup(request: object):
     db.session.commit()
 
     # Add entries to database tables to support tests
-    # The following are tables that have parent keys needed for the Files table
     _add_missions_entries()
     _add_accounts_entries()
     _add_mission_account_mapping_entries()
@@ -354,15 +319,15 @@ def setup(request: object):
 
 def teardown():
     """Teardown function"""
-
-    # Clean out the database
-    db.session.query(db.FileQueue).delete()
-    db.session.query(db.Transactions).delete()
-    db.session.query(db.TagsAndExtras).delete()
-    db.session.query(db.Files).delete()
-    db.session.query(db.MissionShortnameMapping).delete()
-    db.session.query(db.Shortnames).delete()
-    db.session.query(db.MissionAccountMapping).delete()
-    db.session.query(db.Missions).delete()
-    db.session.query(db.Accounts).delete()
-    db.session.commit()
+    pass
+    # # Clean out the database
+    # db.session.query(db.FileQueue).delete()
+    # db.session.query(db.Transactions).delete()
+    # db.session.query(db.TagsAndExtras).delete()
+    # db.session.query(db.Files).delete()
+    # db.session.query(db.MissionShortnameMapping).delete()
+    # db.session.query(db.Shortnames).delete()
+    # db.session.query(db.MissionAccountMapping).delete()
+    # db.session.query(db.Missions).delete()
+    # db.session.query(db.Accounts).delete()
+    # db.session.commit()
