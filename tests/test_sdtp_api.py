@@ -154,7 +154,7 @@ def test_authorize(client: FlaskClient):
     """
 
     # For authenticated requests
-    authorized_headers = {'content-type': 'application/json', 'Cert-UID': 'test_account_cert'}
+    authorized_headers = {'content-type': 'application/json', 'Cert-UID': 'ges_disc_cert'}
     authorized_response = client.get('/files', headers=authorized_headers)
     assert authorized_response.status_code == 200
 
@@ -184,7 +184,7 @@ def test_get_filelist(client: FlaskClient, request_url: str):
     """
 
     # Send a test request and get the response
-    headers = {'content-type': 'application/json', 'Cert-UID': 'test_account_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': 'ges_disc_cert'}
     response = client.get(request_url, headers=headers)
     data = json.loads(response.get_data().decode("utf-8"))
 
@@ -208,7 +208,7 @@ def test_get_filelist_filter_by_tag(client: FlaskClient):
     request_url = '/files?observation_date=some_value'
 
     # Send a test request and get the response
-    headers = {'content-type': 'application/json', 'Cert-UID': 'test_account_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': 'ges_disc_cert'}
     response = client.get(request_url, headers=headers)
     data = json.loads(response.get_data().decode("utf-8"))
 
@@ -230,7 +230,7 @@ def test_get_filelist_with_pagination(client: FlaskClient):
     request_url = f'/files?startfileid={startfileid}&maxfile={maxfile}'
 
     # Send a test request and get the response
-    headers = {'content-type': 'application/json', 'Cert-UID': 'test_account_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': 'ges_disc_cert'}
     response = client.get(request_url, headers=headers)
     data = json.loads(response.get_data().decode("utf-8"))
 
@@ -257,7 +257,7 @@ def test_get_file(client: FlaskClient):
 
     # Send a request and get the response
     request_url = f'/files/{fileid}'
-    headers = {'content-type': 'application/json', 'Cert-UID': 'test_account_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': 'ges_disc_cert'}
     response = client.get(request_url, headers=headers)
     data = json.loads(response.get_data().decode("utf-8"))
 
@@ -265,7 +265,7 @@ def test_get_file(client: FlaskClient):
     assert response.status_code == 200
 
     # Check if the file is in the subscriber queue staging area
-    filepath = Path(admin_config['staging_loc']) / 'test_account' / 'prod' / data['filename']
+    filepath = Path(admin_config['staging_loc']) / 'ges_disc' / 'prod' / data['filename']
     assert filepath.exists()
 
     _check_transaction(response.headers)
@@ -286,7 +286,7 @@ def test_delete_file(client: FlaskClient):
 
     # Delete the file
     request_url = f'files/{fileid}'
-    headers = {'content-type': 'application/json', 'Cert-UID': 'test_account_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': 'ges_disc_cert'}
     response = client.delete(request_url, headers=headers)
 
     # Make sure the response status is 204
@@ -309,7 +309,7 @@ def test_delete_files(client: FlaskClient):
         The client to test with
     """
 
-    headers = {'content-type': 'application/json', 'Cert-UID': 'test_account_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': 'ges_disc_cert'}
 
     # Get a handful of files to test
     available_files = db.session.query(db.Files).filter(db.Files.available == True).order_by(db.Files.fileid).all()
@@ -384,7 +384,7 @@ def test_file_does_not_exist(client: FlaskClient):
     """
 
     request_url = '/files/999999999999999'
-    headers = {'content-type': 'application/json', 'Cert-UID': 'test_account_cert'}
+    headers = {'content-type': 'application/json', 'Cert-UID': 'ges_disc_cert'}
 
     for method in ['get', 'delete']:
         response = getattr(client, method)(request_url, headers=headers)
