@@ -302,7 +302,7 @@ def setup(request: object):
     _add_mission_shortname_mapping_entries()
 
     # Ingest test filesystem (thus adding entries to Files and FileQueue)
-    filelist = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
+    filelist = glob.glob(str(Path(admin_config['filesystem_loc']) / '*'))
     production = Ingest(filelist, 'prod', '01')  # Ingest a 'production' stream of the data
     production.ingest()
     development = Ingest(filelist, 'dev', '01')      # Ingest a 'development' stream of the data

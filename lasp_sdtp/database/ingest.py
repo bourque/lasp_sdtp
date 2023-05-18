@@ -137,7 +137,7 @@ class Ingest():
         data = db.Files(
             name=Path(file).name,
             checksum=utils.get_checksum(file),
-            size=os.path.getsize(file),
+            size=os.path.getsize(file) / 1e6,
             expires=expires,
             stream=self.stream,
             shortname=shortname,

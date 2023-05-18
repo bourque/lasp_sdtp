@@ -21,6 +21,7 @@ import datetime
 from pathlib import Path
 
 from lasp_sdtp.config import admin_config
+from lasp_sdtp.utils.properties import TSIS2_FILE_SIZES
 from lasp_sdtp.utils.properties import TSIS2_FILENAME_STRUCTURES
 
 
@@ -32,7 +33,7 @@ def create_test_filesystem():
     """
 
     # Create parent directory for storing test files
-    test_directory = Path(admin_config['filesystem_loc']) / 'prod'
+    test_directory = Path(admin_config['filesystem_loc'])
     test_directory.mkdir(parents=True, exist_ok=True)
 
     for shortname in TSIS2_FILENAME_STRUCTURES:
@@ -47,8 +48,12 @@ def create_test_filesystem():
                 base_filename = base_filename.replace('<date2>', next_day)
 
             filename = test_directory / base_filename
+            file_contents = f'File contents\n\n'
+            file_size = round((TSIS2_FILE_SIZES[shortname] * 1e6))
+            file_size = round(file_size, -3) - 15  # File header is 15 bytes
+            file_contents += '.' * file_size  # Inflate the file to mimic expected sizes
             with open(filename, 'w') as f:
-                f.write(f'File contents for {filename.name}')
+                f.write(file_contents)
             print(f'Created test file: {filename}')
 
 

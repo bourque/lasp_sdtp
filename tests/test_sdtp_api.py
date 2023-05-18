@@ -192,9 +192,9 @@ def test_get_filelist(client: FlaskClient, request_url: str):
     assert response.status_code == 200
 
     # Check if the returned files are in the filesystem
-    test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
+    test_files = glob.glob(str(Path(admin_config['filesystem_loc']) / '*'))
     for entry in data['files']:
-        filename = Path(admin_config['filesystem_loc']) / 'prod' / entry['name']
+        filename = Path(admin_config['filesystem_loc']) / entry['name']
         if filename.name not in TEST_FILES_TO_IGNORE:
             assert str(filename) in test_files
 
@@ -216,7 +216,7 @@ def test_get_filelist_filter_by_tag(client: FlaskClient):
     assert response.status_code == 200
 
     # Make sure the results are as expected
-    assert len(data['files']) == 59
+    assert len(data['files']) == 64
     for file in data['files']:
         assert 'observation_date' in file['tags']
 

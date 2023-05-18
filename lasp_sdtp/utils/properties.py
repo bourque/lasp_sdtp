@@ -86,18 +86,35 @@ TEST_FILES_TO_IGNORE = [
     'test_pagination_99993.txt', 'test_pagination_99994.txt', 'test_pagination_99995.txt']
 
 TSIS2_FILENAME_STRUCTURES = {
-        'TSIS2_L1': 'tsis2_L1_<date>.zip',
-        'TSIS2_SIM_CAL': 'tsis2_sim_cal_v01.zip',
-        'TSIS2_TIM_CAL': 'tsis2_tim_cal_v01.zip',
-        'TSIS2_SIM_L2': 'tsis2_sim_L2_v01_<date>.zip',
-        'TSIS2_TIM_L2': 'tsis2_tim_L2_v01_<date>.zip',
-        'TSIS2_SC_L2': 'tsis2_sc_L2_v01_<date>_<date2>.zip',
-        'TSIS2_SSI_L3_12HR_TXT': 'tsis2_ssi_L3_c12h_v01_<date>_<date2>.txt',
-        'TSIS2_SSI_L3_24HR_TXT': 'tsis2_ssi_L3_c24h_v01_<date>_<date2>.txt',
-        'TSIS2_TSI_L3_06HR_TXT': 'tsis2_tsi_L3_c06h_v01_<date>_<date2>.txt',
-        'TSIS2_TSI_L3_24HR_TXT': 'tsis2_tsi_L3_c24h_v01_<date>_<date2>.txt',
-        'TSIS2_SSI_L3_12HR_NC': 'tsis2_ssi_L3_c12h_v01_<date>_<date2>.nc',
-        'TSIS2_SSI_L3_24HR_NC': 'tsis2_ssi_L3_c12h_v01_<date>_<date2>.nc',
-        'TSIS2_TSI_L3_06HR_NC': 'tsis2_tsi_L3_c06h_v01_<date>_<date2>.nc',
-        'TSIS2_TSI_L3_24HR_NC': 'tsis2_tsi_L3_c24h_v01_<date>_<date2>.nc'
-    }
+    'TSIS2_L1': 'tsis2_L1_<date>.zip',
+    'TSIS2_SIM_CAL': 'tsis2_sim_cal_v01.zip',
+    'TSIS2_TIM_CAL': 'tsis2_tim_cal_v01.zip',
+    'TSIS2_SIM_L2': 'tsis2_sim_L2_v01_<date>.zip',
+    'TSIS2_TIM_L2': 'tsis2_tim_L2_v01_<date>.zip',
+    'TSIS2_SC_L2': 'tsis2_sc_L2_v01_<date>_<date2>.zip',
+    'TSIS2_SSI_L3_12HR_TXT': 'tsis2_ssi_L3_c12h_v01_<date>_<date2>.txt',
+    'TSIS2_SSI_L3_24HR_TXT': 'tsis2_ssi_L3_c24h_v01_<date>_<date2>.txt',
+    'TSIS2_TSI_L3_06HR_TXT': 'tsis2_tsi_L3_c06h_v01_<date>_<date2>.txt',
+    'TSIS2_TSI_L3_24HR_TXT': 'tsis2_tsi_L3_c24h_v01_<date>_<date2>.txt',
+    'TSIS2_SSI_L3_12HR_NC': 'tsis2_ssi_L3_c12h_v01_<date>_<date2>.nc',
+    'TSIS2_SSI_L3_24HR_NC': 'tsis2_ssi_L3_c24h_v01_<date>_<date2>.nc',
+    'TSIS2_TSI_L3_06HR_NC': 'tsis2_tsi_L3_c06h_v01_<date>_<date2>.nc',
+    'TSIS2_TSI_L3_24HR_NC': 'tsis2_tsi_L3_c24h_v01_<date>_<date2>.nc'
+}
+
+TSIS2_FILE_SIZES = {
+    'TSIS2_L1': 80.00,
+    'TSIS2_SIM_CAL': 3.00,
+    'TSIS2_TIM_CAL': 2.00,
+    'TSIS2_SIM_L2': 1.00,
+    'TSIS2_TIM_L2': 1.00,
+    'TSIS2_SC_L2': 125.00,
+    'TSIS2_SSI_L3_12HR_TXT': 165.00,
+    'TSIS2_SSI_L3_24HR_TXT': 84.00,
+    'TSIS2_TSI_L3_06HR_TXT': 0.30,
+    'TSIS2_TSI_L3_24HR_TXT': 0.06,
+    'TSIS2_SSI_L3_12HR_NC': 33.00,
+    'TSIS2_SSI_L3_24HR_NC': 17.00,
+    'TSIS2_TSI_L3_06HR_NC': 0.30,
+    'TSIS2_TSI_L3_24HR_NC': 0.06
+}
