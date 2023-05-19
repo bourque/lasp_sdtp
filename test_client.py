@@ -32,7 +32,7 @@ def _ingest_files():
     """Ingests various files into the database for testing purposes."""
 
     print('Ingesting files into the database')
-    filelist = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
+    filelist = glob.glob(str(Path(admin_config['filesystem_loc']) / '*'))
     production = Ingest(filelist, 'prod', '01')  # Ingest a 'production' stream of the data
     production.ingest()
     development = Ingest(filelist, 'dev', '01')  # Ingest a 'development' stream of the data
@@ -44,7 +44,7 @@ def _test_prep():
     the tests within this module"""
 
     # Create a test filesystem if necessary
-    test_directory = Path(admin_config['filesystem_loc']) / 'prod'
+    test_directory = Path(admin_config['filesystem_loc'])
     test_files = glob.glob(f'{test_directory}/*')
     if not test_files:
         print('Creating test filesystem')
