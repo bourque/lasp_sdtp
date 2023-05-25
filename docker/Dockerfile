@@ -23,6 +23,9 @@ RUN pip install --upgrade pip
 RUN pip install poetry
 RUN poetry install
 
+# Add the poetry virtualenv to the PATH
+ENV PATH="/root/.cache/pypoetry/virtualenvs/lasp-sdtp-lKa0R1gD-py3.9/bin:$PATH"
+
 # Set up directories for testing
 RUN mkdir test_subscriber_queues/
 RUN mkdir test_subscriber_queues/ges_disc/
@@ -31,6 +34,3 @@ RUN mkdir test_subscriber_queues/ges_disc/dev/
 
 # Create a test filesystem
 RUN poetry run python bin/create_test_filesystem.py
-
-# Keep the container running so it can be logged into
-CMD ["sleep", "infinity"]

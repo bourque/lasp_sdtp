@@ -7,12 +7,27 @@ services:
       target: base
     ports:
       - "8000:8000"
-      - "8001:8001"
-      - "8002:8002"
     container_name: sdtp_api
-    command: poetry run python bin/run_sdtp_servers.py
-    healthcheck:
-      test: curl http://localhost:8000 || exit 1
-      interval: 5s
-      retries: 10
-      timeout: 300s
+    command: bash -c "cd lasp_sdtp/server/ && gunicorn sdtp_api:sdtp_app -b 0.0.0.0:8000 --log-level debug"
+
+  queue_api:
+    platform: linux/x86_64
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: base
+    ports:
+      - "8001:8001"
+    container_name: queue_api
+    command: bash -c "cd lasp_sdtp/server/ && gunicorn queue_api:queue_app -b 0.0.0.0:8001 --log-level debug"
+
+  request_api:
+    platform: linux/x86_64
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: base
+    ports:
+      - "8002:8002"
+    container_name: request_api
+    command: bash -c "cd lasp_sdtp/server/ && gunicorn request_api:request_app -b 0.0.0.0:8002 --log-level debug"

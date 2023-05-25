@@ -49,8 +49,8 @@ from lasp_sdtp.utils.utils import validate_fileid_range
 logger = logging.getLogger(__name__)
 sdtp_app = Flask(__name__)
 
-REQUEST_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["request_api_port"]}'
-QUEUE_API_URI = f'{admin_config["api_endpoint"]}:{admin_config["queue_api_port"]}'
+REQUEST_API_URI = f'http://request_api:{admin_config["request_api_port"]}'
+QUEUE_API_URI = f'http://queue_api:{admin_config["queue_api_port"]}'
 
 
 @sdtp_app.route('/files/<fileid>', methods=['DELETE'])
