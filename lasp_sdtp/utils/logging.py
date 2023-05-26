@@ -24,7 +24,6 @@ import subprocess
 import sys
 import time
 from getpass import getuser
-from importlib import import_module
 from pathlib import Path
 from socket import gethostname
 from typing import Optional
@@ -63,27 +62,6 @@ def _log_system_environment():
     logging.debug(f'System: {gethostname()}')
     logging.debug(f'Python Version: {python_version}')
     logging.debug(f'Python Executable Path: {sys.executable}')
-
-    # Get list of dependencies
-    setup_file = Path(__file__).parents[2] / 'setup.cfg'
-    with open(setup_file, 'r') as f:
-        data = f.readlines()
-    for i, line in enumerate(data):
-        if 'install_requires =' in line:
-            begin = i + 1
-        elif 'python_requires =' in line:
-            end = i - 1
-    dependencies = data[begin:end]
-    dependencies = [item.strip().replace("'", "").replace(',', '').split('=')[0].split('>')[0].split('<')[0] for item in dependencies]
-
-    # Log dependency versions and paths
-    for dependency in dependencies:
-        try:
-            mod = import_module(dependency)
-            logging.debug(f'{dependency} Version: {mod.__version__}')
-            logging.debug(f'{dependency} Path: {mod.__path__[0]}')
-        except (ImportError, AttributeError) as error:
-            logging.warning(error)
 
     # Log poetry environment information
     logging.debug('Poetry Environment:')

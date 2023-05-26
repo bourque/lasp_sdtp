@@ -27,10 +27,10 @@ RUN poetry install
 ENV PATH="/root/.cache/pypoetry/virtualenvs/lasp-sdtp-lKa0R1gD-py3.9/bin:$PATH"
 
 # Set up directories for testing
-RUN mkdir test_subscriber_queues/
-RUN mkdir test_subscriber_queues/ges_disc/
-RUN mkdir test_subscriber_queues/ges_disc/prod/
-RUN mkdir test_subscriber_queues/ges_disc/dev/
+RUN mkdir subscriber_queues/
+RUN mkdir subscriber_queues/ges_disc/
+RUN mkdir subscriber_queues/ges_disc/prod/
+RUN mkdir subscriber_queues/ges_disc/dev/
 
 # Create a test filesystem
 RUN poetry run python bin/create_test_filesystem.py

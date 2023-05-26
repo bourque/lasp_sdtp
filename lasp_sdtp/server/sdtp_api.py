@@ -34,6 +34,7 @@ TODO: Add 'finally' clause where it makes sense
 """
 
 import logging
+import socket
 
 import requests
 from flask import Flask
@@ -49,8 +50,12 @@ from lasp_sdtp.utils.utils import validate_fileid_range
 logger = logging.getLogger(__name__)
 sdtp_app = Flask(__name__)
 
-REQUEST_API_URI = f'http://request_api:{admin_config["request_api_port"]}'
-QUEUE_API_URI = f'http://queue_api:{admin_config["queue_api_port"]}'
+if 'MacL' in socket.gethostname():  # running locally
+    REQUEST_API_URI = f'http://127.0.0.1:{admin_config["request_api_port"]}'
+    QUEUE_API_URI = f'http://127.0.0.1:{admin_config["queue_api_port"]}'
+else:   # running in docker container
+    REQUEST_API_URI = f'http://request_api:{admin_config["request_api_port"]}'
+    QUEUE_API_URI = f'http://queue_api:{admin_config["queue_api_port"]}'
 
 
 @sdtp_app.route('/files/<fileid>', methods=['DELETE'])
