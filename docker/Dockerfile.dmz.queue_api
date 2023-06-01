@@ -1,0 +1,2 @@
+FROM scratch
+ADD queue_api_image.tar

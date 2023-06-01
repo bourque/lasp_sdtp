@@ -37,6 +37,7 @@ from lasp_sdtp.database.controller import db
 from lasp_sdtp.database.queries import query_for_accounts_by_mission
 from lasp_sdtp.database.queries import query_for_mission_by_shortname
 from lasp_sdtp.utils import utils
+from lasp_sdtp.utils.properties import TEST_FILES_TO_IGNORE
 from lasp_sdtp.utils.properties import TSIS2_FILE_SIZES
 
 
@@ -229,13 +230,14 @@ class Ingest():
                 continue
 
             # Validate the filesize
-            filesize = os.path.getsize(file) / 1e6
-            expected_filesize = TSIS2_FILE_SIZES[shortname]
-            if filesize != expected_filesize:
-                logger.warning('Unexpected filesize for %s: Got %s mb but expected %s mb', filename, filesize, expected_filesize)
-                Path(file).unlink()
-                logger.debug('Deleted file %s', filename)
-                continue
+            if filename not in TEST_FILES_TO_IGNORE:
+                filesize = os.path.getsize(file) / 1e6
+                expected_filesize = TSIS2_FILE_SIZES[shortname]
+                if filesize != expected_filesize:
+                    logger.warning('Unexpected filesize for %s: Got %s mb but expected %s mb', filename, filesize, expected_filesize)
+                    Path(file).unlink()
+                    logger.debug('Deleted file %s', filename)
+                    continue
 
             # Gather some more information from the file
             mission = query_for_mission_by_shortname(shortname)

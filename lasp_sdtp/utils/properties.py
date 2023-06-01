@@ -83,7 +83,7 @@ TEST_FILES_TO_IGNORE = [
     'test_cleanup_db.txt', 'test_cleanup_db2.txt', 'test_reporting.txt', 'test_db_controller.txt',
     'tsis2_L1_19840404.zip', 'tsis2_sim_cal_v01.zip', 'tsis2_sc_L2_v01_19840404_19840405.zip', 'insert_data.txt',
     'test_pagination_99990.txt', 'test_pagination_99991.txt', 'test_pagination_99992.txt',
-    'test_pagination_99993.txt', 'test_pagination_99994.txt', 'test_pagination_99995.txt']
+    'test_pagination_99993.txt', 'test_pagination_99994.txt', 'test_pagination_99995.txt', 'not_subscribed.txt']
 
 TSIS2_FILENAME_STRUCTURES = {
     'TSIS2_L1': 'tsis2_L1_<date>.zip',

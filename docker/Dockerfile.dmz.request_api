@@ -1,0 +1,2 @@
+FROM scratch
+ADD request_api_image.tar
