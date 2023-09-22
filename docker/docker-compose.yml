@@ -20,7 +20,7 @@ services:
       target: base
     ports:
       - "8001:8001"
-    container_name: queue_api
+    container_name: sdtp_queue_api
     volumes:
       - shared_data:/root/
     command: bash -c "cd lasp_sdtp/server/ && gunicorn queue_api:queue_app -b 0.0.0.0:8001 --log-level debug"
@@ -33,7 +33,7 @@ services:
       target: base
     ports:
       - "8002:8002"
-    container_name: request_api
+    container_name: sdtp_request_api
     volumes:
       - shared_data:/root/
     command: bash -c "cd lasp_sdtp/server/ && gunicorn request_api:request_app -b 0.0.0.0:8002 --log-level debug"

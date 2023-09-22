@@ -1,33 +1,33 @@
 services:
   sdtp_api:
     platform: linux/x86_64
-    build:
-      context: .
-      dockerfile: Dockerfile.dmz.sdtp_api
-      target: base
     ports:
       - "8000:8000"
     container_name: sdtp_api
+    image: docker-registry.pdmz.lasp.colorado.edu/datasystems/sdtp_api:latest
+    volumes:
+      - shared_data:/root/
     command: bash -c "cd lasp_sdtp/server/ && gunicorn sdtp_api:sdtp_app -b 0.0.0.0:8000 --log-level debug"
 
   queue_api:
     platform: linux/x86_64
-    build:
-      context: .
-      dockerfile: Dockerfile.dmz.queue_api
-      target: base
     ports:
       - "8001:8001"
-    container_name: queue_api
+    container_name: sdtp_queue_api
+    image: docker-registry.pdmz.lasp.colorado.edu/datasystems/sdtp_queue_api:latest
+    volumes:
+      - shared_data:/root/
     command: bash -c "cd lasp_sdtp/server/ && gunicorn queue_api:queue_app -b 0.0.0.0:8001 --log-level debug"
 
   request_api:
     platform: linux/x86_64
-    build:
-      context: .
-      dockerfile: Dockerfile.dmz.request_api
-      target: base
     ports:
       - "8002:8002"
-    container_name: request_api
+    container_name: sdtp_request_api
+    image: docker-registry.pdmz.lasp.colorado.edu/datasystems/sdtp_request_api:latest
+    volumes:
+      - shared_data:/root/
     command: bash -c "cd lasp_sdtp/server/ && gunicorn request_api:request_app -b 0.0.0.0:8002 --log-level debug"
+
+volumes:
+  shared_data:
