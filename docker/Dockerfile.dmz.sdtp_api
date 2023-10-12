@@ -1,2 +1,0 @@
-FROM scratch
-ADD sdtp_api_image.tar

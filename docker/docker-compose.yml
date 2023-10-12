@@ -10,7 +10,7 @@ services:
     container_name: sdtp_api
     volumes:
       - shared_data:/root/
-    command: bash -c "cd lasp_sdtp/server/ && gunicorn sdtp_api:sdtp_app -b 0.0.0.0:8000 --log-level debug"
+    command: bash -c "cd lasp_sdtp/server/ && gunicorn sdtp_api:sdtp_app -b 0.0.0.0:8000 --log-level debug --threads 2"
 
   queue_api:
     platform: linux/x86_64
@@ -23,7 +23,7 @@ services:
     container_name: sdtp_queue_api
     volumes:
       - shared_data:/root/
-    command: bash -c "cd lasp_sdtp/server/ && gunicorn queue_api:queue_app -b 0.0.0.0:8001 --log-level debug"
+    command: bash -c "cd lasp_sdtp/server/ && gunicorn queue_api:queue_app -b 0.0.0.0:8001 --log-level debug --threads 2"
 
   request_api:
     platform: linux/x86_64
@@ -36,7 +36,7 @@ services:
     container_name: sdtp_request_api
     volumes:
       - shared_data:/root/
-    command: bash -c "cd lasp_sdtp/server/ && gunicorn request_api:request_app -b 0.0.0.0:8002 --log-level debug"
+    command: bash -c "cd lasp_sdtp/server/ && gunicorn request_api:request_app -b 0.0.0.0:8002 --log-level debug --threads 2"
 
 volumes:
   shared_data:
