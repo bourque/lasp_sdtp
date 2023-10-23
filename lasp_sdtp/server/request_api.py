@@ -165,6 +165,11 @@ def get_filelist() -> dict:
     if len(data) > max_num_files:
         data = data[:max_num_files]
 
+    # Rename ShortName and Version to comply with ICD
+    for item in data:
+        item['tags']['Version'] = item['tags'].pop('version')
+        item['tags']['ShortName'] = item['tags'].pop('shortname')
+
     # Construct the response
     response = {'transactionid': str(transactionid),
                 'results': data}
