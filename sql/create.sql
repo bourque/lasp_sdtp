@@ -104,7 +104,23 @@ CREATE TABLE Transactions
 INSERT INTO Accounts (username, role, registrationOpen, certUid, registrationDate) VALUES ('lasp_admin', 'admin', 0, 'admin_cert', TO_DATE('2022/11/08', 'YYYY/MM/DD'));
 INSERT INTO Accounts (username, role, registrationOpen, certUid, registrationDate) VALUES ('ges_disc', 'subscriber', 1, 'test_cert', NULL);
 
+INSERT INTO Missions (mission, ingestDirectory) VALUES ('TSIS', '/path/to/tsis/data/');
 INSERT INTO Missions (mission, ingestDirectory) VALUES ('TSIS2', '/path/to/tsis2/data/');
+
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_L1', 'tsis_L1_(?P<date>\d{8}).zip');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_SIM_CAL', 'tsis_sim_cal_v(?P<version>\d{2}).zip');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_TIM_CAL', 'tsis_tim_cal_v(?P<version>\d{2}).zip');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_SIM_L2', 'tsis_sim_L2_v(?P<version>\d{2})_(?P<date>\d{8}).zip');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_TIM_L2', 'tsis_tim_L2_v(?P<version>\d{2})_(?P<date>\d{8}).zip');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_SC_L2', 'tsis_sc_L2_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).zip');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_SSI_L3_12HR_TXT', 'tsis_ssi_L3_c12h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_SSI_L3_24HR_TXT', 'tsis_ssi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_TSI_L3_06HR_TXT', 'tsis_tsi_L3_c06h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_TSI_L3_24HR_TXT', 'tsis_tsi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_SSI_L3_12HR_NC', 'tsis_ssi_L3_c12h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_SSI_L3_24HR_NC', 'tsis_ssi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_TSI_L3_06HR_NC', 'tsis_tsi_L3_c06h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc');
+INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS_TSI_L3_24HR_NC', 'tsis_tsi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc');
 
 INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_L1', 'tsis2_L1_(?P<date>\d{8}).zip');
 INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SIM_CAL', 'tsis2_sim_cal_v(?P<version>\d{2}).zip');
@@ -120,6 +136,21 @@ INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SSI_L3_12HR_N
 INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_SSI_L3_24HR_NC', 'tsis2_ssi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc');
 INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TSI_L3_06HR_NC', 'tsis2_tsi_L3_c06h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc');
 INSERT INTO Shortnames (shortname, filenamePattern) VALUES ('TSIS2_TSI_L3_24HR_NC', 'tsis2_tsi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc');
+
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_L1');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_SIM_CAL');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_SIM_L2');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_SSI_L3_12HR_NC');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_SSI_L3_12HR_TXT');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_SSI_L3_24HR_NC');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_SSI_L3_24HR_TXT');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_TIM_CAL');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_TIM_L2');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_SC_L2');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_TSI_L3_06HR_NC');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_TSI_L3_06HR_TXT');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_TSI_L3_24HR_NC');
+INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS', 'TSIS_TSI_L3_24HR_TXT');
 
 INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS2_L1');
 INSERT INTO MissionShortnameMapping (Mission, Shortname) VALUES ('TSIS2', 'TSIS2_SIM_CAL');

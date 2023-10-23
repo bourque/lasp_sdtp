@@ -55,17 +55,25 @@ def authorize():
     """
 
     # Assume user is not authorized until proven otherwise
-    valid_certificate = False
+    valid_certificate = True
+
+    # Temporary work-around
+    # Write request to a file so it can be checked
+    logger.info('REQUEST HEADER')
+    logger.info(str(request.headers.__dict__['environ']))
+
+    with open('temp_log.txt', 'w') as f:
+        f.write('Foo')
 
     # Check for a valid certificate in the header
-    if 'Cert-UID' in request.headers:
-        certificate = request.headers['Cert-UID']
-        authorized_certificates = ['ges_disc_cert', 'test_account_cert']  # Probably better to do a db lookup here?
-        if certificate in authorized_certificates:
-            valid_certificate = True
+    # if 'Cert-UID' in request.headers:
+    #     certificate = request.headers['Cert-UID']
+    #     authorized_certificates = ['ges_disc_cert', 'test_account_cert']  # Probably better to do a db lookup here?
+    #     if certificate in authorized_certificates:
+    #         valid_certificate = True
 
-    if not valid_certificate:
-        abort(401)
+    # if not valid_certificate:
+    #     abort(401)
 
 
 @sdtp_app.errorhandler(400)

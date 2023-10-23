@@ -1,7 +1,7 @@
 """This script creates a directory with (mostly empty) files for testing
 purposes.
 
-For each TSIS2 data product type, files are created for five different days and
+For each TSIS data product type, files are created for five different days and
 are placed in the ``filesystem_loc`` as defined in the ``admin_config.json``
 file. The contents of each file only contain one line of text containing the
 filename.
@@ -21,8 +21,8 @@ import datetime
 from pathlib import Path
 
 from lasp_sdtp.config import admin_config
-from lasp_sdtp.utils.properties import TSIS2_FILE_SIZES
-from lasp_sdtp.utils.properties import TSIS2_FILENAME_STRUCTURES
+from lasp_sdtp.utils.properties import TSIS_FILE_SIZES
+from lasp_sdtp.utils.properties import TSIS_FILENAME_STRUCTURES
 
 
 def create_test_filesystem():
@@ -36,12 +36,12 @@ def create_test_filesystem():
     test_directory = Path(admin_config['filesystem_loc'])
     test_directory.mkdir(parents=True, exist_ok=True)
 
-    for shortname in TSIS2_FILENAME_STRUCTURES:
+    for shortname in TSIS_FILENAME_STRUCTURES:
 
         # Create files for five different days
         dates = ['20220101', '20220102', '20220103', '20220104', '20220105']
         for date in dates:
-            base_filename = TSIS2_FILENAME_STRUCTURES[shortname]
+            base_filename = TSIS_FILENAME_STRUCTURES[shortname]
             base_filename = base_filename.replace('<date>', date)
             if '<date2>' in base_filename:
                 next_day = datetime.datetime.strftime(datetime.datetime.strptime(date, '%Y%m%d') + datetime.timedelta(days=1), '%Y%m%d')
@@ -49,7 +49,7 @@ def create_test_filesystem():
 
             filename = test_directory / base_filename
             file_contents = f'File contents\n\n'
-            file_size = round((TSIS2_FILE_SIZES[shortname] * 1e6))
+            file_size = round((TSIS_FILE_SIZES[shortname] * 1e6))
             file_size = round(file_size, -3) - 15  # File header is 15 bytes
             file_contents += '.' * file_size  # Inflate the file to mimic expected sizes
             with open(filename, 'w') as f:

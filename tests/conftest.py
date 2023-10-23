@@ -26,20 +26,20 @@ from lasp_sdtp.database.controller import db
 from lasp_sdtp.database.ingest import Ingest
 
 TEST_SHORTNAME_MAPPING = {
-    'TSIS2_L1': r'tsis2_L1_(?P<date>\d{8}).zip',
-    'TSIS2_SIM_CAL': r'tsis2_sim_cal_v(?P<version>\d{2}).zip',
-    'TSIS2_TIM_CAL': r'tsis2_tim_cal_v(?P<version>\d{2}).zip',
-    'TSIS2_SIM_L2': r'tsis2_sim_L2_v(?P<version>\d{2})_(?P<date>\d{8}).zip',
-    'TSIS2_TIM_L2': r'tsis2_tim_L2_v(?P<version>\d{2})_(?P<date>\d{8}).zip',
-    'TSIS2_SC_L2': r'tsis2_sc_L2_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).zip',
-    'TSIS2_SSI_L3_12HR_TXT': r'tsis2_ssi_L3_c12h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt',
-    'TSIS2_SSI_L3_24HR_TXT': r'tsis2_ssi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt',
-    'TSIS2_TSI_L3_06HR_TXT': r'tsis2_tsi_L3_c06h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt',
-    'TSIS2_TSI_L3_24HR_TXT': r'tsis2_tsi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt',
-    'TSIS2_SSI_L3_12HR_NC': r'tsis2_ssi_L3_c12h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc',
-    'TSIS2_SSI_L3_24HR_NC': r'tsis2_ssi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc',
-    'TSIS2_TSI_L3_06HR_NC': r'tsis2_tsi_L3_c06h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc',
-    'TSIS2_TSI_L3_24HR_NC': r'tsis2_tsi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc'
+    'TSIS_L1': r'tsis_L1_(?P<date>\d{8}).zip',
+    'TSIS_SIM_CAL': r'tsis_sim_cal_v(?P<version>\d{2}).zip',
+    'TSIS_TIM_CAL': r'tsis_tim_cal_v(?P<version>\d{2}).zip',
+    'TSIS_SIM_L2': r'tsis_sim_L2_v(?P<version>\d{2})_(?P<date>\d{8}).zip',
+    'TSIS_TIM_L2': r'tsis_tim_L2_v(?P<version>\d{2})_(?P<date>\d{8}).zip',
+    'TSIS_SC_L2': r'tsis_sc_L2_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).zip',
+    'TSIS_SSI_L3_12HR_TXT': r'tsis_ssi_L3_c12h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt',
+    'TSIS_SSI_L3_24HR_TXT': r'tsis_ssi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt',
+    'TSIS_TSI_L3_06HR_TXT': r'tsis_tsi_L3_c06h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt',
+    'TSIS_TSI_L3_24HR_TXT': r'tsis_tsi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).txt',
+    'TSIS_SSI_L3_12HR_NC': r'tsis_ssi_L3_c12h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc',
+    'TSIS_SSI_L3_24HR_NC': r'tsis_ssi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc',
+    'TSIS_TSI_L3_06HR_NC': r'tsis_tsi_L3_c06h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc',
+    'TSIS_TSI_L3_24HR_NC': r'tsis_tsi_L3_c24h_v(?P<version>\d{2})_(?P<start_date>\d{8})_(?P<end_date>\d{8}).nc'
 }
 
 
@@ -118,7 +118,7 @@ def _add_files_entries():
         size=1,
         expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
         stream='prod',
-        shortname='TSIS2_L1',
+        shortname='TSIS_L1',
         version='01',
         ingest_date=datetime.datetime(2022, 1, 1).date(),
         available=True
@@ -130,7 +130,7 @@ def _add_files_entries():
         size=1,
         expires=datetime.datetime.utcnow().date() - datetime.timedelta(days=1),
         stream='prod',
-        shortname='TSIS2_L1',
+        shortname='TSIS_L1',
         version='01',
         ingest_date=datetime.datetime(2022, 1, 1).date(),
         available=True
@@ -144,7 +144,7 @@ def _add_files_entries():
         size=1,
         expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
         stream='prod',
-        shortname='TSIS2_L1',
+        shortname='TSIS_L1',
         version='01',
         ingest_date=datetime.datetime(2022, 1, 1).date(),
         available=True
@@ -158,7 +158,7 @@ def _add_files_entries():
         size=1,
         expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
         stream='prod',
-        shortname='TSIS2_L1',
+        shortname='TSIS_L1',
         version='01',
         ingest_date=datetime.datetime(2022, 1, 1).date(),
         available=True
@@ -187,7 +187,7 @@ def _add_files_entries():
             size=1,
             expires=datetime.datetime.utcnow().date() + datetime.timedelta(days=1),
             stream='prod',
-            shortname='TSIS2_L1',
+            shortname='TSIS_L1',
             version='01',
             ingest_date=datetime.datetime.utcnow().date(),
             available=True
@@ -201,7 +201,7 @@ def _add_mission_account_mapping_entries():
     """Add ``MissionAccountMapping`` table entries used for testing"""
 
     data_to_insert = [db.MissionAccountMapping(
-        mission='TSIS2',
+        mission='TSIS',
         account='ges_disc'
     )]
 
@@ -212,8 +212,8 @@ def _add_missions_entries():
     """Add ``Missions`` table entries used for testing"""
 
     data_to_insert = [db.Missions(
-        mission='TSIS2',
-        ingest_directory='/path/to/tsis2/data/'
+        mission='TSIS',
+        ingest_directory='/path/to/tsis/data/'
     )]
 
     # Add 'test' mission (used in test_ingest)
@@ -232,7 +232,7 @@ def _add_mission_shortname_mapping_entries():
 
     for shortname in TEST_SHORTNAME_MAPPING:
         data_to_insert.append(db.MissionShortnameMapping(
-            mission='TSIS2',
+            mission='TSIS',
             shortname=shortname
         ))
 

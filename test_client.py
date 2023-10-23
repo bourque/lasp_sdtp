@@ -144,11 +144,11 @@ if __name__ == '__main__':
 
     # Get filelist
     test_api('GET', 'http://127.0.0.1:8000/files', 200)
-    test_api('GET', 'http://127.0.0.1:8000/files?shortname=TSIS2_SC_L2', 200)
-    test_api('GET', 'http://127.0.0.1:8000/files?shortname=TSIS2_SC_L2&stream=dev', 200)
-    test_api('GET', 'http://127.0.0.1:8000/files?shortname=TSIS2_SC_L2&stream=dev&irradiance=some_value', 200)
+    test_api('GET', 'http://127.0.0.1:8000/files?shortname=TSIS_TIM_L2', 200)
+    test_api('GET', 'http://127.0.0.1:8000/files?shortname=TSIS_TIM_L2&stream=dev', 200)
+    test_api('GET', 'http://127.0.0.1:8000/files?shortname=TSIS_TIM_L2&stream=dev&irradiance=some_value', 200)
     test_api('GET', 'http://127.0.0.1:8000/files?startfileid=1&maxfile=3', 200)
-    test_api('GET', 'http://127.0.0.1:8000/files?shortname=TSIS2_SC_L2&stream=dev&irradiance=some_value&startfileid=1&maxfile=3', 200)
+    test_api('GET', 'http://127.0.0.1:8000/files?shortname=TSIS_TIM_L2&stream=dev&irradiance=some_value&startfileid=1&maxfile=3', 200)
 
     # Get file
     test_api('GET', f'http://127.0.0.1:8000/files/{fileid}', 200)
@@ -204,20 +204,5 @@ if __name__ == '__main__':
 
     # Try to delete a file that user doesn't have access to (file 99999 is hard-coded to be restricted)
     test_api('DELETE', 'http://127.0.0.1:8000/files/99999', 403)
-
-    # Send multiple of requests at once
-    # params = [
-    #     ('GET', 'http://127.0.0.1:8000/files', 200),
-    #     ('GET', 'http://127.0.0.1:8000/files', 200),
-    #     ('GET', 'http://127.0.0.1:8000/files', 200),
-    #     ('GET', 'http://127.0.0.1:8000/files', 200),
-    #     ('GET', 'http://127.0.0.1:8000/files', 200),
-    #     ('GET', 'http://127.0.0.1:8000/files', 200),
-    #     ('GET', 'http://127.0.0.1:8000/files', 200),
-    #     ('GET', 'http://127.0.0.1:8000/files', 200)
-    # ]
-    # pool = multiprocessing.Pool(processes=8)
-    # pool.starmap(test_api, params)
-    # pool.close()
 
     print('\nAll tests completed successfully!')
