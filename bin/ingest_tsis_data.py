@@ -22,9 +22,7 @@ from lasp_sdtp.database.ingest import Ingest
 if __name__ == '__main__':
 
     # Read in filesystem
-    # Currently these files are read directly from a test filesystem, but this
-    # Could be modified to listen to a dropbox folder, for example
-    filelist = glob.glob(str(Path(admin_config['filesystem_loc']) / 'prod' / '*'))
+    filelist = glob.glob(str(Path(admin_config['filesystem_loc']) / '*'))
 
     # Ingest a 'production' stream of the data
     production = Ingest(filelist, 'prod', '01')

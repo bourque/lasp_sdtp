@@ -42,12 +42,14 @@ from flask import abort
 from flask import make_response
 from flask import request
 from flask.wrappers import Response
+from werkzeug import exceptions
 
 from lasp_sdtp.config import admin_config
+from lasp_sdtp.database.cleanup import cleanup_files
+from lasp_sdtp.utils.logging import configure_logging
 from lasp_sdtp.utils.utils import parse_api_response
 from lasp_sdtp.utils.utils import validate_fileid_range
 
-logger = logging.getLogger(__name__)
 sdtp_app = Flask(__name__)
 
 if 'MacL' in socket.gethostname():  # running locally
@@ -56,6 +58,74 @@ if 'MacL' in socket.gethostname():  # running locally
 else:   # running in docker container
     REQUEST_API_URI = f'http://request_api:{admin_config["request_api_port"]}'
     QUEUE_API_URI = f'http://queue_api:{admin_config["queue_api_port"]}'
+    # Configure logging
+    log_file_loc = '/root/logs/'
+    configure_logging(log_file_loc)
+
+logger = logging.getLogger(__name__)
+
+@sdtp_app.before_request
+def authorize():
+    """Authorize a request.
+
+    This is performed before every request is processed.  If the request cannot
+    be authorized, the request is aborted with a 401 error.
+    """
+
+    # Assume user is not authorized until proven otherwise
+    #valid_certificate = False
+
+    # Temporary work-around
+    # Write request to a file so it can be checked
+    logger.info('Received request:')
+    logger.info(str(request.headers.__dict__['environ']))
+
+    valid_certificate = True
+
+    # Check for a valid certificate in the header
+    # if 'Cert-UID' in request.headers:
+    #     certificate = request.headers['Cert-UID']
+    #     authorized_certificates = ['ges_disc_cert', 'test_account_cert']  # Probably better to do a db lookup here?
+    #     if certificate in authorized_certificates:
+    #         valid_certificate = True
+
+    if not valid_certificate:
+        abort(401)
+
+
+@sdtp_app.errorhandler(400)
+def custom400(error: exceptions.BadRequest) -> Response:
+    """Returns a custom 400 response"""
+    return make_response({'message': 'The request is incorrect'}, 400)
+
+
+@sdtp_app.errorhandler(401)
+def custom401(error: exceptions.Unauthorized) -> Response:
+    """Returns a custom 401 response"""
+
+    # The message depends on the request method
+    if request.method == 'PUT':
+        return make_response({'message': 'Unauthorized'}, 401)
+    elif request.method == 'GET':
+        return make_response({'message': 'Request is not authenticated'}, 401)
+
+
+@sdtp_app.errorhandler(403)
+def custom403(error: exceptions.Forbidden) -> Response:
+    """Returns a custom 403 response"""
+    return make_response({'message': 'Request is authenticated but user is forbidden from accessing resource'}, 403)
+
+
+@sdtp_app.errorhandler(404)
+def custom404(error: exceptions.NotFound) -> Response:
+    """Returns a custom 400 response"""
+    return make_response({'message': 'The requested resource does not exist'}, 404)
+
+
+@sdtp_app.errorhandler(500)
+def custom500(error: exceptions.InternalServerError) -> Response:
+    """Returns a custom 500 response"""
+    return make_response({'message': 'Internal Server Error'}, 500)
 
 
 @sdtp_app.route('/files/<fileid>', methods=['DELETE'])
@@ -335,3 +405,12 @@ def register() -> Response:
     response.headers['SDTP-TransactionID'] = transactionid
 
     return response
+
+
+@sdtp_app.before_request
+def remove_expired_data():
+    """Remove expired files from the database prior to processing a request in
+    order to avoid allowing inadvertent access.
+    """
+
+    cleanup_files()
