@@ -12,8 +12,6 @@ Use
     This module is intended to be executed via the command line as such:
     ::
         python daily_report.py
-
-TODO[1997]: Fix _send_email to actually send an email
 """
 
 import smtplib
@@ -66,7 +64,7 @@ def _send_email(content: str):
     """
 
     # Get the template
-    email_template_file = Path(__file__).parent.parent / 'lasp_sdtp/utils/' / 'email_template.html'
+    email_template_file = Path(__file__).resolve().parent.parent / 'lasp_sdtp' / 'utils' / 'email_template.html'
     with open(email_template_file) as f:
         template = Template(f.read())
 
@@ -80,13 +78,13 @@ def _send_email(content: str):
     msg['To'] = 'matthew.bourque@lasp.colorado.edu'
     msg.attach(MIMEText(body, 'html'))
 
-    # # Send the email
-    # server = smtplib.SMTP(admin_config['email_server'], admin_config['email_port'])
-    # server.starttls()
-    # server.login(admin_config['email_address'], admin_config['email_password'])
-    # text = msg.as_string()
-    # server.sendmail(admin_config['email_address'], 'matthew,bourque@lasp.colorado.edu', text)
-    # server.quit()
+    # Send the email
+    server = smtplib.SMTP(admin_config['email_server'], admin_config['email_port'])
+    server.starttls()
+    server.login(admin_config['email_address'], admin_config['email_password'])
+    text = msg.as_string()
+    server.sendmail(admin_config['email_address'], 'matthew.bourque@lasp.colorado.edu', text)
+    server.quit()
 
 
 def generate_daily_report() -> str:
