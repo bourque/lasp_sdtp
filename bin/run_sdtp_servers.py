@@ -19,7 +19,6 @@ Use
         python run_sdtp_servers.py
 """
 
-from pathlib import Path
 import threading
 
 from lasp_sdtp.config import admin_config
@@ -27,7 +26,6 @@ from lasp_sdtp.server.api_utils import register_admin
 from lasp_sdtp.server.queue_api import queue_app
 from lasp_sdtp.server.request_api import request_app
 from lasp_sdtp.server.sdtp_api import sdtp_app
-from lasp_sdtp.utils.logging import configure_logging
 
 
 def run_queue_app():
@@ -43,10 +41,6 @@ def run_sdtp_app():
 
 
 if __name__ == '__main__':
-
-    # Configure logging
-    log_file_loc = Path.home() / 'logs'
-    configure_logging(log_file_loc)
 
     # Register an admin account if necessary
     register_admin()

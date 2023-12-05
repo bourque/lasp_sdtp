@@ -35,6 +35,7 @@ TODO: Add 'finally' clause where it makes sense
 
 import logging
 import socket
+from pathlib import Path
 
 import requests
 from flask import Flask
@@ -55,13 +56,13 @@ sdtp_app = Flask(__name__)
 if 'MacL' in socket.gethostname():  # running locally
     REQUEST_API_URI = f'http://127.0.0.1:{admin_config["request_api_port"]}'
     QUEUE_API_URI = f'http://127.0.0.1:{admin_config["queue_api_port"]}'
+    LOG_FILE_LOC = Path.home()
 else:   # running in docker container
     REQUEST_API_URI = f'http://request_api:{admin_config["request_api_port"]}'
     QUEUE_API_URI = f'http://queue_api:{admin_config["queue_api_port"]}'
-    # Configure logging
-    log_file_loc = '/root/logs/'
-    configure_logging(log_file_loc)
+    LOG_FILE_LOC = '/root/logs/'
 
+configure_logging(LOG_FILE_LOC)
 logger = logging.getLogger(__name__)
 
 @sdtp_app.before_request

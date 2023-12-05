@@ -105,4 +105,9 @@ def configure_logging(log_file_loc: str, verbose: Optional[bool] = True) -> str:
     # Log system configuration/environment
     _log_system_environment()
 
+    # Turn off werkzeug messages as they are redundant with what is explicitly
+    # logged in the application
+    logger = logging.getLogger('werkzeug')
+    logger.setLevel(logging.ERROR)
+
     return log_file
