@@ -126,16 +126,20 @@ def test_api(method, url, expected_response, verbose=True):
 
 if __name__ == '__main__':
 
+    domain = 'http://127.0.0.1:8000'
+
     print('\nRunning end-to-end test\n')
 
-    # Do various preparations for testing (e.g. add database entries, ingest files, etc.)
-    _test_prep()
+    if domain == 'http://127.0.0.1:8000':
 
-    # Register Account
-    test_api('PUT', 'http://127.0.0.1:8000/register', 204)
+        # Do various preparations for testing (e.g. add database entries, ingest files, etc.)
+        _test_prep()
 
-    # Ingest the test filesystem (thus adding entries to Files and FileQueue)
-    _ingest_files()
+        # Register Account
+        test_api('PUT', 'http://127.0.0.1:8000/register', 204)
+
+        # Ingest the test filesystem (thus adding entries to Files and FileQueue)
+        _ingest_files()
 
     # Get a fileid to test with
     results = db.session.query(db.Files).all()
@@ -143,66 +147,66 @@ if __name__ == '__main__':
     fileid = min(results)
 
     # Get filelist
-    test_api('GET', 'http://127.0.0.1:8000/files', 200)
-    test_api('GET', 'http://127.0.0.1:8000/files?shortname=TSIS_TIM_L2', 200)
-    test_api('GET', 'http://127.0.0.1:8000/files?shortname=TSIS_TIM_L2&stream=dev', 200)
-    test_api('GET', 'http://127.0.0.1:8000/files?shortname=TSIS_TIM_L2&stream=dev&irradiance=some_value', 200)
-    test_api('GET', 'http://127.0.0.1:8000/files?startfileid=1&maxfile=3', 200)
-    test_api('GET', 'http://127.0.0.1:8000/files?shortname=TSIS_TIM_L2&stream=dev&irradiance=some_value&startfileid=1&maxfile=3', 200)
+    test_api('GET', f'{domain}/files', 200)
+    test_api('GET', f'{domain}/files?shortname=TSIS_TIM_L2', 200)
+    test_api('GET', f'{domain}/files?shortname=TSIS_TIM_L2&stream=dev', 200)
+    test_api('GET', f'{domain}/files?shortname=TSIS_TIM_L2&stream=dev&irradiance=some_value', 200)
+    test_api('GET', f'{domain}/files?startfileid=1&maxfile=3', 200)
+    test_api('GET', f'{domain}/files?shortname=TSIS_TIM_L2&stream=dev&irradiance=some_value&startfileid=1&maxfile=3', 200)
 
     # Get file
-    test_api('GET', f'http://127.0.0.1:8000/files/{fileid}', 200)
+    test_api('GET', f'{domain}/files/{fileid}', 200)
 
     # Delete file
-    test_api('DELETE', f'http://127.0.0.1:8000/files/{fileid}', 204)
+    test_api('DELETE', f'{domain}/files/{fileid}', 204)
 
     # Delete range of files
-    test_api('DELETE', f'http://127.0.0.1:8000/files/{fileid}-{fileid+3}', 204)
+    test_api('DELETE', f'{domain}/files/{fileid}-{fileid+3}', 204)
 
     # Send a request to endpoint that doesn't exist
-    test_api('GET', 'http://127.0.0.1:8000/bogus_endpoint', 404)
+    test_api('GET', f'{domain}/bogus_endpoint', 404)
 
     # Try to register a closed account
-    test_api('PUT', 'http://127.0.0.1:8000/register', 401)  # The account should already be registered and thus not open for registration
+    test_api('PUT', f'{domain}/register', 401)  # The account should already be registered and thus not open for registration
 
     # Request a filelist with bogus parameters
-    test_api('GET', 'http://127.0.0.1:8000/files?bogus_param=foo', 400)
-    test_api('GET', 'http://127.0.0.1:8000/files?shortname=TSIS_SC_L2&bogus_param=foo', 400)
+    test_api('GET', f'{domain}/files?bogus_param=foo', 400)
+    test_api('GET', f'{domain}/files?shortname=TSIS_SC_L2&bogus_param=foo', 400)
 
     # Request a filelist with valid parameters but no files returned
-    test_api('GET', 'http://127.0.0.1:8000/files?shortname=foo', 200)
+    test_api('GET', f'{domain}/files?shortname=foo', 200)
 
     # Request a file that doesn't exist
-    test_api('GET', 'http://127.0.0.1:8000/files/1234567', 404)
+    test_api('GET', f'{domain}/files/1234567', 404)
 
     # Request a file with invalid fileid
-    test_api('GET', 'http://127.0.0.1:8000/files/-1', 400)
-    test_api('GET', 'http://127.0.0.1:8000/files/1.5', 400)
-    test_api('GET', 'http://127.0.0.1:8000/files/foo', 400)
-    test_api('GET', 'http://127.0.0.1:8000/files/9999999999999999', 400)
+    test_api('GET', f'{domain}/files/-1', 400)
+    test_api('GET', f'{domain}/files/1.5', 400)
+    test_api('GET', f'{domain}/files/foo', 400)
+    test_api('GET', f'{domain}/files/9999999999999999', 400)
 
     # Try to delete a file that doesn't exist
-    test_api('DELETE', 'http://127.0.0.1:8000/files/1234567', 404)
+    test_api('DELETE', f'{domain}/files/1234567', 404)
 
     # Try to delete a file with invalid fileid
-    test_api('DELETE', 'http://127.0.0.1:8000/files/-1', 400)
-    test_api('DELETE', 'http://127.0.0.1:8000/files/1.5', 400)
-    test_api('DELETE', 'http://127.0.0.1:8000/files/foo', 400)
-    test_api('DELETE', 'http://127.0.0.1:8000/files/9999999999999999', 400)
+    test_api('DELETE', f'{domain}/files/-1', 400)
+    test_api('DELETE', f'{domain}/files/1.5', 400)
+    test_api('DELETE', f'{domain}/files/foo', 400)
+    test_api('DELETE', f'{domain}/files/9999999999999999', 400)
 
     # Try to delete a range of files that don't exist
-    test_api('DELETE', 'http://127.0.0.1:8000/files/1234567-1234569', 404)
+    test_api('DELETE', f'{domain}/files/1234567-1234569', 404)
 
     # Try to delete a range of files with invalid fileids
-    test_api('DELETE', 'http://127.0.0.1:8000/files/foo-bar', 400)
-    test_api('DELETE', 'http://127.0.0.1:8000/files/10-5', 400)
-    test_api('DELETE', 'http://127.0.0.1:8000/files/123-foo', 400)
-    test_api('DELETE', 'http://127.0.0.1:8000/files/10-10', 400)
+    test_api('DELETE', f'{domain}/files/foo-bar', 400)
+    test_api('DELETE', f'{domain}/files/10-5', 400)
+    test_api('DELETE', f'{domain}/files/123-foo', 400)
+    test_api('DELETE', f'{domain}/files/10-10', 400)
 
     # Try to request a file that user doesn't have access to (file 99999 is hard-coded to be restricted)
-    test_api('GET', 'http://127.0.0.1:8000/files/99999', 403)
+    test_api('GET', f'{domain}/files/99999', 403)
 
     # Try to delete a file that user doesn't have access to (file 99999 is hard-coded to be restricted)
-    test_api('DELETE', 'http://127.0.0.1:8000/files/99999', 403)
+    test_api('DELETE', f'{domain}/files/99999', 403)
 
     print('\nAll tests completed successfully!')
