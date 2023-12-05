@@ -17,8 +17,6 @@ Example
     ::
         from lasp_sdtp.config import admin_config
         from lasp_sdtp.config import subscriber_config
-
-TODO: Implement more complex jsonschema for checking nested objects
 """
 
 import json

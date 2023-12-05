@@ -9,8 +9,6 @@ Use
     This module is intended to be executed via the command line as such:
     ::
         python ingest_tsis_data.py
-
-TODO[TIMDS-1996]: Add support for ingesting data from dropbox folder
 """
 
 import glob

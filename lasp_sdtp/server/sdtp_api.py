@@ -30,7 +30,6 @@ TODO[TIMDS-1992]: Implement 429 errors (Too many requests)
 TODO[TIMDS-1993]: Implement support for grouping files together
 TODO[TIMDS-1994]: Make diagram of how a file flows through the system
 TODO[TIMDS-1995]: Add logic to update transactions.responseStatus field
-TODO: Add 'finally' clause where it makes sense
 """
 
 import logging

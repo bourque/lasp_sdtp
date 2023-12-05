@@ -21,8 +21,6 @@ Example
         from lasp_sdtp.database.ingest import Ingest
         i = Ingest(filelist, 'prod', '01')
         i.ingest()
-
-TODO: Send an email to report invalid shortnames?
 """
 
 import datetime
