@@ -14,7 +14,10 @@ Example
         FLASK_APP=queue_api.py FLASK_ENV=development flask run --port 8001
 """
 
+import base64
+import json
 import logging
+import zipfile
 from pathlib import Path
 
 from flask import abort
@@ -104,19 +107,41 @@ def get_file(fileid: int) -> dict:
         The response object containing appropriate headers and content.
     """
 
-    logger.info('Retrieving file contents for file %s', fileid)
+    logger.debug('Retrieving file contents for file %s', fileid)
 
     # Determine where the file exists in the subscriber queue staging area
     metadata = query_for_file(fileid)
     file_loc = Path(admin_config['staging_loc']) / subscriber_config['username'] / metadata.stream / metadata.name
 
+    logger.debug(str(file_loc))
+
     # If the file doesn't exist, raise a 404 error
     if not file_loc.exists():
         abort(404)
 
-    # Get the file contents
-    with open(file_loc, 'r') as f:
-        contents = f.readlines()
+    # Determine how to read the file based on the filetype
+    if str(file_loc).endswith('.txt'):
+        with open(file_loc, 'r') as f:
+            contents = f.readlines()
+
+    elif str(file_loc).endswith('.zip'):
+        with zipfile.ZipFile(file_loc, 'r') as zip_file:
+            filenames = zip_file.namelist()
+            contents = {}
+
+            for filename in filenames:
+                with zip_file.open(filename, 'r') as f:
+                    binary_data = f.read()
+                    decoded_data = base64.b64encode(binary_data).decode('utf-8')
+                    contents[filename] = decoded_data
+
+    elif str(file_loc).endswith('.nc'):
+        with open(file_loc, 'rb') as f:
+            binary_data = f.read()
+            contents = base64.b64encode(binary_data).decode('utf-8')
+
+    else:
+        raise NotImplementedError('File format not currently supported')
 
     response = {'filename': Path(file_loc).name, 'contents': contents}
 
