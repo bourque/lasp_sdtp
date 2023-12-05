@@ -29,6 +29,7 @@ from lasp_sdtp.database.controller import db
 
 logger = logging.getLogger(__name__)
 
+
 def cleanup_files():
     """Remove expired files from the database and queue space"""
 

@@ -240,7 +240,7 @@ def get_tag_value(filename: str, field_name: str) -> object:
         The tag value
     """
 
-    #logger.info('Retrieving %s from %s', (field_name, filename))
+    # logger.info('Retrieving %s from %s', (field_name, filename))
     return 'some_value'
 
 

@@ -48,7 +48,7 @@ def create_test_filesystem():
                 base_filename = base_filename.replace('<date2>', next_day)
 
             filename = test_directory / base_filename
-            file_contents = f'File contents\n\n'
+            file_contents = 'File contents\n\n'
             file_size = round((TSIS_FILE_SIZES[shortname] * 1e6))
             file_size = round(file_size, -3) - 15  # File header is 15 bytes
             file_contents += '.' * file_size  # Inflate the file to mimic expected sizes

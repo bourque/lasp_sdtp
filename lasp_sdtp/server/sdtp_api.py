@@ -65,6 +65,7 @@ else:   # running in docker container
 configure_logging(LOG_FILE_LOC)
 logger = logging.getLogger(__name__)
 
+
 @sdtp_app.before_request
 def authorize():
     """Authorize a request.
@@ -74,7 +75,7 @@ def authorize():
     """
 
     # Assume user is not authorized until proven otherwise
-    #valid_certificate = False
+    # valid_certificate = False
 
     # Temporary work-around
     # Write request to a file so it can be checked

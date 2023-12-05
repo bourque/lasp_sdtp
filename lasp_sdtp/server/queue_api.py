@@ -15,7 +15,6 @@ Example
 """
 
 import base64
-import json
 import logging
 import zipfile
 from pathlib import Path
