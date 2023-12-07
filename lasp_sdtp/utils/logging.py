@@ -31,9 +31,17 @@ from typing import Optional
 from lasp_sdtp.utils.properties import LOG_CONFIG
 
 
-def _get_log_file(log_file_loc: str) -> str:
+def _get_log_file(log_file_loc: str, name: str) -> str:
     """Define filename/filepath for log file and create the necessary
     directories to store it.
+
+    Parameters
+    ----------
+    log_file_loc : str
+        The parent directory in which to save the log file
+    name : str
+        The name to be used in the filename of the generated log file.  For
+        example, ``lasp_sdtp`` results in ``lasp_sdtp_YYYYMMDD-HHMMSS.log``.
 
     Returns
     -------
@@ -43,7 +51,7 @@ def _get_log_file(log_file_loc: str) -> str:
 
     # Define filename for log file
     timestamp = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
-    filename = f'lasp_sdtp_{timestamp}.log'
+    filename = f'{name}_{timestamp}.log'
     log_file = Path(log_file_loc) / filename
 
     # Make sure parent directory exists
@@ -76,13 +84,16 @@ def _log_system_environment():
         logging.debug(f'\t{line}')
 
 
-def configure_logging(log_file_loc: str, verbose: Optional[bool] = True) -> str:
+def configure_logging(log_file_loc: str, name: str, verbose: Optional[bool] = True) -> str:
     """Configure and create a log that records system information.
 
     Parameters
     ----------
     log_file_loc : str
         The parent directory in which to save the log file
+    name : str
+        The name to be used in the filename of the generated log file.  For
+        example, ``lasp_sdtp`` results in ``lasp_sdtp_YYYYMMDD-HHMMSS.log``.
     verbose : boolean
         Switches on/off printing information to stdout
 
@@ -93,7 +104,7 @@ def configure_logging(log_file_loc: str, verbose: Optional[bool] = True) -> str:
     """
 
     # Define where the log file will be stored
-    log_file = _get_log_file(log_file_loc)
+    log_file = _get_log_file(log_file_loc, name)
     LOG_CONFIG['handlers']['file']['filename'] = str(log_file)
 
     # Configure the log

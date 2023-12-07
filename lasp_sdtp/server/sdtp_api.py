@@ -61,7 +61,7 @@ else:   # running in docker container
     QUEUE_API_URI = f'http://queue_api:{admin_config["queue_api_port"]}'
     LOG_FILE_LOC = '/root/logs/'
 
-configure_logging(LOG_FILE_LOC)
+configure_logging(LOG_FILE_LOC, 'sdtp_api')
 logger = logging.getLogger(__name__)
 
 

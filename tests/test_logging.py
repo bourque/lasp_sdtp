@@ -24,7 +24,7 @@ def test_configure_logging():
     """Tests the ``configure_logging`` function"""
 
     # Configure a log file
-    log_file = configure_logging(Path.cwd(), verbose=False)
+    log_file = configure_logging(Path.cwd(), 'test_logging', verbose=False)
 
     # Perform some basic logging
     logging.debug('Some system information')
