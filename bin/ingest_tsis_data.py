@@ -16,8 +16,13 @@ from pathlib import Path
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.database.ingest import Ingest
+from lasp_sdtp.utils.logging import configure_logging
 
 if __name__ == '__main__':
+
+    # Configure logging
+    log_file_loc = Path.home() / 'logs'
+    configure_logging(log_file_loc, 'ingest_tsis_data')
 
     # Read in filesystem
     filelist = glob.glob(str(Path(admin_config['filesystem_loc']) / '*'))

@@ -82,6 +82,22 @@ class Ingest():
         shutil.copyfile(file, dst)
         logger.info('Copied file %s to subscriber queue: %s',  (file, dst))
 
+    def _get_filelist_to_ingest(self) -> list:
+        """Determine which files need to be ingested based on which files are
+        already in the database.
+
+        Returns
+        -------
+        filelist_to_ingest : list[str]
+        """
+
+        files_in_db = db.session.query(db.Files).filter(db.Files.stream == self.stream).all()
+        files_in_db = [item.name for item in files_in_db]
+
+        files_to_ingest = [file for file in self.filelist if Path(file).name not in files_in_db]
+
+        return files_to_ingest
+
     def _insert_into_filequeue(self, fileid: int, account: str):
         """Insert the given file into the ``FileQueue`` table for the given
         ``account``.
@@ -211,11 +227,18 @@ class Ingest():
         details.
         """
 
-        for file in self.filelist:
+        logging.info('Ingesting files for stream %s version %s', self.stream, self.version)
+
+        # Only ingest files that are not already in the database
+        filelist_to_ingest = self._get_filelist_to_ingest()
+
+        logging.info('Files to ingest: %s', filelist_to_ingest)
+
+        for file in filelist_to_ingest:
 
             filename = Path(file).name
 
-            logger.info('Ingesting %s for stream %s version %s', filename, self.stream, self.version)
+            logger.info('Ingesting file: %s', filename)
 
             # Validate the shortname
             try:
@@ -271,3 +294,5 @@ class Ingest():
                 logger.warning('No subscribed accounts for %s', file)
                 Path(file).unlink()
                 logger.debug('Deleted file %s', file)
+
+        logging.info('Ingestion complete')
