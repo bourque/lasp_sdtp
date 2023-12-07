@@ -91,10 +91,14 @@ class Ingest():
         filelist_to_ingest : list[str]
         """
 
+        # Ignore files that are already in the database
         files_in_db = db.session.query(db.Files).filter(db.Files.stream == self.stream).all()
         files_in_db = [item.name for item in files_in_db]
-
         files_to_ingest = [file for file in self.filelist if Path(file).name not in files_in_db]
+
+        # Ignore files that are not of interest
+        ignore = ['.pbk', '.sav']
+        files_to_ingest = [file for file in files_to_ingest if Path(file).suffix not in ignore]
 
         return files_to_ingest
 
@@ -229,7 +233,8 @@ class Ingest():
 
         logging.info('Ingesting files for stream %s version %s', self.stream, self.version)
 
-        # Only ingest files that are not already in the database
+        # Only ingest files that are not already in the database and are able
+        # to be ingested
         filelist_to_ingest = self._get_filelist_to_ingest()
 
         logging.info('Files to ingest: %s', filelist_to_ingest)
