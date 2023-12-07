@@ -54,7 +54,7 @@ class Files(Base):
     fileid = sa.Column('fileid', sa.Integer, primary_key=True)
     name = sa.Column('name', sa.String(255), unique=True, nullable=False)
     checksum = sa.Column('checksum', sa.String(71), unique=True, nullable=False)
-    size = sa.Column('size', sa.Float, nullable=False)
+    size = sa.Column('size', sa.Integer, nullable=False)
     expires = sa.Column('expires', sa.DateTime, nullable=False)
     stream = sa.Column('stream', sa.String(255), nullable=False)
     shortname = sa.Column('shortname', sa.String(255), nullable=False)
