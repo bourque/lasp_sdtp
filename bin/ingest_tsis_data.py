@@ -30,7 +30,3 @@ if __name__ == '__main__':
     # Ingest a 'production' stream of the data
     production = Ingest(filelist, 'prod', '01')
     production.ingest()
-
-    # Ingest a 'development' stream of the data
-    development = Ingest(filelist, 'dev', '01')
-    development.ingest()

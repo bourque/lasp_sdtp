@@ -35,8 +35,6 @@ def _ingest_files():
     filelist = glob.glob(str(Path(admin_config['filesystem_loc']) / '*'))
     production = Ingest(filelist, 'prod', '01')  # Ingest a 'production' stream of the data
     production.ingest()
-    development = Ingest(filelist, 'dev', '01')  # Ingest a 'development' stream of the data
-    development.ingest()
 
 
 def _test_prep():
@@ -149,10 +147,9 @@ if __name__ == '__main__':
     # Get filelist
     test_api('GET', f'{domain}/files', 200)
     test_api('GET', f'{domain}/files?shortname=TSIS_TIM_L2', 200)
-    test_api('GET', f'{domain}/files?shortname=TSIS_TIM_L2&stream=dev', 200)
-    test_api('GET', f'{domain}/files?shortname=TSIS_TIM_L2&stream=dev&irradiance=some_value', 200)
+    test_api('GET', f'{domain}/files?shortname=TSIS_TIM_L2&stream=prod', 200)
     test_api('GET', f'{domain}/files?startfileid=1&maxfile=3', 200)
-    test_api('GET', f'{domain}/files?shortname=TSIS_TIM_L2&stream=dev&irradiance=some_value&startfileid=1&maxfile=3', 200)
+    test_api('GET', f'{domain}/files?shortname=TSIS_TIM_L2&stream=prod&startfileid=1&maxfile=3', 200)
 
     # Get file
     test_api('GET', f'{domain}/files/{fileid}', 200)
