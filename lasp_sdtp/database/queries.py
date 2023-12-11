@@ -56,10 +56,9 @@ def get_report_queries() -> list:
     queries.append((
         'Recent Transactions',
         db.session.query(
-            db.Transactions.transactionid, db.Transactions.action, db.Transactions.username, db.Files.name,
+            db.Transactions.transactionid, db.Transactions.action, db.Transactions.username, db.Transactions.fileid,
             db.Transactions.start_time, db.Transactions.end_time, db.Transactions.source, db.Transactions.destination
-        ).join(
-            db.Transactions, db.Files.fileid == db.Transactions.fileid)))
+        )))
 
     # File queue contents
     queries.append((

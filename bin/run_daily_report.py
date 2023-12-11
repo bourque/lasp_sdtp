@@ -25,6 +25,7 @@ from sqlalchemy.orm.query import Query
 
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.database.queries import get_report_queries
+from lasp_sdtp.utils.logging import configure_logging
 
 
 def _construct_content(header: str, query: Query) -> str:
@@ -110,5 +111,9 @@ def generate_daily_report() -> str:
 
 
 if __name__ == '__main__':
+
+    # Configure logging
+    log_file_loc = Path.home() / 'logs'
+    configure_logging(log_file_loc, 'daily_report')
 
     generate_daily_report()

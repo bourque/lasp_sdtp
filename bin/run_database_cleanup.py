@@ -13,9 +13,16 @@ Use
         python run_database_cleanup.py
 """
 
+from pathlib import Path
+
 from lasp_sdtp.database import cleanup
+from lasp_sdtp.utils.logging import configure_logging
 
 
 if __name__ == '__main__':
+
+    # Configure logging
+    log_file_loc = Path.home() / 'logs'
+    configure_logging(log_file_loc, 'cleanup_database')
 
     cleanup.cleanup_files()
