@@ -80,7 +80,7 @@ class Ingest():
         # Copy file to subscriber queue
         dst = Path(admin_config['staging_loc']) / account / self.stream / Path(file).name
         shutil.copyfile(file, dst)
-        logger.info('Copied file %s to subscriber queue: %s',  (file, dst))
+        logger.info('Copied file %s to subscriber queue: %s', file, dst)
 
     def _get_filelist_to_ingest(self) -> list:
         """Determine which files need to be ingested based on which files are
@@ -128,7 +128,7 @@ class Ingest():
             expires=expires
         )]
         db.insert_data(data)
-        logger.debug('Inserted file %s into FileQueue for account %s', (fileid, account))
+        logger.debug('Inserted file %s into FileQueue for account %s', fileid, account)
 
     def _insert_into_files(self, file: str, shortname: str) -> int:
         """Insert data associated with the given file into the ``Files`` table.
@@ -216,7 +216,7 @@ class Ingest():
         for account in accounts:
             filepath = Path(admin_config['staging_loc']) / account / self.stream / filename
             filepath.unlink()
-            logger.debug('Removed file %s from subscriber queue staging area for account %s', (filepath, account))
+            logger.debug('Removed file %s from subscriber queue staging area for account %s', filepath, account)
 
         # Remove the file from FileQueue table
         db.session.query(db.FileQueue).filter(db.FileQueue.fileid == fileid).delete()
@@ -297,7 +297,5 @@ class Ingest():
 
             else:
                 logger.warning('No subscribed accounts for %s', file)
-                Path(file).unlink()
-                logger.debug('Deleted file %s', file)
 
         logging.info('Ingestion complete')
