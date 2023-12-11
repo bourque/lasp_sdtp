@@ -31,20 +31,20 @@ TEST_TAGS = [
 ]
 
 TEST_SHORTNAMES = [
-    ('tsis2_L1_19840404.zip', 'TSIS2_L1'),
-    ('tsis2_sim_cal_v01.zip', 'TSIS2_SIM_CAL'),
-    ('tsis2_tim_cal_v01.zip', 'TSIS2_TIM_CAL'),
-    ('tsis2_sim_L2_v01_19840404.zip', 'TSIS2_SIM_L2'),
-    ('tsis2_tim_L2_v01_19840404.zip', 'TSIS2_TIM_L2'),
-    ('tsis2_sc_L2_v01_19840404_19840405.zip', 'TSIS2_SC_L2'),
-    ('tsis2_ssi_L3_c12h_v01_19840404_19840405.txt', 'TSIS2_SSI_L3_12HR_TXT'),
-    ('tsis2_ssi_L3_c24h_v01_19840404_19840405.txt', 'TSIS2_SSI_L3_24HR_TXT'),
-    ('tsis2_tsi_L3_c06h_v01_19840404_19840405.txt', 'TSIS2_TSI_L3_06HR_TXT'),
-    ('tsis2_tsi_L3_c24h_v01_19840404_19840405.txt', 'TSIS2_TSI_L3_24HR_TXT'),
-    ('tsis2_ssi_L3_c12h_v01_19840404_19840405.nc', 'TSIS2_SSI_L3_12HR_NC'),
-    ('tsis2_ssi_L3_c24h_v01_19840404_19840405.nc', 'TSIS2_SSI_L3_24HR_NC'),
-    ('tsis2_tsi_L3_c06h_v01_19840404_19840405.nc', 'TSIS2_TSI_L3_06HR_NC'),
-    ('tsis2_tsi_L3_c24h_v01_19840404_19840405.nc', 'TSIS2_TSI_L3_24HR_NC')]
+    ('tsis_L1_19840404.zip', 'TSIS_L1'),
+    ('tsis_sim_cal_v01.zip', 'TSIS_SIM_CAL'),
+    ('tsis_tim_cal_v01.zip', 'TSIS_TIM_CAL'),
+    ('tsis_sim_L2_v01_19840404.zip', 'TSIS_SIM_L2'),
+    ('tsis_tim_L2_v01_19840404.zip', 'TSIS_TIM_L2'),
+    ('tsis_sc_L2_v01_19840404_19840405.zip', 'TSIS_SC_L2'),
+    ('tsis_ssi_L3_c12h_v01_19840404_19840405.txt', 'TSIS_SSI_L3_12HR_TXT'),
+    ('tsis_ssi_L3_c24h_v01_19840404_19840405.txt', 'TSIS_SSI_L3_24HR_TXT'),
+    ('tsis_tsi_L3_c06h_v01_19840404_19840405.txt', 'TSIS_TSI_L3_06HR_TXT'),
+    ('tsis_tsi_L3_c24h_v01_19840404_19840405.txt', 'TSIS_TSI_L3_24HR_TXT'),
+    ('tsis_ssi_L3_c12h_v01_19840404_19840405.nc', 'TSIS_SSI_L3_12HR_NC'),
+    ('tsis_ssi_L3_c24h_v01_19840404_19840405.nc', 'TSIS_SSI_L3_24HR_NC'),
+    ('tsis_tsi_L3_c06h_v01_19840404_19840405.nc', 'TSIS_TSI_L3_06HR_NC'),
+    ('tsis_tsi_L3_c24h_v01_19840404_19840405.nc', 'TSIS_TSI_L3_24HR_NC')]
 
 
 def test_combine_metadata():

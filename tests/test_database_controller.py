@@ -48,7 +48,7 @@ def test_fileid_boundary():
         size=1,
         expires=datetime.datetime.utcnow().date(),
         stream='prod',
-        shortname='TSIS2_L1',
+        shortname='TSIS_L1',
         version='01',
         ingest_date=datetime.datetime.utcnow().date(),
         available=True
@@ -71,7 +71,7 @@ def test_insert_data():
         size=1,
         expires=datetime.datetime.utcnow().date(),
         stream='prod',
-        shortname='TSIS2_L1',
+        shortname='TSIS_L1',
         version='01',
         ingest_date=datetime.datetime.utcnow().date(),
         available=True

@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 
+from bin.create_test_filesystem import create_test_filesystem
 from lasp_sdtp.config import admin_config
 from lasp_sdtp.database.controller import db
 from lasp_sdtp.database.ingest import Ingest
@@ -301,12 +302,16 @@ def setup(request: object):
     _add_shortnames_entries()
     _add_mission_shortname_mapping_entries()
 
+    # Create a test filesystem if necessary
+    filesystem = Path(admin_config['filesystem_loc'])
+    test_files = glob.glob(f'{filesystem}/*')
+    if not test_files:
+        create_test_filesystem()
+
     # Ingest test filesystem (thus adding entries to Files and FileQueue)
     filelist = glob.glob(str(Path(admin_config['filesystem_loc']) / '*'))
     production = Ingest(filelist, 'prod', '01')  # Ingest a 'production' stream of the data
     production.ingest()
-    development = Ingest(filelist, 'dev', '01')      # Ingest a 'development' stream of the data
-    development.ingest()
 
     # Add additional entries to database tables to support tests
     _add_files_entries()
@@ -319,15 +324,15 @@ def setup(request: object):
 
 def teardown():
     """Teardown function"""
-    pass
-    # # Clean out the database
-    # db.session.query(db.FileQueue).delete()
-    # db.session.query(db.Transactions).delete()
-    # db.session.query(db.TagsAndExtras).delete()
-    # db.session.query(db.Files).delete()
-    # db.session.query(db.MissionShortnameMapping).delete()
-    # db.session.query(db.Shortnames).delete()
-    # db.session.query(db.MissionAccountMapping).delete()
-    # db.session.query(db.Missions).delete()
-    # db.session.query(db.Accounts).delete()
-    # db.session.commit()
+
+    # Clean out the database
+    db.session.query(db.FileQueue).delete()
+    db.session.query(db.Transactions).delete()
+    db.session.query(db.TagsAndExtras).delete()
+    db.session.query(db.Files).delete()
+    db.session.query(db.MissionShortnameMapping).delete()
+    db.session.query(db.Shortnames).delete()
+    db.session.query(db.MissionAccountMapping).delete()
+    db.session.query(db.Missions).delete()
+    db.session.query(db.Accounts).delete()
+    db.session.commit()

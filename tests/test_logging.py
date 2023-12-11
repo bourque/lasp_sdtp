@@ -50,7 +50,7 @@ def test_configure_logging():
 def test_get_log_file():
     """Tests the ``_get_log_file`` function"""
 
-    log_file = _get_log_file(Path.cwd())
+    log_file = _get_log_file(Path.cwd(), 'test')
 
     assert isinstance(log_file, PosixPath)
     assert str(Path.cwd()) in str(log_file)

@@ -76,8 +76,6 @@ def authorize():
     # Assume user is not authorized until proven otherwise
     # valid_certificate = False
 
-    # Temporary work-around
-    # Write request to a file so it can be checked
     logger.info('Received request:')
     logger.info(str(request.headers.__dict__['environ']))
 

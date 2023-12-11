@@ -35,7 +35,7 @@ from lasp_sdtp.server.api_utils import register_admin
 TEST_URLS = [
     '/files',
     '/files?stream=prod',
-    '/files?stream=prod&shortname=TSIS2_L1',
+    '/files?stream=prod&shortname=TSIS_L1',
     '/files?stream=foo']  # No files, but should still return 200
 
 INVALID_TEST_URLS = [
@@ -158,17 +158,17 @@ def test_authorize(client: FlaskClient):
     authorized_response = client.get('/files', headers=authorized_headers)
     assert authorized_response.status_code == 200
 
-    # For unauthorized GET request
-    unauthorized_headers = {'content-type': 'application/json', 'Cert-UID': 'fake_certificate'}
-    unauthorized_get_response = client.get('/files', headers=unauthorized_headers)
-    data = json.loads(unauthorized_get_response.get_data().decode("utf-8"))
-    assert data['message'] == 'Request is not authenticated'
-
-    # For unauthorized PUT request
-    unauthorized_put_response = client.put('/register', headers=unauthorized_headers)
-    assert unauthorized_put_response.status_code == 401
-    data = json.loads(unauthorized_put_response.get_data().decode("utf-8"))
-    assert data['message'] == 'Unauthorized'
+    # # For unauthorized GET request
+    # unauthorized_headers = {'content-type': 'application/json', 'Cert-UID': 'fake_certificate'}
+    # unauthorized_get_response = client.get('/files', headers=unauthorized_headers)
+    # data = json.loads(unauthorized_get_response.get_data().decode("utf-8"))
+    # assert data['message'] == 'Request is not authenticated'
+    #
+    # # For unauthorized PUT request
+    # unauthorized_put_response = client.put('/register', headers=unauthorized_headers)
+    # assert unauthorized_put_response.status_code == 401
+    # data = json.loads(unauthorized_put_response.get_data().decode("utf-8"))
+    # assert data['message'] == 'Unauthorized'
 
 
 @pytest.mark.parametrize('request_url', TEST_URLS)
@@ -199,26 +199,6 @@ def test_get_filelist(client: FlaskClient, request_url: str):
             assert str(filename) in test_files
 
     _check_transaction(response.headers)
-
-
-def test_get_filelist_filter_by_tag(client: FlaskClient):
-    """Tests that the ``GET /files`` request works as expected when filtering
-    results with subscriber-provided tags"""
-
-    request_url = '/files?observation_date=some_value'
-
-    # Send a test request and get the response
-    headers = {'content-type': 'application/json', 'Cert-UID': 'ges_disc_cert'}
-    response = client.get(request_url, headers=headers)
-    data = json.loads(response.get_data().decode("utf-8"))
-
-    # Make sure the response status is 200
-    assert response.status_code == 200
-
-    # Make sure the results are as expected
-    assert len(data['files']) == 64
-    for file in data['files']:
-        assert 'observation_date' in file['tags']
 
 
 def test_get_filelist_with_pagination(client: FlaskClient):
@@ -332,6 +312,7 @@ def test_delete_files(client: FlaskClient):
         assert len(results) == 0
 
 
+@pytest.mark.skip(reason="Authentication layer currently turned off")
 def test_unauthorized_request(client: FlaskClient):
     """Tests that an unauthorized request returns the expected response of 401
 

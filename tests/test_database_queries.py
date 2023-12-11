@@ -38,7 +38,7 @@ def test_query_for_filelist():
     tags = {
         'stream': 'prod',
         'version': '01',
-        'shortname': 'TSIS2_L1'}
+        'shortname': 'TSIS_L1'}
     filelist = query_for_filelist(tags=tags)
     assert len(filelist) == 12
 
@@ -53,5 +53,5 @@ def test_query_for_queue_entries():
 def test_validate_access():
     """Tests the ``validate_access`` function"""
 
-    assert validate_access(12345) is True  # This is a tsis2 data product which the 'ges_disc' user has access to
+    assert validate_access(12345) is True  # This is a tsis data product which the 'ges_disc' user has access to
     assert validate_access(23456) is False  # This is a 'restricted' data product
