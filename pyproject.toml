@@ -3,7 +3,7 @@ name = "lasp-sdtp"
 version = "0.1.0"
 description = "Implementation of the NASA Science Data Transfer Protocol (SDTP) Interface for LASP-based applications"
 authors = ["Matthew Bourque <matthew.bourque@lasp.colorado.edu>"]
-license = "Copyright 2023 Regents of the University of Colorado. All rights reserved."
+license = "Copyright 2024 Regents of the University of Colorado. All rights reserved."
 readme = "README.md"
 packages = [{include = "lasp_sdtp"}]
 
@@ -23,7 +23,6 @@ urllib3 = "1.26.6"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^5.0.0"
-jupyter = "^1.0.0"
 ipython = "^8.12.0"
 
 [build-system]
