@@ -53,12 +53,14 @@ def get_report_queries() -> list:
             db.Accounts.role == 'subscriber')))
 
     # Recent transactions
+    one_day = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
     queries.append((
         'Recent Transactions',
         db.session.query(
             db.Transactions.transactionid, db.Transactions.action, db.Transactions.username, db.Transactions.fileid,
             db.Transactions.start_time, db.Transactions.end_time, db.Transactions.source, db.Transactions.destination
-        )))
+        ).filter(
+            db.Transactions.start_time >= one_day)))
 
     # File queue contents
     queries.append((
@@ -72,7 +74,7 @@ def get_report_queries() -> list:
         ).filter(
             db.FileQueue.expires >= datetime.datetime.utcnow().date())))
 
-    # Files that are taking too long
+    # Files that are taking too long to transfer
     queries.append((
         'Long Transfers',
         db.session.query(
