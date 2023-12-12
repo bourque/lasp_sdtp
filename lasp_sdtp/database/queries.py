@@ -107,7 +107,7 @@ def query_for_accounts_by_mission(mission: str) -> list:
     Parameters
     ----------
     mission : str
-        The mission of interest (e.g. ``TSIS2``)
+        The mission of interest (e.g. ``TSIS``)
 
     Returns
     -------
@@ -244,12 +244,12 @@ def query_for_mission_by_shortname(shortname: str) -> str:
     Parameters
     ----------
     shortname : str
-        The shortname of interest (e.g. ``TSIS2_L1``)
+        The shortname of interest (e.g. ``TSIS_L1``)
 
     Returns
     -------
     mission : str
-        The mission associated with the shortname (e.g. ``TSIS2``)
+        The mission associated with the shortname (e.g. ``TSIS``)
     """
 
     logger.debug('Querying for mission(s) associated with shortname %s', shortname)

@@ -1,5 +1,5 @@
-"""This script configures logging and starts the flask servers for the SDTP
-application
+"""This script configures logging and starts the flask servers locally for the
+SDTP application.
 
 Also, when executed, an ``lasp_admin`` account is registered, if it doesn't
 already exist.

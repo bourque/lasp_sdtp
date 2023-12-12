@@ -1,8 +1,5 @@
-"""This module contains functions to remove expired accounts and files from the
-database and file queue.
-
-Expired accounts are those for which the current date exceeds the value of the
-``accounts.registrationExpires`` database entry.
+"""This module contains functions to remove expired files from the database and
+file queue.
 
 Expired files are those for which the current date exceeds the value of the
 ``fileQueue.expires`` database entry.

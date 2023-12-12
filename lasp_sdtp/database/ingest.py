@@ -2,9 +2,8 @@
 The ``Files`` and ``TagsAndExtras`` tables are updated accordingly.
 
 If a file already exists in the system (i.e. it is in one or more subscriber
-queues and is marked as available in the ``Files`` table), the file is 'purged'
-from the system (i.e. it is removed from subscriber queue staging area and
-marked as unavailable/deleted in the ``Files`` table)
+queues and is marked as available in the ``Files`` table), the file is not
+ingested
 
 Authors
 -------

@@ -156,7 +156,7 @@ class Controller():
         self.session.commit()
         logger.debug('Deleted file %s from file queue', fileid)
 
-    def insert_data(self, data):
+    def insert_data(self, data: list):
         """Inserts the given data into the appropriate table
 
         Parameters

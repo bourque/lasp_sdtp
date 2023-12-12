@@ -1,5 +1,5 @@
 """This script performs system reporting for the application.  When executed,
-an email is constructed and sent to the email provided in the
+an email is constructed and sent to the email address provided in the
 ``admin_config.json`` file.  The email contains a daily report of information
 about the system and its usage.
 

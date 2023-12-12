@@ -1,14 +1,11 @@
 {
 	"api_endpoint": "http://127.0.0.1",
 	"certificate_authority": "",
-	"data_cache_loc": "",
-	"db_connection_string": "",
-	"email_address": "",
-	"email_password": "",
-	"email_port" : 123,
-	"email_server": "smtp.gmail.com",
+	"staging_loc": "subscriber_queues/",
+	"db_connection_string": "oracle+cx_oracle://user:password@database:port/?service_name=name&encoding=UTF-8",
+	"email": "example@lasp.colorado.edu",
 	"endpoint": "0.0.0.0",
-	"filesystem_loc": "",
+	"filesystem_loc": "filesystem/",
 	"queue_api_port": 8001,
 	"request_api_port": 8002,
 	"sdtp_api_port": 8000

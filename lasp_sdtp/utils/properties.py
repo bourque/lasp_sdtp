@@ -57,6 +57,7 @@ REQUIRED_ADMIN_CONFIG_KEYS = {
     'certificate_authority': str,
     'staging_loc': str,
     'db_connection_string': str,
+    'email': str,
     'endpoint': str,
     'filesystem_loc': str,
     'queue_api_port': int,
