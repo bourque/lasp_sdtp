@@ -23,7 +23,6 @@ import pandas as pd
 from jinja2 import Template
 from sqlalchemy.orm.query import Query
 
-from lasp_sdtp.config import admin_config
 from lasp_sdtp.database.queries import get_report_queries
 from lasp_sdtp.utils.logging import configure_logging
 
@@ -75,16 +74,14 @@ def _send_email(content: str):
     # Construct email message
     msg = MIMEMultipart()
     msg['Subject'] = 'LASP SDTP Daily Report'
-    msg['From'] = admin_config['email_address']
+    msg['From'] = 'lasp-sdtp'
     msg['To'] = 'matthew.bourque@lasp.colorado.edu'
     msg.attach(MIMEText(body, 'html'))
 
     # Send the email
-    server = smtplib.SMTP(admin_config['email_server'], admin_config['email_port'])
-    server.starttls()
-    server.login(admin_config['email_address'], admin_config['email_password'])
     text = msg.as_string()
-    server.sendmail(admin_config['email_address'], 'matthew.bourque@lasp.colorado.edu', text)
+    server = smtplib.SMTP('localhost')
+    server.sendmail('localhost@lasp-sdtp.pdmz.lasp.colorado.edu', 'matthew.bourque@lasp.colorado.edu', text)
     server.quit()
 
 

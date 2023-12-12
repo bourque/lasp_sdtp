@@ -1,4 +1,4 @@
-"""Various properties to help support the ``lasp_sdtp`` application.
+"""Various properties to help support the application.
 
 Authors
 -------
@@ -8,7 +8,7 @@ Example
 -------
 
     ::
-        from lasp_sdtp.utils.properties import TSIS2_SHORTNAMES
+        from lasp_sdtp.utils.properties import TSIS_SHORTNAMES
 """
 
 LOG_CONFIG = {
@@ -57,10 +57,6 @@ REQUIRED_ADMIN_CONFIG_KEYS = {
     'certificate_authority': str,
     'staging_loc': str,
     'db_connection_string': str,
-    'email_address': str,
-    'email_password': str,
-    'email_port': int,
-    'email_server': str,
     'endpoint': str,
     'filesystem_loc': str,
     'queue_api_port': int,
