@@ -53,16 +53,15 @@ LOG_CONFIG = {
 }
 
 REQUIRED_ADMIN_CONFIG_KEYS = {
-    'api_endpoint': str,
     'certificate_authority': str,
-    'staging_loc': str,
     'db_connection_string': str,
     'email': str,
     'endpoint': str,
     'filesystem_loc': str,
     'queue_api_port': int,
     'request_api_port': int,
-    'sdtp_api_port': int
+    'sdtp_api_port': int,
+    'staging_loc': str,
 }
 
 REQUIRED_SUBSCRIBER_CONFIG_KEYS = {

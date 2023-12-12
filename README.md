@@ -4,9 +4,9 @@
 The Laboratory for Atmospheric and Space Physics (LASP) Science Data Transfer Protocol (SDTP) Application is used to
 transfer LASP-based data products to the Goddard Earth Sciences Data Information Services (GES DISC).
 
-This README covers the installation and usage of the application and is geared towards internal LASP developers and/or
-contributors of this application.  More information about the design and implementation of the application can be found
-here: https://confluence.lasp.colorado.edu/pages/viewpage.action?pageId=86215664
+This README covers the installation and usage of the application software and is geared towards internal LASP developers
+and/or contributors of this application.  More information about the design and implementation of the application can be
+found [here](https://confluence.lasp.colorado.edu/pages/viewpage.action?pageId=86215664).
 
 
 ## Installation
@@ -14,7 +14,7 @@ here: https://confluence.lasp.colorado.edu/pages/viewpage.action?pageId=86215664
 
 ### Prerequisites
 
-It is suggested that developers have a working installation of `poetry` for Python 3.9.  Downloads and installation
+It is suggested that developers have a working installation of `poetry` for Python 3.8.  Downloads and installation
 instructions for `poetry` are available [here](https://python-poetry.org/docs/).
 
 Requirements for the `lasp_sdtp` package will be included in the `lasp-sdtp` `poetry` environment, which is included
@@ -57,13 +57,10 @@ are used by the application to define and apply necessary configurations.  A des
 
 ```python
 {
-    "api_endpoint": "http://127.0.0.1",  # URL for main enpoint of application
     "certificate_authority": "sample_certificate",  #  Certificate authority for authorization
     "db_connection_string": "oracle://server:username@database:port/?service_name=service",  # Connection string to Oracle database
-    "email_address": "email@example.com",  # Email address from which daily reports are sent
-    "email_password": "password",  # Email address password
-    "email_port": 123,  # Email port number
-    "email_server": "smtp.email.com",  # Email server
+    "email": "email@example.com",  # Email address from which daily reports are sent
+    "endpoint": "0.0.0.0",  # URL for main enpoint of application
     "filesystem_loc": "/path/to/filesystem/",  # Path to where files can be ingested,
     "queue_api_port": 123,  # Port for queue API endpoint
     "request_api_port": 123,  # Port for request API endpoint
@@ -118,7 +115,7 @@ are used by the application to define and apply necessary configurations.  A des
 
 ## Usage
 
-To start the necessary servers:
+To start the necessary servers locally:
 
 ```
 cd bin/
@@ -135,6 +132,14 @@ To run the `pytest` testing suite:
 ```
 cd tests/
 pytest -s .
+```
+
+To ingest test data into the database:
+
+```
+cd bin/
+python create_test_filesystem.py
+python ingest_tsis_data.py
 ```
 
 Once the server is running and test data have been added, one can send requests to the server, e.g.:
