@@ -62,18 +62,6 @@ def get_report_queries() -> list:
         ).filter(
             db.Transactions.start_time >= one_day)))
 
-    # File queue contents
-    queries.append((
-        'File Queue Contents',
-        db.session.query(
-            db.FileQueue.fileid, db.Files.name, db.FileQueue.username, db.FileQueue.entry_date, db.FileQueue.expires
-        ).select_from(
-            db.Files
-        ).join(
-            db.FileQueue, db.Files.fileid == db.FileQueue.fileid
-        ).filter(
-            db.FileQueue.expires >= datetime.datetime.utcnow().date())))
-
     # Files that are taking too long to transfer
     queries.append((
         'Long Transfers',
@@ -97,6 +85,18 @@ def get_report_queries() -> list:
             db.FileQueue, db.Files.fileid == db.FileQueue.fileid
         ).filter(
             db.FileQueue.expires <= datetime.datetime.utcnow().date() + datetime.timedelta(days=7))))
+
+    # File queue contents
+    queries.append((
+        'File Queue Contents',
+        db.session.query(
+            db.FileQueue.fileid, db.Files.name, db.FileQueue.username, db.FileQueue.entry_date, db.FileQueue.expires
+        ).select_from(
+            db.Files
+        ).join(
+            db.FileQueue, db.Files.fileid == db.FileQueue.fileid
+        ).filter(
+            db.FileQueue.expires >= datetime.datetime.utcnow().date())))
 
     return queries
 
