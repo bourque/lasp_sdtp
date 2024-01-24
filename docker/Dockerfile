@@ -26,11 +26,8 @@ RUN poetry install
 # Add the poetry virtualenv to the PATH
 ENV PATH="/root/.cache/pypoetry/virtualenvs/lasp-sdtp-lKa0R1gD-py3.9/bin:$PATH"
 
-# Set up subscriber queue
-RUN mkdir subscriber_queues/
-RUN mkdir subscriber_queues/ges_disc/
-RUN mkdir subscriber_queues/ges_disc/prod/
-RUN mkdir subscriber_queues/ges_disc/dev/
-
 # Create a volume to hold the filesystem
 VOLUME ["/filesystem"]
+
+# Create a volume to hold the subscriber queues
+VOLUME ["/subscriber_queues"]

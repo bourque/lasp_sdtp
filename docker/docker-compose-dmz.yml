@@ -8,6 +8,7 @@ services:
     volumes:
       - shared_data:/root/
       - /home/mabo8927/filesystem:/filesystem
+      - /home/mabo8927/subscriber_queues:/subscriber_queues
       - /home/mabo8927/logs:/root/logs
     command: bash -c " \
       cd lasp_sdtp/server/ && \
@@ -22,6 +23,7 @@ services:
     volumes:
       - shared_data:/root/
       - /home/mabo8927/filesystem:/filesystem
+      - /home/mabo8927/subscriber_queues:/subscriber_queues
       - /home/mabo8927/logs:/root/logs
     command: bash -c " \
       cd lasp_sdtp/server/ && \
@@ -36,6 +38,7 @@ services:
     volumes:
       - shared_data:/root/
       - /home/mabo8927/filesystem:/filesystem
+      - /home/mabo8927/subscriber_queues:/subscriber_queues
       - /home/mabo8927/logs:/root/logs
     command: bash -c " \
       cd lasp_sdtp/server/ && \
